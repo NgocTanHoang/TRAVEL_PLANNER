@@ -1,0 +1,42 @@
+.venv/
+venv/
+env/
+travel_env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+.ipynb_checkpoints/
+.vscode/
+.idea/
+.DS_Store
+
+# Byte-compiled / optimized / DLL files
+*.pyc
+*.pyo
+*.pyd
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+coverage.xml
+*.cover
+
+# Environment files (do not commit secrets)
+.env
+.env.*
+.streamlit/secrets.toml
+.env
+__pycache__/
+*.pyc
+/project_structure
+*.pyo
+/venv.env
