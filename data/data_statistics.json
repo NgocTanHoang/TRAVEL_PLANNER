@@ -1,0 +1,37 @@
+{
+  "total_places": 50334,
+  "cities": 56,
+  "categories": 259,
+  "avg_rating": 3.771800373504987,
+  "price_levels": {
+    "1.0": 16773,
+    "2.0": 16694,
+    "3.0": 16376,
+    "4.0": 303,
+    "5.0": 188
+  },
+  "top_cities": {
+    "Phu Quoc": 978,
+    "Hanoi": 977,
+    "Tam Dao": 973,
+    "Ho Chi Minh City": 971,
+    "Kien Giang": 969,
+    "Da Nang": 965,
+    "Phan Thiet": 949,
+    "Cat Ba": 947,
+    "Hoi An": 946,
+    "Can Tho": 944
+  },
+  "top_categories": {
+    "cafe": 857,
+    "club": 842,
+    "pub": 834,
+    "bar": 833,
+    "park": 833,
+    "waterfall": 821,
+    "cave": 817,
+    "fire_station": 812,
+    "bay": 809,
+    "mosque": 809
+  }
+}
