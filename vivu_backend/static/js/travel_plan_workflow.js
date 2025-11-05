@@ -1186,4 +1186,5 @@ function getCookie(name) {
 window.goToStep = goToStep;
 window.selectHotel = selectHotel;
 window.createFinalPlan = createFinalPlan;
+window.toggleDay = toggleDay;
 
