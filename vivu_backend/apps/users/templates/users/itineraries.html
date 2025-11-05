@@ -1,0 +1,336 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Lịch trình đã tạo | Vi Vu{% endblock %}
+
+{% block extra_styles %}
+<style>
+    :root {
+        --color-primary: #153D68;
+        --color-primary-light: #1e4d7f;
+        --color-primary-dark: #0d2842;
+        --color-secondary: #00838F;
+        --color-accent: #DAA520;
+        --color-white: #FFFFFF;
+        --color-gray-100: #F3F4F6;
+        --color-gray-600: #4B5563;
+        --color-gray-900: #111827;
+    }
+    
+    .main-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 3rem 2rem;
+    }
+    
+    .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    
+    .page-header h1 {
+        font-family: 'Poppins', sans-serif;
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+    }
+    
+    .page-header p {
+        font-size: 1.1rem;
+        opacity: 0.8;
+    }
+    
+    .itineraries-section {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        padding: 3rem;
+        border-radius: 20px;
+        border: 2px solid rgba(0, 131, 143, 0.2);
+    }
+    
+    .section-title {
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 2rem;
+        color: var(--color-accent);
+    }
+    
+    .itineraries-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 2rem;
+    }
+    
+    .itinerary-card {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 2rem;
+        border-radius: 15px;
+        border: 2px solid rgba(0, 131, 143, 0.2);
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+    
+    .itinerary-card:hover {
+        border-color: var(--color-accent);
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(218, 165, 32, 0.2);
+    }
+    
+    .itinerary-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+        color: var(--color-accent);
+    }
+    
+    .itinerary-meta {
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 0.5rem;
+    }
+    
+    .itinerary-status {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-top: 0.5rem;
+    }
+    
+    .status-draft {
+        background: rgba(107, 114, 128, 0.3);
+        color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .status-published {
+        background: rgba(0, 131, 143, 0.3);
+        color: var(--color-secondary);
+    }
+    
+    .status-archived {
+        background: rgba(218, 165, 32, 0.3);
+        color: var(--color-accent);
+    }
+    
+    .no-data {
+        text-align: center;
+        padding: 3rem;
+        color: rgba(255, 255, 255, 0.5);
+        font-style: italic;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 2rem;
+    }
+    
+    .pagination a, .pagination span {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--color-white);
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    
+    .pagination a:hover {
+        background: var(--color-secondary);
+    }
+    
+    .pagination .current {
+        background: var(--color-accent);
+    }
+    
+    .btn {
+        padding: 0.75rem 2rem;
+        border: none;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-primary {
+        background: var(--color-secondary);
+        color: var(--color-white);
+    }
+    
+    .btn-primary:hover {
+        background: #00a5b5;
+        box-shadow: 0 10px 20px rgba(0, 131, 143, 0.35);
+        transform: translateY(-2px);
+    }
+    
+    .create-btn {
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    
+    .footer {
+        background: var(--color-primary-dark);
+        color: #fff;
+        padding: 3rem 2rem 1.5rem;
+        margin-top: 4rem;
+        border-top: 2px solid rgba(0, 131, 143, 0.2);
+    }
+    
+    .footer-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .footer-section h4 {
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+        color: var(--color-accent);
+    }
+    
+    .footer-section ul {
+        list-style: none;
+    }
+    
+    .footer-section ul li {
+        margin-bottom: 0.5rem;
+    }
+    
+    .footer-section a {
+        color: #fff;
+        text-decoration: none;
+        opacity: 0.9;
+        transition: all 0.3s;
+    }
+    
+    .footer-section a:hover {
+        color: var(--color-accent);
+        opacity: 1;
+    }
+    
+    .footer-bottom {
+        text-align: center;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        opacity: 0.8;
+    }
+    
+    @media (max-width: 968px) {
+        .main-content {
+            padding: 2rem 1rem;
+        }
+        .itineraries-grid {
+            grid-template-columns: 1fr;
+        }
+        .itineraries-section {
+            padding: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block nav_items %}
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-header">
+        <h1>📅 Lịch trình đã tạo</h1>
+        <p>Quản lý các lịch trình du lịch của bạn</p>
+    </div>
+
+    <div class="create-btn">
+        <a href="/#home" class="btn btn-primary">➕ Tạo lịch trình mới</a>
+    </div>
+
+    <div class="itineraries-section">
+        <h2 class="section-title">Danh sách lịch trình</h2>
+        {% if itineraries %}
+            <div class="itineraries-grid">
+                {% for itinerary in itineraries %}
+                <div class="itinerary-card">
+                    <div class="itinerary-title">{{ itinerary.tieuDe }}</div>
+                    <div class="itinerary-meta">
+                        <strong>Ngày đi:</strong> {{ itinerary.ngayBatDau|date:"d/m/Y" }}
+                    </div>
+                    <div class="itinerary-meta">
+                        <strong>Ngày về:</strong> {{ itinerary.ngayKetThuc|date:"d/m/Y" }}
+                    </div>
+                    <div class="itinerary-meta">
+                        <strong>Thời gian:</strong> {{ itinerary.soNgay }} ngày • {{ itinerary.soNguoi }} người
+                    </div>
+                    {% if itinerary.nganSach %}
+                    <div class="itinerary-meta">
+                        <strong>Ngân sách:</strong> {{ itinerary.nganSach|floatformat:0 }} VNĐ
+                    </div>
+                    {% endif %}
+                    <div>
+                        <span class="itinerary-status status-{{ itinerary.trangThai }}">
+                            {% if itinerary.trangThai == 'draft' %}Bản nháp
+                            {% elif itinerary.trangThai == 'published' %}Đã xuất bản
+                            {% else %}Đã lưu trữ
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% if is_paginated %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}">‹ Trước</a>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <span class="current">{{ num }}</span>
+                {% else %}
+                <a href="?page={{ num }}">{{ num }}</a>
+                {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">Sau ›</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="no-data">Bạn chưa tạo lịch trình nào. Hãy bắt đầu lập kế hoạch chuyến đi đầu tiên!</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+<footer class="footer">
+    <div class="footer-container">
+        <div class="footer-section">
+            <h4>Vi Vu</h4>
+            <p>AI-Powered Travel Planner cho Việt Nam</p>
+        </div>
+        <div class="footer-section">
+            <h4>Liên kết</h4>
+            <ul>
+                <li><a href="/">Trang chủ</a></li>
+                <li><a href="/accounts/profile/">Thông tin cá nhân</a></li>
+                <li><a href="/accounts/search-history/">Lịch sử tìm kiếm</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p>&copy; 2025 Vi Vu - AI Travel Planner. All rights reserved.</p>
+    </div>
+</footer>
+{% endblock %}
+
+{% block extra_scripts %}
+{% endblock %}

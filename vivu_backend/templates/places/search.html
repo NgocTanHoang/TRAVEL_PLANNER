@@ -1,0 +1,830 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Tìm kiếm địa điểm - Vi Vu{% endblock %}
+
+{% block extra_styles %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""/>
+
+<style>
+    .search-page {
+        min-height: calc(100vh - 80px);
+        padding: 2rem 0;
+        background: var(--color-primary);
+    }
+
+    .search-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 2rem;
+    }
+
+    .search-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-top: 2rem;
+    }
+
+    .search-box {
+        max-width: 600px;
+        margin: 0 auto 2rem;
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 1rem 4rem 1rem 1.5rem;
+        font-size: 1.1rem;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: var(--radius-lg);
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--color-text-light);
+        backdrop-filter: blur(10px);
+        transition: var(--transition-base);
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: var(--color-accent);
+        background: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 0 0 4px rgba(var(--color-accent-rgb), 0.1);
+    }
+
+    .search-input::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .search-icon-btn {
+        position: absolute;
+        right: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: transparent;
+        border: none;
+        color: var(--color-text-light);
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition-base);
+        border-radius: var(--radius-md);
+        opacity: 0.8;
+    }
+
+    .search-icon-btn:hover {
+        opacity: 1;
+        color: var(--color-accent);
+        background: rgba(var(--color-accent-rgb), 0.2);
+        transform: translateY(-50%) scale(1.1);
+    }
+
+    .search-icon-btn:active {
+        transform: translateY(-50%) scale(0.95);
+    }
+
+    .search-icon-btn:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+
+    .search-icon-btn:disabled:hover {
+        opacity: 0.5;
+        color: var(--color-text-light);
+        background: transparent;
+        transform: translateY(-50%) scale(1);
+    }
+
+    .search-content {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .results-panel {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .map-panel {
+        order: 2;
+    }
+
+    .results-panel h2 {
+        font-family: var(--font-family-heading);
+        font-size: 1.5rem;
+        color: var(--color-text-light);
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid rgba(var(--color-accent-rgb), 0.3);
+    }
+
+    #results-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .result-item {
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        cursor: pointer;
+        transition: var(--transition-base);
+        border: 2px solid transparent;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .result-item:hover {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: var(--color-accent);
+        transform: translateX(5px);
+        box-shadow: 0 5px 15px rgba(var(--color-accent-rgb), 0.2);
+    }
+
+    .result-item.active {
+        background: rgba(var(--color-accent-rgb), 0.2);
+        border-color: var(--color-accent);
+    }
+
+    .result-item h3 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--color-accent);
+        line-height: 1.4;
+    }
+
+    .result-item .location {
+        color: var(--color-text-light);
+        opacity: 0.9;
+        font-size: 1rem;
+    }
+
+    .result-item .rating {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--color-accent);
+        font-weight: 600;
+    }
+
+    .result-item-meta {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .result-item .distance {
+        display: inline-block;
+        background: rgba(var(--color-accent-rgb), 0.2);
+        color: var(--color-accent);
+        padding: 0.25rem 0.75rem;
+        border-radius: var(--radius-full);
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .result-item .actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .result-item .description {
+        color: rgba(255,255,255,0.7);
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+
+    .btn-action {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        border: none;
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition-base);
+        font-size: 0.9rem;
+    }
+
+    .btn-view {
+        background: var(--color-secondary);
+        color: var(--color-text-light);
+    }
+
+    .btn-view:hover {
+        background: var(--color-secondary-light);
+        transform: translateY(-2px);
+    }
+
+    .btn-info {
+        background: var(--color-accent);
+        color: var(--color-text-dark);
+    }
+
+    .btn-info:hover {
+        background: var(--color-accent-light);
+        transform: translateY(-2px);
+    }
+
+    .map-panel {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        padding-right: 2rem;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        height: calc(100vh - 300px);
+        min-height: 600px;
+        position: relative;
+    }
+
+    #search-map {
+        width: 100%;
+        height: 100%;
+        border-radius: var(--radius-md);
+        z-index: 1;
+    }
+
+    .no-results {
+        text-align: center;
+        padding: 3rem;
+        color: var(--color-text-light);
+        opacity: 0.7;
+    }
+
+    .no-results-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+
+    /* Place Detail Section */
+    .place-detail-section {
+        margin-top: 2rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: var(--radius-lg);
+        padding: 2rem;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: none;
+    }
+
+    .place-detail-section.active {
+        display: block;
+    }
+
+    .place-detail-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 2px solid rgba(var(--color-accent-rgb), 0.3);
+    }
+
+    .place-detail-header h2 {
+        font-family: var(--font-family-heading);
+        font-size: 2rem;
+        color: var(--color-accent);
+        margin-bottom: 0.5rem;
+    }
+
+    .place-detail-header .close-btn {
+        background: transparent;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        color: var(--color-text-light);
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition-base);
+    }
+
+    .place-detail-header .close-btn:hover {
+        border-color: var(--color-accent);
+        color: var(--color-accent);
+    }
+
+    .place-detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+
+    .detail-item {
+        margin-bottom: 1.5rem;
+    }
+
+    .detail-item label {
+        display: block;
+        color: var(--color-accent);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .detail-item .value {
+        color: var(--color-text-light);
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+
+    .detail-item.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .place-images {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .place-image {
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        aspect-ratio: 16/9;
+        object-fit: cover;
+    }
+
+    .place-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    @media (max-width: 1024px) {
+        .map-panel {
+            height: 500px;
+            min-height: 500px;
+        }
+        
+        .result-item-meta {
+            gap: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="search-page">
+    <div class="search-container">
+        <!-- Search Header -->
+        <div class="search-header">
+            <div class="search-box">
+                <input type="text" 
+                       id="search-input" 
+                       class="search-input" 
+                       placeholder="Nhập tên địa điểm, địa chỉ, hoặc thành phố..."
+                       value="{{ initial_query|default:'' }}"
+                       autocomplete="off">
+                <button class="search-icon-btn" id="search-btn" type="button" aria-label="Tìm kiếm">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content: 2 Columns -->
+        <div class="search-content">
+            <!-- Left Column: Results -->
+            <div class="results-panel">
+                <h2>Kết quả tìm kiếm</h2>
+                <div id="results-list">
+                    <div class="no-results">
+                        <div class="no-results-icon">📍</div>
+                        <p>Nhập từ khóa để bắt đầu tìm kiếm</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Map -->
+            <div class="map-panel">
+                <div id="search-map"></div>
+            </div>
+        </div>
+
+        <!-- Place Detail Section (below results and map) -->
+        <div class="place-detail-section" id="place-detail">
+            <div class="place-detail-header">
+                <div>
+                    <h2 id="detail-name"></h2>
+                    <p class="location" id="detail-location"></p>
+                </div>
+                <button class="close-btn" id="close-detail">×</button>
+            </div>
+            <div class="place-detail-grid" id="detail-content">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- Leaflet JavaScript -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+
+<script>
+    // Initialize map
+    let searchMap = null;
+    let markers = [];
+    let selectedPlace = null;
+    let userLocation = null;
+
+    function initSearchMap() {
+        // Default center: Ho Chi Minh City
+        searchMap = L.map('search-map').setView([10.762622, 106.660172], 13);
+        
+        // Add OpenStreetMap tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
+        }).addTo(searchMap);
+        
+        // Add scale control
+        L.control.scale({
+            metric: true,
+            imperial: false
+        }).addTo(searchMap);
+        
+        console.log('🗺️ Search map initialized');
+    }
+
+    // Search function
+    async function performSearch(query) {
+        const searchInput = document.getElementById('search-input');
+        const searchBtn = document.getElementById('search-btn');
+        const resultsList = document.getElementById('results-list');
+
+        // Validate keyword
+        if (!query || query.trim() === '') {
+            resultsList.innerHTML = `
+                <div class="no-results">
+                    <div class="no-results-icon">⚠️</div>
+                    <p style="color: var(--color-accent);">Vui lòng nhập từ khóa tìm kiếm</p>
+                </div>
+            `;
+            searchInput.focus();
+            return;
+        }
+
+        // Disable search button and show loading state
+        searchBtn.disabled = true;
+        searchBtn.style.opacity = '0.5';
+        searchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+        try {
+            // Gửi yêu cầu tìm kiếm đến hệ thống
+            const response = await fetch(`/api/v1/places/search/?q=${encodeURIComponent(query)}`);
+            const data = await response.json();
+            
+            console.log('🔍 Search request sent for:', query);
+
+            // Clear previous results
+            clearResults();
+            clearMarkers();
+
+            if (data.results && data.results.length > 0) {
+                window.currentSearchResults = data.results;
+                
+                // Get user location for sorting
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            userLocation = {
+                                lat: position.coords.latitude,
+                                lon: position.coords.longitude
+                            };
+                            displayResults(data.results, userLocation.lat, userLocation.lon);
+                        },
+                        () => {
+                            // If location access denied or failed, display without sorting
+                            displayResults(data.results);
+                        },
+                        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                    );
+                } else {
+                    displayResults(data.results);
+                }
+                
+                displayMarkers(data.results);
+            } else {
+                resultsList.innerHTML = `
+                    <div class="no-results">
+                        <div class="no-results-icon">🔍</div>
+                        <p>Không tìm thấy kết quả cho "${query}"</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Search error:', error);
+            resultsList.innerHTML = `
+                <div class="no-results">
+                    <div class="no-results-icon">⚠️</div>
+                    <p>Đã xảy ra lỗi khi tìm kiếm</p>
+                </div>
+            `;
+        } finally {
+            searchBtn.disabled = false;
+            searchBtn.style.opacity = '0.8';
+            searchBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i>';
+        }
+    }
+
+    // Calculate distance between two coordinates (Haversine formula)
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371; // Earth's radius in kilometers
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+
+    // Sort results by distance (from user location), then by rating
+    function sortResultsByDistance(results, userLat, userLon) {
+        return results.map(place => {
+            let distance = Infinity;
+            
+            if (place.viDo && place.kinhDo && userLat && userLon) {
+                distance = calculateDistance(
+                    userLat, userLon,
+                    parseFloat(place.viDo),
+                    parseFloat(place.kinhDo)
+                );
+            }
+            
+            return { place, distance };
+        }).sort((a, b) => {
+            // Sort by distance first
+            if (a.distance !== b.distance) {
+                return a.distance - b.distance;
+            }
+            // If same distance, sort by rating
+            return (b.place.danhGiaTrungBinh || 0) - (a.place.danhGiaTrungBinh || 0);
+        }).map(item => item.place);
+    }
+
+    // Display search results
+    function displayResults(results, userLat = null, userLon = null) {
+        const resultsList = document.getElementById('results-list');
+        resultsList.innerHTML = '';
+
+        // Sort results by distance and rating
+        const sortedResults = sortResultsByDistance(results, userLat, userLon);
+
+        sortedResults.forEach((place, index) => {
+            const item = document.createElement('div');
+            item.className = 'result-item';
+            item.dataset.index = index;
+            
+            const rating = place.danhGiaTrungBinh || 0;
+            const ratingStars = '⭐'.repeat(Math.floor(rating));
+
+            // Calculate and display distance
+            let distanceHtml = '';
+            if (userLat && userLon && place.viDo && place.kinhDo) {
+                const distance = calculateDistance(
+                    userLat, userLon,
+                    parseFloat(place.viDo),
+                    parseFloat(place.kinhDo)
+                );
+                distanceHtml = `<div class="distance">📍 ${distance.toFixed(1)} km</div>`;
+            }
+
+            item.innerHTML = `
+                <h3>${place.tenDiaDiem}</h3>
+                <div class="result-item-meta">
+                    <div class="location">📍 ${place.tenTinhThanh || 'N/A'}</div>
+                    <div class="rating">${ratingStars} ${rating.toFixed(1)}</div>
+                    ${distanceHtml}
+                </div>
+                ${place.moTa ? `<p class="description">${place.moTa}</p>` : ''}
+                <div class="actions">
+                    <button class="btn-action btn-view" onclick="viewOnMap(${index})">
+                        🗺️ Xem vị trí
+                    </button>
+                    <button class="btn-action btn-info" onclick="showPlaceDetail(${index})">
+                        ℹ️ Tìm hiểu thêm
+                    </button>
+                </div>
+            `;
+
+            item.addEventListener('click', (e) => {
+                if (!e.target.closest('button')) {
+                    viewOnMap(index);
+                }
+            });
+
+            resultsList.appendChild(item);
+        });
+    }
+
+    // Display markers on map
+    function displayMarkers(results) {
+        if (!searchMap) return;
+
+        results.forEach((place, index) => {
+            if (place.viDo && place.kinhDo) {
+                const lat = parseFloat(place.viDo);
+                const lon = parseFloat(place.kinhDo);
+
+                const marker = L.marker([lat, lon], {
+                    icon: L.divIcon({
+                        className: 'custom-marker',
+                        html: `<div style="background: var(--color-accent); width: 40px; height: 40px; border-radius: 50%; border: 4px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px;">📍</div>`,
+                        iconSize: [40, 40],
+                        iconAnchor: [20, 40]
+                    })
+                }).addTo(searchMap);
+
+                marker.bindPopup(`
+                    <strong>${place.tenDiaDiem}</strong><br>
+                    ${place.tenTinhThanh || 'N/A'}<br>
+                    <button onclick="viewOnMap(${index})" style="margin-top: 0.5rem; padding: 0.5rem; background: var(--color-accent); border: none; border-radius: 4px; cursor: pointer;">
+                        Xem chi tiết
+                    </button>
+                `);
+
+                marker.placeIndex = index;
+                markers.push({ marker, place });
+
+                marker.on('click', () => {
+                    highlightResult(index);
+                    viewOnMap(index);
+                });
+            }
+        });
+
+        // Fit map to show all markers
+        if (markers.length > 0) {
+            const bounds = markers.map(m => [m.place.viDo, m.place.kinhDo]).filter(c => c[0] && c[1]);
+            if (bounds.length > 0) {
+                searchMap.fitBounds(bounds, { padding: [50, 50] });
+            }
+        }
+    }
+
+    // View place on map
+    function viewOnMap(index) {
+        const results = window.currentSearchResults || [];
+        if (!results[index]) return;
+
+        const place = results[index];
+        if (place.viDo && place.kinhDo) {
+            const lat = parseFloat(place.viDo);
+            const lon = parseFloat(place.kinhDo);
+
+            searchMap.setView([lat, lon], 16);
+
+            // Highlight result item
+            highlightResult(index);
+
+            // Open marker popup
+            const markerObj = markers.find(m => m.placeIndex === index);
+            if (markerObj) {
+                markerObj.marker.openPopup();
+            }
+        }
+    }
+
+    // Highlight result item
+    function highlightResult(index) {
+        document.querySelectorAll('.result-item').forEach((item, i) => {
+            if (i === index) {
+                item.classList.add('active');
+                item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                item.classList.remove('active');
+            }
+        });
+    }
+
+    // Show place detail
+    function showPlaceDetail(index) {
+        const results = window.currentSearchResults || [];
+        if (!results[index]) return;
+
+        const place = results[index];
+        selectedPlace = place;
+
+        // Populate detail section
+        document.getElementById('detail-name').textContent = place.tenDiaDiem;
+        document.getElementById('detail-location').textContent = `${place.tenTinhThanh || 'N/A'} ${place.diaChi || ''}`;
+
+        const detailContent = document.getElementById('detail-content');
+        detailContent.innerHTML = '';
+
+        const fields = [
+            { label: 'Loại địa điểm', value: getPlaceTypeLabel(place.loaiDiaDiem) },
+            { label: 'Địa chỉ', value: place.diaChi || 'N/A', fullWidth: true },
+            { label: 'Đánh giá', value: `${place.danhGiaTrungBinh || 0}/5.0 (${place.soLuotDanhGia || 0} đánh giá)` },
+            { label: 'Giá vé', value: place.giaVe ? `${place.giaVe.toLocaleString('vi-VN')} VNĐ` : 'Miễn phí' },
+            { label: 'Giờ mở cửa', value: place.gioMoCua || 'N/A' },
+            { label: 'Giờ đóng cửa', value: place.gioDongCua || 'N/A' },
+            { label: 'Điện thoại', value: place.dienThoai || 'N/A' },
+            { label: 'Website', value: place.website ? `<a href="${place.website}" target="_blank" style="color: var(--color-accent);">${place.website}</a>` : 'N/A' },
+            { label: 'Mô tả', value: place.moTa || 'Chưa có mô tả', fullWidth: true },
+        ];
+
+        fields.forEach(field => {
+            const item = document.createElement('div');
+            item.className = `detail-item ${field.fullWidth ? 'full-width' : ''}`;
+            item.innerHTML = `
+                <label>${field.label}</label>
+                <div class="value">${field.value}</div>
+            `;
+            detailContent.appendChild(item);
+        });
+
+        // Show detail section
+        document.getElementById('place-detail').classList.add('active');
+        document.getElementById('place-detail').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function getPlaceTypeLabel(type) {
+        const types = {
+            'dia_danh': 'Địa danh',
+            'nha_hang': 'Nhà hàng',
+            'khach_san': 'Khách sạn',
+            'giai_tri': 'Giải trí',
+            'mua_sam': 'Mua sắm',
+            'khac': 'Khác'
+        };
+        return types[type] || type;
+    }
+
+    // Clear results
+    function clearResults() {
+        const resultsList = document.getElementById('results-list');
+        resultsList.innerHTML = '';
+        window.currentSearchResults = [];
+    }
+
+    // Clear markers
+    function clearMarkers() {
+        markers.forEach(({ marker }) => {
+            searchMap.removeLayer(marker);
+        });
+        markers = [];
+    }
+
+    // Close detail section
+    document.getElementById('close-detail').addEventListener('click', () => {
+        document.getElementById('place-detail').classList.remove('active');
+    });
+
+    // Search button event
+    document.getElementById('search-btn').addEventListener('click', () => {
+        const query = document.getElementById('search-input').value.trim();
+        if (query) {
+            performSearch(query);
+        }
+    });
+
+    // Enter key in search input
+    document.getElementById('search-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            const query = e.target.value.trim();
+            if (query) {
+                performSearch(query);
+            }
+        }
+    });
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        initSearchMap();
+        
+        // Auto-search if query parameter exists
+        const urlParams = new URLSearchParams(window.location.search);
+        const query = urlParams.get('q');
+        if (query) {
+            document.getElementById('search-input').value = query;
+            performSearch(query);
+        }
+    });
+</script>
+{% endblock %}
+

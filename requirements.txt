@@ -1,0 +1,98 @@
+aiohttp==3.13.2
+whitenoise==6.11.0
+# Vi Vu Travel Planner - Complete Requirements
+# Install: pip install -r requirements.txt
+
+# ============================================================================
+# DJANGO BACKEND REQUIREMENTS
+# ============================================================================
+
+# Django Core
+Django==5.0.1
+djangorestframework==3.14.0
+djangorestframework-simplejwt==5.3.1
+django-cors-headers==4.3.1
+drf-spectacular==0.27.0
+
+# Database
+# SQLite (default, no extra packages needed)
+# For PostgreSQL in production: psycopg2-binary==2.9.9
+
+# Password hashing
+argon2-cffi==23.1.0
+
+# Utilities
+python-dotenv==1.0.1
+Pillow==10.2.0
+
+# Cache (Redis)
+redis>=5.0.0,<6.0.0
+
+# ============================================================================
+# AI & LLM (for Multi-Agent System)
+# ============================================================================
+
+# LangChain & LangGraph
+langchain>=1.0.0,<2.0.0
+langchain-core>=1.0.0,<2.0.0
+langchain-openai>=1.0.0,<2.0.0
+langgraph>=1.0.0,<2.0.0
+langchain-tavily>=0.1.0,<1.0.0
+
+# OpenAI
+openai>=1.0.0,<3.0.0
+
+# Google Gemini
+google-generativeai>=0.3.0
+
+# Monitoring & Tracing
+langsmith>=0.3.0,<1.0.0
+
+# ============================================================================
+# VECTOR DATABASE & RAG
+# ============================================================================
+
+# ChromaDB for vector storage
+chromadb>=0.4.0,<2.0.0
+
+# ============================================================================
+# DATA PROCESSING & ANALYSIS
+# ============================================================================
+
+# Machine Learning
+scikit-learn>=1.3.0,<2.0.0
+scipy>=1.11.0,<2.0.0
+joblib>=1.3.0,<2.0.0
+
+# Collaborative Filtering
+surprise>=0.1,<1.0  # For SVD-based collaborative filtering
+
+# Deep Learning (optional - install separately)
+# PyTorch: pip install torch
+# TensorFlow: pip install tensorflow
+# XGBoost: pip install xgboost
+
+# Google Gemini LangChain integration
+langchain-google-genai>=1.0.0,<2.0.0
+
+# Web scraping (for data collection agents)
+beautifulsoup4>=4.12.0,<5.0.0
+requests>=2.31.0,<3.0.0
+googlesearch-python>=1.2.3,<2.0.0
+
+# SerpAPI - Google Search Results
+google-search-results>=2.4.2,<3.0.0
+
+# ============================================================================
+# TESTING & CODE QUALITY
+# ============================================================================
+
+# Testing
+pytest==8.0.0
+pytest-django==4.7.0
+factory-boy==3.3.0
+
+# Code quality
+black==24.1.1
+flake8==7.0.0
+isort==5.13.2

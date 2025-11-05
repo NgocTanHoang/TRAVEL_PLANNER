@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Django REST Framework - API Backend mạnh mẽ cho Vi Vu Travel Planner">
+    <title>Django REST Framework - Vi Vu Technology Stack</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/img/logo_crop-Photoroom.png">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --color-primary: #153D68;
+            --color-primary-light: #1e4d7f;
+            --color-primary-dark: #0d2842;
+            --color-primary-rgb: 21, 61, 104;
+            --color-secondary: #00838F;
+            --color-secondary-light: #00a5b5;
+            --color-secondary-dark: #00616b;
+            --color-secondary-rgb: 0, 131, 143;
+            --color-accent: #DAA520;
+            --color-accent-light: #f0c040;
+            --color-accent-dark: #b8860b;
+            --color-text-light: #FFFFFF;
+            --color-text-dark: #1A1A1A;
+            --font-family-base: 'Inter', sans-serif;
+            --font-family-heading: 'Poppins', sans-serif;
+            --font-family-code: 'Fira Code', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family-base);
+            line-height: 1.6;
+            color: var(--color-text-light);
+            background: linear-gradient(180deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
+            padding: 0.5rem 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 2px solid rgba(var(--color-secondary-rgb), 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .navbar.scrolled {
+            background: rgba(var(--color-primary-rgb), 0.7);
+            backdrop-filter: blur(20px);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+
+        .logo-image {
+            height: 70px;
+            width: 70px;
+            object-fit: contain;
+            border-radius: 50%;
+            background: white;
+            padding: 4px;
+            border: 2px solid transparent;
+            transition: var(--transition-base);
+        }
+        
+        .logo:hover .logo-image {
+            border-color: var(--color-accent);
+            box-shadow: 0 6px 20px rgba(var(--color-accent-rgb), 0.4);
+        }
+
+        .logo-brand {
+            font-family: var(--font-family-heading);
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--color-text-light);
+        }
+
+        .back-link {
+            color: var(--color-accent);
+            text-decoration: none;
+            font-weight: 600;
+            padding: 0.5rem 1.5rem;
+            border: 2px solid var(--color-accent);
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            background: var(--color-accent);
+            color: var(--color-primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .hero-section {
+            padding: 4rem 2rem;
+            text-align: center;
+            background: linear-gradient(135deg, rgba(var(--color-secondary-rgb), 0.2) 0%, rgba(var(--color-primary-rgb), 0.3) 100%);
+        }
+
+        .tech-icon {
+            font-size: 6rem;
+            margin-bottom: 1.5rem;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+        }
+
+        .hero-section h1 {
+            font-family: var(--font-family-heading);
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            color: var(--color-text-light);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            line-height: 1.25;
+            max-width: 1100px;
+            margin-left: auto;
+            margin-right: auto;
+            text-wrap: balance;
+            word-break: normal;
+            hyphens: auto;
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            color: var(--color-accent);
+            margin-bottom: 2rem;
+            font-weight: 600;
+        }
+
+        .version-badge {
+            display: inline-block;
+            background: var(--color-secondary);
+            color: var(--color-text-light);
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .content-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .section-title {
+            font-family: var(--font-family-heading);
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            color: var(--color-text-light);
+            text-align: center;
+            line-height: 1.3;
+            text-wrap: balance;
+            max-width: 1000px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .feature-card {
+            background: rgba(var(--color-primary-rgb), 0.4);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 15px;
+            border: 2px solid var(--color-secondary);
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--color-accent);
+            box-shadow: 0 10px 30px rgba(218, 165, 32, 0.4);
+            background: rgba(var(--color-primary-rgb), 0.6);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-family: var(--font-family-heading);
+            font-size: 1.5rem;
+            color: var(--color-accent);
+            margin-bottom: 1rem;
+        }
+
+        .feature-card p {
+            color: var(--color-text-light);
+            line-height: 1.8;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(var(--color-secondary-rgb), 0.2);
+            border-radius: 12px;
+            border: 2px solid var(--color-accent);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--color-accent);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            color: var(--color-text-light);
+            margin-top: 0.5rem;
+        }
+
+        .code-block {
+            background: #1e1e1e;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--color-accent);
+            margin: 2rem 0;
+            overflow-x: auto;
+        }
+
+        .code-block pre {
+            font-family: var(--font-family-code);
+            font-size: 0.95rem;
+            color: #d4d4d4;
+            margin: 0;
+        }
+
+        .code-block code {
+            color: #569cd6;
+        }
+
+        .highlight-box {
+            background: rgba(var(--color-accent-rgb), 0.1);
+            border-left: 4px solid var(--color-accent);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 2rem 0;
+        }
+
+        .highlight-box h4 {
+            color: var(--color-accent);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .tech-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .tech-list li {
+            padding: 0.8rem 0;
+            border-bottom: 1px solid rgba(var(--color-secondary-rgb), 0.3);
+            color: var(--color-text-light);
+        }
+
+        .tech-list li:before {
+            content: "✓";
+            color: var(--color-accent);
+            font-weight: bold;
+            margin-right: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .cta-section {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: rgba(var(--color-secondary-rgb), 0.1);
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: var(--color-accent);
+            color: var(--color-primary-dark);
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(218, 165, 32, 0.4);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(218, 165, 32, 0.6);
+        }
+
+        @media (max-width: 768px) {
+            .hero-section h1 {
+                font-size: 2.4rem;
+                line-height: 1.3;
+                padding: 0 1rem;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Footer - Giống trang đăng nhập */
+        footer {
+            background: var(--color-primary-dark);
+            color: var(--color-text-light);
+            padding: 3rem 2rem 1.5rem;
+            margin-top: auto;
+        }
+
+        footer .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        footer .footer-section h4 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--color-accent);
+        }
+
+        footer .footer-section p {
+            opacity: 0.9;
+            line-height: 1.6;
+            margin-bottom: 0.5rem;
+        }
+
+        footer .footer-section ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        footer .footer-section ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        footer .footer-section a {
+            color: var(--color-text-light);
+            text-decoration: none;
+            opacity: 0.9;
+            transition: all 0.3s;
+        }
+
+        footer .footer-section a:hover {
+            color: var(--color-accent);
+            opacity: 1;
+        }
+
+        footer .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            opacity: 0.8;
+        }
+
+        footer .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        footer .social-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+            color: var(--color-text-light);
+            text-decoration: none;
+        }
+
+        footer .social-link:hover {
+            background: var(--color-accent);
+            transform: translateY(-3px);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <img src="/static/img/logo_crop-Photoroom.png" alt="Vi Vu Logo" class="logo-image">
+                <h1 class="logo-brand">Vi Vu</h1>
+            </a>
+            <a href="/#tech" class="back-link">← Quay lại</a>
+        </div>
+    </nav>
+
+    <section class="hero-section">
+        <div class="tech-icon">🚀</div>
+        <h1>Django REST Framework</h1>
+        <p class="hero-subtitle">Powerful & Flexible Toolkit for Building Web APIs</p>
+        <span class="version-badge">Version 3.14+ | Python 3.8+</span>
+    </section>
+
+    <section class="content-section">
+        <h2 class="section-title">Tại sao chúng tôi chọn Django REST Framework?</h2>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Hiệu suất cao</h3>
+                <p>Xử lý hàng nghìn request/giây với khả năng tối ưu hóa query và caching mạnh mẽ. DRF giúp Vi Vu phản hồi nhanh chóng cho 50,000+ địa điểm.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>Bảo mật tích hợp</h3>
+                <p>Hỗ trợ JWT Authentication, OAuth2, Token-based Auth. Bảo vệ dữ liệu người dùng với các chuẩn bảo mật quốc tế như OWASP Top 10.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Serialization thông minh</h3>
+                <p>Chuyển đổi dữ liệu phức tạp (Django Models) thành JSON/XML một cách tự động. Hỗ trợ nested serializers và validation mạnh mẽ.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>ViewSets & Routers</h3>
+                <p>Tự động tạo CRUD endpoints với ViewSets. Giảm 60% code lặp lại so với Django views truyền thống.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📚</div>
+                <h3>Browsable API</h3>
+                <p>Giao diện web tương tác để test API ngay trên trình duyệt. Không cần Postman hay cURL - chỉ cần mở trình duyệt!</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🔄</div>
+                <h3>Pagination & Filtering</h3>
+                <p>Tích hợp sẵn pagination (PageNumber, Cursor, LimitOffset) và filtering (django-filter) cho hiệu suất tối ưu với big data.</p>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-box">
+                <span class="stat-number">50K+</span>
+                <span class="stat-label">Stars on GitHub</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number">10M+</span>
+                <span class="stat-label">Downloads/tháng</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number">500K+</span>
+                <span class="stat-label">Projects sử dụng</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number">99.9%</span>
+                <span class="stat-label">Uptime trong Vi Vu</span>
+            </div>
+        </div>
+
+        <div class="highlight-box">
+            <h4>🎯 Ứng dụng trong Vi Vu Travel Planner</h4>
+            <ul class="tech-list">
+                <li><strong>Places API:</strong> Quản lý 50,334 địa điểm du lịch với full CRUD operations</li>
+                <li><strong>Itinerary API:</strong> Tạo và quản lý lịch trình cá nhân hóa với nested serializers</li>
+                <li><strong>Reviews API:</strong> 1,633+ đánh giá với rating aggregation và filtering</li>
+                <li><strong>JWT Authentication:</strong> Bảo mật API với SimpleJWT, access/refresh tokens</li>
+                <li><strong>Pagination:</strong> PageNumberPagination với page_size=20 cho hiệu suất tối ưu</li>
+                <li><strong>API Documentation:</strong> Tự động gen docs với drf-spectacular (OpenAPI 3.0)</li>
+            </ul>
+        </div>
+
+        <h2 class="section-title">Code Example - Vi Vu API Endpoint</h2>
+        
+        <div class="code-block">
+            <pre><code># apps/places/views.py - Places API ViewSet
+from rest_framework import viewsets, filters
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
+from .models import DiaDiem
+from .serializers import DiaDiemSerializer
+
+class PlaceViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint for managing travel places in Vietnam
+    
+    Features:
+    - Full CRUD operations
+    - Search by name, description
+    - Filter by province, category, rating
+    - Pagination (20 items/page)
+    """
+    queryset = DiaDiem.objects.select_related('tinhThanh').all()
+    serializer_class = DiaDiemSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['tinhThanh', 'loaiDiaDiem']
+    search_fields = ['tenDiaDiem', 'moTa']
+    
+    @action(detail=False, methods=['get'])
+    def top_rated(self, request):
+        """Get top 10 highest rated places"""
+        top_places = self.queryset.order_by('-diemTrungBinh')[:10]
+        serializer = self.get_serializer(top_places, many=True)
+        return Response(serializer.data)
+</code></pre>
+        </div>
+
+        <div class="highlight-box">
+            <h4>🔧 Tech Stack Integration</h4>
+            <ul class="tech-list">
+                <li><strong>djangorestframework==3.14.0</strong> - Core framework</li>
+                <li><strong>djangorestframework-simplejwt==5.3.0</strong> - JWT authentication</li>
+                <li><strong>drf-spectacular==0.26.5</strong> - OpenAPI 3.0 documentation</li>
+                <li><strong>django-filter==23.3</strong> - Advanced filtering</li>
+                <li><strong>django-cors-headers==4.3.0</strong> - CORS support for frontend</li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <h2 class="section-title">Khám phá Vi Vu API</h2>
+        <p style="color: var(--color-text-light); font-size: 1.2rem; margin-bottom: 2rem;">
+            Trải nghiệm sức mạnh của Django REST Framework với Vi Vu API
+        </p>
+        <a href="/api/docs/" class="cta-button">📚 Xem API Documentation</a>
+        &nbsp;&nbsp;
+        <a href="/api/v1/places/" class="cta-button" style="background: var(--color-secondary);">🗺️ Test Places API</a>
+    </section>
+    
+    <script>
+        // Navbar scroll effect - transparency on scroll
+        const navbar = document.querySelector('.navbar');
+        if(navbar){
+            window.addEventListener('scroll', () => {
+                const currentScroll = window.pageYOffset;
+                if(currentScroll > 50){
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
+            });
+        }
+    </script>
+    
+    <!-- FOOTER -->
+    {% include 'includes/footer.html' %}
+</body>
+</html>
+

@@ -1,0 +1,2 @@
+"""Itineraries app initialization."""
+

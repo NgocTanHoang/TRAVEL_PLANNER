@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vi Vu - AI Travel Planner | Plan in Minutes, Vibe for Months.</title>
+    <link rel="icon" type="image/png" href="/static/img/logo_crop-Photoroom.png">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/index.css' %}">
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar" id="navbar" role="navigation" aria-label="Main navigation">
+        <div class="nav-container">
+            <a href="/" class="logo" aria-label="Vi Vu Home">
+                <div class="logo-badge">
+                    <img src="/static/img/logo_crop-Photoroom.png" alt="Vi Vu Logo">
+                </div>
+                <div class="logo-content">
+                    <h1 class="logo-brand">Vi Vu</h1>
+                    <p class="logo-tagline">Plan in Minutes, Vibe for Months.</p>
+                </div>
+            </a>
+            
+            <ul class="nav-menu" role="menubar">
+                <li role="none">
+                    <a href="#home" class="nav-link active" role="menuitem">Trang chủ</a>
+                </li>
+                <li role="none" class="search-dropdown">
+                    <a href="#nearby-section" class="nav-link" role="menuitem">🔍 Tìm kiếm</a>
+                    <div class="search-dropdown-menu" role="menu">
+                        <div class="search-dropdown-header">Tìm kiếm du lịch</div>
+                        
+                        <div class="search-dropdown-category">
+                            <div class="search-dropdown-category-title">📍 Địa điểm & Tham quan</div>
+                            <div class="search-dropdown-items">
+                                <a href="/places/search/" class="search-dropdown-item" role="menuitem">
+                                    <span class="search-dropdown-item-icon">🗺️</span>
+                                    <span>Tìm kiếm địa điểm</span>
+                                </a>
+                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                    <span class="search-dropdown-item-icon">🏛️</span>
+                                    <span>Di tích lịch sử</span>
+                                </a>
+                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                    <span class="search-dropdown-item-icon">🏞️</span>
+                                    <span>Thắng cảnh</span>
+                                </a>
+                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                    <span class="search-dropdown-item-icon">🎢</span>
+                                    <span>Khu vui chơi</span>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="search-dropdown-category">
+                            <div class="search-dropdown-category-title">🏨 Lưu trú</div>
+                            <div class="search-dropdown-items">
+                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                    <span class="search-dropdown-item-icon">🏨</span>
+                                    <span>Tìm khách sạn</span>
+                                </a>
+                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                    <span class="search-dropdown-item-icon">🏡</span>
+                                    <span>Homestay</span>
+                                </a>
+                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                    <span class="search-dropdown-item-icon">🏖️</span>
+                                    <span>Resort</span>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="search-dropdown-category">
+                            <div class="search-dropdown-category-title">🍽️ Ăn uống</div>
+                            <div class="search-dropdown-items">
+                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                    <span class="search-dropdown-item-icon">🍜</span>
+                                    <span>Nhà hàng</span>
+                                </a>
+                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                    <span class="search-dropdown-item-icon">☕</span>
+                                    <span>Quán cafe</span>
+                                </a>
+                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                    <span class="search-dropdown-item-icon">🍻</span>
+                                    <span>Bar & Pub</span>
+                                </a>
+                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                    <span class="search-dropdown-item-icon">🥘</span>
+                                    <span>Đặc sản địa phương</span>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="search-dropdown-category">
+                            <div class="search-dropdown-category-title">🛍️ Mua sắm</div>
+                            <div class="search-dropdown-items">
+                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                    <span class="search-dropdown-item-icon">🏬</span>
+                                    <span>Trung tâm thương mại</span>
+                                </a>
+                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                    <span class="search-dropdown-item-icon">🛒</span>
+                                    <span>Chợ địa phương</span>
+                                </a>
+                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                    <span class="search-dropdown-item-icon">🎁</span>
+                                    <span>Quà lưu niệm</span>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="search-dropdown-category">
+                            <div class="search-dropdown-category-title">✈️ Vận chuyển</div>
+                            <div class="search-dropdown-items">
+                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                    <span class="search-dropdown-item-icon">✈️</span>
+                                    <span>Tìm chuyến bay</span>
+                                </a>
+                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                    <span class="search-dropdown-item-icon">🚂</span>
+                                    <span>Vé tàu hỏa</span>
+                                </a>
+                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                    <span class="search-dropdown-item-icon">🚌</span>
+                                    <span>Vé xe khách</span>
+                                </a>
+                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                    <span class="search-dropdown-item-icon">🚗</span>
+                                    <span>Thuê xe</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                   <li role="none">
+                       <a href="/travel-plan/" class="nav-link nav-link-signup" role="menuitem">✈️ Tạo lịch trình</a>
+                   </li>
+                <li role="none">
+                    <a href="#how-it-works" class="nav-link" role="menuitem">Cách hoạt động</a>
+                </li>
+                
+                {% if user.is_authenticated %}
+                <!-- User Menu - Chỉ hiển thị avatar -->
+                <li role="none" class="user-dropdown">
+                    <button class="user-avatar-btn" id="user-avatar-btn" aria-label="User menu" aria-expanded="false">
+                        <span class="user-avatar">
+                            {% if user.anhDaiDien %}
+                            <img src="{{ user.anhDaiDien }}" alt="{{ user.hoTen|default:user.username }}">
+                            {% else %}
+                            <span class="avatar-initials">{{ user.username|first|upper }}</span>
+                            {% endif %}
+                        </span>
+                    </button>
+                    <ul class="user-dropdown-menu" id="user-dropdown-menu" role="menu">
+                        <li role="none">
+                            <a href="/accounts/profile/" class="dropdown-item" role="menuitem">
+                                <i class="fas fa-user"></i> Thông tin cá nhân
+                            </a>
+                        </li>
+                        <li role="none">
+                            <a href="/accounts/itineraries/" class="dropdown-item" role="menuitem">
+                                <i class="fas fa-map"></i> Lịch trình đã tạo
+                            </a>
+                        </li>
+                        <li role="none">
+                            <a href="/accounts/search-history/" class="dropdown-item" role="menuitem">
+                                <i class="fas fa-history"></i> Lịch sử tìm kiếm
+                            </a>
+                        </li>
+                        <li role="separator" class="dropdown-divider"></li>
+                        <li role="none">
+                            <a href="#" onclick="event.preventDefault(); showLogoutModal();" class="dropdown-item dropdown-item-danger" role="menuitem">
+                                <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                {% else %}
+                <!-- Login/Signup Links -->
+                <li role="none">
+                    <a href="/accounts/login/" class="nav-link" role="menuitem">Đăng nhập</a>
+                </li>
+                <li role="none">
+                    <a href="/accounts/signup/" class="nav-link nav-link-signup" role="menuitem">Đăng ký</a>
+                </li>
+                {% endif %}
+            </ul>
+            
+            <button class="mobile-menu-toggle" aria-label="Toggle navigation menu">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+        </div>
+    </nav>
+
+    <!-- HERO BANNER -->
+    <section class="hero-banner" id="home">
+        {% load static %}
+        <img src="/media/banner_01.jpeg" alt="Vi Vu Banner" class="hero-banner-image">
+    </section>
+
+    <!-- POPULAR PLACES -->
+    <section class="popular-places" id="popular-section">
+        <div class="section-container">
+            <h2 class="popular-section-title">Phổ biến</h2>
+            <div class="places-scroll-container" id="popular-scroll">
+                <div class="places-horizontal" id="popular-places-horizontal">
+                    <div class="loading-placeholder">Đang tải địa điểm phổ biến...</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- NEARBY PLACES SECTION - Địa điểm gần đây -->
+    <section class="nearby-places" id="nearby-section">
+        <div class="section-container">
+            <h2 class="popular-section-title">Địa điểm gần đây</h2>
+            <div class="nearby-places-content">
+                <div id="nearby-places-list">
+                    <div class="loading-placeholder">Đang tải địa điểm gần đây...</div>
+                </div>
+                <div class="nearby-place-detail empty" id="nearby-place-detail">
+                    <p>👆 Click vào một địa điểm để xem thông tin chi tiết</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- FEATURE HIGHLIGHTS -->
+    <section class="feature-highlights" id="how-it-works">
+        <div class="section-container">
+            <div class="section-header">
+                <h2>Tính năng nổi bật</h2>
+                <p class="section-subtitle">Khám phá sức mạnh của AI trong việc lập kế hoạch du lịch</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <span class="feature-icon">🧭</span>
+                    <h3>AI Planner</h3>
+                    <p>Tạo lịch trình thông minh tự động dựa trên sở thích và ngân sách của bạn</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">💬</span>
+                    <h3>RAG Chat</h3>
+                    <p>Trò chuyện với AI để nhận tư vấn du lịch từ dữ liệu thực tế 50K+ địa điểm</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">💰</span>
+                    <h3>Price Predictor</h3>
+                    <p>Dự đoán giá vé, khách sạn và tối ưu ngân sách cho chuyến đi của bạn</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- FOOTER -->
+    {% include 'includes/footer.html' %}
+
+    <!-- AI ASSISTANT FLOATING BUBBLE -->
+    <div class="ai-bubble" id="ai-bubble" aria-label="Chat với AI">
+        <span class="ai-bubble-icon">💬</span>
+    </div>
+
+    <!-- AI CHAT MODAL -->
+    <div class="ai-chat-modal" id="ai-chat-modal">
+        <div class="chat-header">
+            <h4>AI Assistant</h4>
+            <button class="chat-close" id="chat-close" aria-label="Đóng chat">×</button>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <div class="message ai">Xin chào! Tôi là AI Assistant của Vi Vu. Tôi có thể giúp gì cho bạn?</div>
+        </div>
+        <div class="chat-input-container">
+            <input type="text" class="chat-input" id="chat-input" placeholder="Nhập câu hỏi của bạn..." />
+            <button class="chat-send" id="chat-send">Gửi</button>
+        </div>
+    </div>
+
+    <!-- LOGOUT CONFIRMATION MODAL -->
+    <!-- Place Info Modal -->
+    <div class="place-info-modal-overlay" id="place-info-modal-overlay">
+        <div class="place-info-modal">
+            <div class="place-info-modal-header">
+                <h2 id="place-info-title">Thông tin địa điểm</h2>
+                <button class="place-info-modal-close" id="place-info-close" aria-label="Close">&times;</button>
+            </div>
+            <div class="place-info-modal-body">
+                <div class="place-info-loading" id="place-info-loading">
+                    <p>Đang tải thông tin...</p>
+                    <p style="font-size: 0.9rem; opacity: 0.7; margin-top: 0.5rem;">Đang tìm kiếm thông tin trên mạng...</p>
+                </div>
+                <div class="place-info-content" id="place-info-content">
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="logout-modal-overlay" id="logout-modal-overlay">
+        <div class="logout-modal">
+            <div class="logout-modal-header">
+                <div class="logout-modal-icon">
+                    <i class="fas fa-sign-out-alt"></i>
+                </div>
+                <h3>Xác nhận đăng xuất</h3>
+            </div>
+            <div class="logout-modal-body">
+                <p>Bạn có chắc chắn muốn đăng xuất khỏi tài khoản của mình không?</p>
+            </div>
+            <div class="logout-modal-actions">
+                <button class="logout-modal-btn logout-modal-btn-cancel" id="logout-modal-cancel">Không</button>
+                <form id="logout-form" method="post" action="/accounts/logout/" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="logout-modal-btn logout-modal-btn-confirm" id="logout-modal-confirm">Đăng xuất</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom JavaScript -->
+    <script src="{% static 'js/index.js' %}"></script>
+</body>
+</html>

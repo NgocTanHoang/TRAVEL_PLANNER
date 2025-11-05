@@ -1,42 +1,146 @@
-.venv/
-venv/
-env/
-travel_env/
+# ============================================================================
+# VI VU TRAVEL PLANNER - GIT IGNORE
+# ============================================================================
+
+# ============================================================================
+# Python
+# ============================================================================
 __pycache__/
 *.py[cod]
-*.egg-info/
-dist/
+*$py.class
+*.so
+.Python
 build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
 *.egg
-.ipynb_checkpoints/
-.vscode/
-.idea/
-.DS_Store
-
-# Byte-compiled / optimized / DLL files
-*.pyc
-*.pyo
-*.pyd
-
-# Installer logs
+MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Unit test / coverage reports
+# Virtual environments
+venv/
+.venv/
+venv310/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# ============================================================================
+# Django
+# ============================================================================
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+/staticfiles/
+/media/
+
+# Django migrations (keep migrations but ignore temp files)
+# **/migrations/*.py
+# !**/migrations/__init__.py
+
+# ============================================================================
+# Environment Variables
+# ============================================================================
+.env
+.env.local
+.env.*.local
+
+# ============================================================================
+# IDEs
+# ============================================================================
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# ============================================================================
+# OS
+# ============================================================================
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
+# ============================================================================
+# Testing & Coverage
+# ============================================================================
+.pytest_cache/
+.coverage
 htmlcov/
 .tox/
 .nox/
-.coverage
-coverage.xml
-*.cover
 
-# Environment files (do not commit secrets)
-.env
-.env.*
-.streamlit/secrets.toml
-.env
-__pycache__/
-*.pyc
-/project_structure
-*.pyo
-/venv.env
+# ============================================================================
+# AI & ML
+# ============================================================================
+
+# Model files (uncomment if models are large)
+# *.pkl
+# *.h5
+# *.pb
+# *.onnx
+# saved_models/
+
+# Vector DB
+# vector_db/ (keeping it for now as it's needed)
+vector_db/*.sqlite3
+vector_db/**/*.bin
+vector_db/**/*.pickle
+
+# Logs
+logs/
+*.log
+
+# ============================================================================
+# Project Specific
+# ============================================================================
+
+# Data files (uncomment if data is too large)
+# data/*.csv
+# data/*.json
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+
+# Old/backup files
+*.bak
+*.old
+*_old/
+*_backup/

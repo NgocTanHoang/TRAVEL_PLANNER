@@ -1,0 +1,1383 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Tạo lịch trình du lịch - Vi Vu{% endblock %}
+
+{% block nav_items %}
+    <li role="none">
+        <a href="/" class="nav-link" role="menuitem">Trang chủ</a>
+    </li>
+    <li role="none">
+        <a href="/places/search/" class="nav-link" role="menuitem">Tìm kiếm</a>
+    </li>
+    <li role="none">
+        <a href="/travel-plan/" class="nav-link active" role="menuitem">✈️ Tạo lịch trình</a>
+    </li>
+{% endblock %}
+
+{% block content %}
+<style>
+    /* ===================================
+     * 4-STEP WORKFLOW STYLES
+     * =================================== */
+    .workflow-container {
+        min-height: 100vh;
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+        padding: 2rem 1rem;
+        padding-top: calc(2rem + 80px); /* Account for sticky navbar height */
+        margin-top: 0;
+    }
+    
+    @media (max-width: 768px) {
+        .workflow-container {
+            padding-top: calc(1.5rem + 80px);
+        }
+    }
+    
+    .workflow-wrapper {
+        max-width: 1000px;
+        margin: 0 auto;
+        background: var(--color-white);
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+        position: relative;
+        z-index: 1;
+    }
+    
+    /* Progress Steps */
+    .workflow-progress {
+        background: var(--color-gray-100);
+        padding: 2rem;
+        border-bottom: 2px solid var(--color-gray-200);
+    }
+    
+    .steps-indicator {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        position: relative;
+        margin-bottom: 2rem;
+        padding: 0 1rem;
+        gap: 0.5rem;
+    }
+    
+    @media (max-width: 640px) {
+        .steps-indicator {
+            padding: 0 0.5rem;
+            gap: 0.25rem;
+            margin-bottom: 1.5rem;
+        }
+    }
+    
+    .steps-indicator::before {
+        content: '';
+        position: absolute;
+        top: 25px;
+        left: 1rem;
+        right: 1rem;
+        height: 3px;
+        background: var(--color-gray-300);
+        z-index: 0;
+    }
+    
+    .step-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        z-index: 1;
+        min-width: 0;
+    }
+    
+    @media (max-width: 480px) {
+        .step-item {
+            flex: 1 1 auto;
+        }
+    }
+    
+    .step-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: var(--color-white);
+        border: 3px solid var(--color-gray-300);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.2rem;
+        color: var(--color-gray-400);
+        transition: all 0.3s;
+        margin-bottom: 0.5rem;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .step-item.active .step-circle {
+        background: var(--color-secondary);
+        border-color: var(--color-secondary);
+        color: var(--color-white);
+        box-shadow: 0 4px 12px rgba(0, 131, 143, 0.3);
+    }
+    
+    .step-item.completed .step-circle {
+        background: var(--color-accent);
+        border-color: var(--color-accent);
+        color: var(--color-white);
+    }
+    
+    .step-item.completed .step-circle::after {
+        content: '✓';
+        font-size: 1.5rem;
+    }
+    
+    .step-label {
+        font-size: 0.9rem;
+        color: var(--color-gray-600);
+        text-align: center;
+        font-weight: 600;
+    }
+    
+    .step-item.active .step-label {
+        color: var(--color-secondary);
+    }
+    
+    .step-item.completed .step-label {
+        color: var(--color-accent);
+    }
+    
+    /* Step Content */
+    .workflow-content {
+        padding: 2rem 2.5rem;
+        min-height: 400px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    /* Ensure content doesn't overlap with navbar when zoomed */
+    @media (max-width: 1200px) {
+        .workflow-content {
+            padding: 2rem;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .workflow-content {
+            padding: 1.5rem;
+        }
+    }
+    
+    .step-content {
+        display: none;
+    }
+    
+    .step-content.active {
+        display: block;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .step-header {
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+    
+    .step-header h2 {
+        color: var(--color-primary-dark);
+        font-size: 1.75rem;
+        margin-bottom: 0.25rem;
+        font-weight: 700;
+    }
+    
+    @media (max-width: 768px) {
+        .step-header h2 {
+            font-size: 1.5rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .step-header h2 {
+            font-size: 1.25rem;
+        }
+    }
+    
+    @media (max-width: 360px) {
+        .step-header h2 {
+            font-size: 1.1rem;
+        }
+    }
+    
+    .step-header p {
+        color: var(--color-gray-600);
+        font-size: 0.95rem;
+        margin-top: 0.25rem;
+    }
+    
+    @media (max-width: 768px) {
+        .step-header p {
+            font-size: 0.875rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .step-header p {
+            font-size: 0.8rem;
+        }
+    }
+    
+    /* Form Styles - Compact & Modern */
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+        max-width: 1000px;
+        width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+        position: relative;
+        z-index: 1;
+    }
+    
+    /* Ensure equal width columns */
+    .form-grid > .form-group {
+        width: 100%;
+        min-width: 0;
+    }
+    
+    /* Prevent form from moving up when zoomed */
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .form-grid {
+            gap: 0.75rem;
+        }
+    }
+    
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .form-group.full-width {
+        grid-column: 1 / -1;
+    }
+    
+    .form-group label {
+        font-weight: 600;
+        color: var(--color-primary-dark);
+        margin-bottom: 0.4rem;
+        font-size: 0.875rem;
+    }
+    
+    .form-group input,
+    .form-group select {
+        padding: 0.75rem 1rem;
+        border: 2px solid var(--color-gray-200);
+        border-radius: 12px;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+        font-family: inherit;
+        background: var(--color-white);
+        color: var(--color-text-dark);
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: var(--color-secondary);
+        box-shadow: 0 0 0 4px rgba(0, 131, 143, 0.08);
+        background: var(--color-white);
+    }
+    
+    .form-group input::placeholder {
+        color: var(--color-gray-400);
+        font-size: 0.9rem;
+    }
+    
+    /* Autocomplete */
+    .autocomplete-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 2px solid var(--color-gray-200);
+        border-top: none;
+        border-radius: 0 0 10px 10px;
+        max-height: 300px;
+        overflow-y: auto;
+        z-index: 2000;
+        display: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        margin-top: -2px;
+    }
+    
+    .autocomplete-dropdown.show {
+        display: block;
+    }
+    
+    .autocomplete-item {
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        transition: background 0.2s;
+        border-bottom: 1px solid var(--color-gray-200);
+        color: var(--color-text-dark);
+        font-size: 0.95rem;
+    }
+    
+    .autocomplete-item:hover,
+    .autocomplete-item.selected {
+        background: var(--color-gray-100);
+        color: var(--color-primary-dark);
+    }
+    
+    /* Location Actions */
+    .location-field {
+        position: relative;
+    }
+    
+    .location-actions {
+        margin-top: 0.75rem;
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .btn-location {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.625rem 1rem;
+        background: var(--color-secondary);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: inherit;
+    }
+    
+    .btn-location:hover:not(:disabled) {
+        background: var(--color-secondary-dark);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 131, 143, 0.25);
+    }
+    
+    .btn-location:disabled {
+        opacity: 0.6;
+        cursor: wait;
+    }
+    
+    .btn-location .btn-icon {
+        font-size: 1rem;
+    }
+    
+    .location-status {
+        color: var(--color-gray-600);
+        font-size: 0.875rem;
+        min-height: 1.25rem;
+        display: inline-block;
+    }
+    
+    /* Detected Address Chip */
+    .detected-chip {
+        display: inline-flex;
+        gap: 0.5rem;
+        align-items: center;
+        background: white;
+        border: 2px solid var(--color-secondary);
+        border-radius: 25px;
+        padding: 0.625rem 1rem;
+        margin-top: 0.75rem;
+        box-shadow: 0 2px 8px rgba(0, 131, 143, 0.1);
+        animation: slideDown 0.3s ease;
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .detected-chip.hidden {
+        display: none;
+    }
+    
+    .chip-address {
+        flex: 1;
+        font-size: 0.875rem;
+        color: var(--color-primary-dark);
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .chip-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.375rem 0.5rem;
+        border-radius: 6px;
+        transition: all 0.2s;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 28px;
+        height: 28px;
+    }
+    
+    .chip-edit {
+        color: var(--color-primary-dark);
+    }
+    
+    .chip-edit:hover {
+        background: var(--color-gray-100);
+        color: var(--color-secondary-dark);
+    }
+    
+    .chip-confirm {
+        background: var(--color-accent);
+        color: white;
+        font-weight: 600;
+    }
+    
+    .chip-confirm:hover {
+        background: var(--color-accent-dark);
+        transform: scale(1.1);
+    }
+    
+    /* Mini Map */
+    .mini-map {
+        width: 100%;
+        height: 200px;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-top: 1rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border: 2px solid var(--color-gray-200);
+        position: relative;
+        z-index: 1;
+    }
+    
+    .mini-map.hidden {
+        display: none;
+    }
+    
+    .mini-map.visible {
+        display: block;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    /* Leaflet controls z-index fix - ensure map controls are below autocomplete */
+    .mini-map .leaflet-control-container {
+        z-index: 100 !important;
+    }
+    
+    .mini-map .leaflet-top,
+    .mini-map .leaflet-bottom {
+        z-index: 100 !important;
+    }
+    
+    .mini-map .leaflet-control-zoom {
+        z-index: 100 !important;
+    }
+    
+    /* Prevent autocomplete from being covered */
+    .location-field {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+    }
+    
+    .location-field input {
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .location-actions {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+    
+    .btn-location {
+        width: 100%;
+        box-sizing: border-box;
+        justify-content: center;
+    }
+    
+    /* Ensure inputs don't move up when zoomed out */
+    .form-group {
+        position: relative;
+        z-index: 1;
+    }
+    
+    /* Fix for zoom out issues - prevent elements from overlapping navbar */
+    @media (max-width: 480px) {
+        .workflow-container {
+            padding-top: calc(0.75rem + 70px);
+        }
+    }
+    
+    /* Very small screens or when zoomed out significantly */
+    @media (max-width: 360px) {
+        .workflow-container {
+            padding-top: calc(0.5rem + 65px);
+        }
+        
+        .workflow-content {
+            padding: 1rem;
+        }
+    }
+    
+    /* Error Modal Popup */
+    .error-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(var(--color-primary-rgb), 0.7);
+        backdrop-filter: blur(4px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    .error-modal-overlay.show {
+        display: flex;
+    }
+    
+    .error-modal {
+        background: var(--color-white);
+        border-radius: 16px;
+        padding: 0;
+        max-width: 450px;
+        width: 90%;
+        box-shadow: 0 20px 60px rgba(var(--color-primary-rgb), 0.3);
+        animation: slideUp 0.3s ease;
+        overflow: hidden;
+        border: 2px solid var(--color-primary);
+    }
+    
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .error-modal-header {
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+        color: var(--color-white);
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .error-modal-header.success {
+        background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%);
+    }
+    
+    .error-modal-header.error {
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    }
+    
+    .error-modal-header .error-icon {
+        font-size: 2rem;
+    }
+    
+    .error-modal-header h3 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 700;
+    }
+    
+    .error-modal-body {
+        padding: 1.5rem;
+        color: var(--color-text-dark);
+    }
+    
+    .error-modal-message {
+        font-size: 1rem;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+    
+    .error-modal-footer {
+        padding: 0 1.5rem 1.5rem;
+        display: flex;
+        justify-content: flex-end;
+    }
+    
+    .error-modal-btn {
+        background: var(--color-secondary);
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 10px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: inherit;
+    }
+    
+    .error-modal-btn:hover {
+        background: var(--color-secondary-dark);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 131, 143, 0.3);
+    }
+    
+    .error-modal-btn:active {
+        transform: translateY(0);
+    }
+    
+    /* Info Cards */
+    .info-card {
+        background: var(--color-gray-50);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid var(--color-secondary);
+    }
+    
+    .info-card h4 {
+        color: var(--color-primary-dark);
+        margin-bottom: 0.5rem;
+        font-size: 1.1rem;
+    }
+    
+    .info-card p {
+        color: var(--color-gray-600);
+        margin: 0.25rem 0;
+    }
+    
+    /* Transport Options */
+    .transport-options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    @media (max-width: 1024px) {
+        .transport-options {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+    
+    @media (max-width: 640px) {
+        .transport-options {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .transport-options {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .transport-option {
+        background: var(--color-white);
+        border: 2px solid var(--color-gray-200);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .transport-option:hover {
+        border-color: var(--color-secondary);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 131, 143, 0.15);
+    }
+    
+    .transport-option.selected {
+        border-color: var(--color-accent);
+        background: var(--color-gray-50);
+    }
+    
+    .transport-option-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Budget Breakdown */
+    .budget-breakdown {
+        background: var(--color-white);
+        border: 2px solid var(--color-gray-200);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-top: 2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+    
+    .budget-breakdown h4 {
+        color: var(--color-primary-dark);
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid var(--color-secondary);
+    }
+    
+    @media (max-width: 768px) {
+        .budget-breakdown {
+            padding: 1.5rem;
+        }
+        
+        .budget-breakdown h4 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .budget-breakdown {
+            padding: 1rem;
+        }
+        
+        .budget-breakdown h4 {
+            font-size: 1rem;
+        }
+    }
+    
+    .budget-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 0;
+        border-bottom: 1px solid var(--color-gray-200);
+        color: var(--color-text-dark);
+    }
+    
+    .budget-item span:first-child {
+        color: var(--color-gray-600);
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+    
+    .budget-item span:last-child {
+        color: var(--color-primary-dark);
+        font-weight: 600;
+        font-size: 1rem;
+        text-align: right;
+    }
+    
+    @media (max-width: 480px) {
+        .budget-item {
+            flex-direction: column;
+            gap: 0.5rem;
+            text-align: left;
+            padding: 0.75rem 0;
+            font-size: 0.9rem;
+        }
+        
+        .budget-item span:last-child {
+            text-align: left;
+            font-size: 1.1rem;
+        }
+    }
+    
+    .budget-item:last-child {
+        border-bottom: none;
+        padding-top: 1.5rem;
+        margin-top: 0.5rem;
+        border-top: 2px solid var(--color-gray-300);
+    }
+    
+    .budget-item:last-child span:first-child {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: var(--color-primary-dark);
+    }
+    
+    .budget-item:last-child span:last-child {
+        font-weight: 700;
+        font-size: 1.3rem;
+        color: var(--color-accent);
+    }
+    
+    .budget-summary-footer {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--color-gray-300);
+    }
+    
+    .budget-summary-footer p {
+        color: var(--color-gray-600);
+        font-size: 0.95rem;
+        margin: 0;
+    }
+    
+    .budget-summary-footer strong {
+        color: var(--color-primary-dark);
+        font-weight: 600;
+    }
+    
+    /* Hotel Cards */
+    .hotels-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+    
+    @media (max-width: 1024px) {
+        .hotels-grid {
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+    }
+    
+    @media (max-width: 640px) {
+        .hotels-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+    }
+    
+    .hotel-card {
+        background: var(--color-white);
+        border: 2px solid var(--color-gray-200);
+        border-radius: 12px;
+        padding: 1.5rem;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .hotel-card:hover {
+        border-color: var(--color-secondary);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 131, 143, 0.15);
+    }
+    
+    .hotel-card.selected {
+        border-color: var(--color-accent);
+        background: var(--color-gray-50);
+    }
+    
+    .hotel-name {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--color-primary-dark);
+        margin-bottom: 0.5rem;
+    }
+    
+    .hotel-rating {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .hotel-price {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--color-accent);
+        margin-top: 1rem;
+    }
+    
+    /* Itinerary */
+    .itinerary-day {
+        background: var(--color-gray-50);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .itinerary-day h4 {
+        color: var(--color-primary-dark);
+        margin-bottom: 1rem;
+        font-size: 1.2rem;
+    }
+    
+    .itinerary-activity {
+        padding: 0.75rem;
+        background: var(--color-white);
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+        border-left: 3px solid var(--color-secondary);
+    }
+    
+    /* Buttons */
+    .btn-workflow {
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: 10px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-primary {
+        background: var(--color-secondary);
+        color: var(--color-white);
+    }
+    
+    .btn-primary:hover {
+        background: var(--color-secondary-light);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 131, 143, 0.3);
+    }
+    
+    .btn-secondary {
+        background: var(--color-gray-200);
+        color: var(--color-primary-dark);
+    }
+    
+    .btn-secondary:hover {
+        background: var(--color-gray-300);
+    }
+    
+    .btn-success {
+        background: var(--color-accent);
+        color: var(--color-white);
+    }
+    
+    .btn-success:hover {
+        background: #c4941f;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(218, 165, 32, 0.3);
+    }
+    
+    .btn-workflow:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .workflow-actions {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 2px solid var(--color-gray-200);
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    @media (max-width: 768px) {
+        .workflow-actions {
+            flex-direction: column-reverse;
+        }
+        
+        .workflow-actions .btn-workflow {
+            width: 100%;
+        }
+    }
+    
+    /* Loading */
+    .loading-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 0.8s linear infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .workflow-content {
+            padding: 1.5rem;
+        }
+        
+        .form-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .workflow-content {
+            padding: 1.5rem;
+        }
+        
+        .step-header h2 {
+            font-size: 1.5rem;
+        }
+        
+        .workflow-actions {
+            flex-direction: column-reverse;
+            gap: 1rem;
+        }
+        
+        .btn-workflow {
+            width: 100%;
+        }
+        
+        .steps-indicator {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .steps-indicator::before {
+            display: none;
+        }
+        
+        .transport-options,
+        .hotels-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .location-actions {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .btn-location {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .mini-map {
+            height: 180px;
+        }
+        
+        .detected-chip {
+            flex-wrap: wrap;
+            padding: 0.75rem;
+        }
+        
+        .chip-address {
+            width: 100%;
+            white-space: normal;
+            margin-bottom: 0.5rem;
+        }
+    }
+</style>
+
+<div class="workflow-container">
+    <div class="workflow-wrapper">
+        <!-- Progress Steps -->
+        <div class="workflow-progress">
+            <div class="steps-indicator">
+                <div class="step-item active" data-step="1">
+                    <div class="step-circle">1</div>
+                    <div class="step-label">Chọn địa điểm</div>
+                </div>
+                <div class="step-item" data-step="2">
+                    <div class="step-circle">2</div>
+                    <div class="step-label">Thông tin du lịch</div>
+                </div>
+                <div class="step-item" data-step="3">
+                    <div class="step-circle">3</div>
+                    <div class="step-label">Ngân sách & Khách sạn</div>
+                </div>
+                <div class="step-item" data-step="4">
+                    <div class="step-circle">4</div>
+                    <div class="step-label">Xác nhận & Tạo kế hoạch</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Workflow Content -->
+        <div class="workflow-content">
+            <!-- Step 1: Location Selection -->
+            <div class="step-content active" id="step-1">
+                <div class="step-header">
+                    <h2>📍 Chọn địa điểm</h2>
+                    <p>Nhập điểm xuất phát và điểm đến của bạn</p>
+                </div>
+                
+                <form id="step1-form">
+                    <div class="form-grid">
+                        <div class="form-group location-field">
+                            <label for="origin-input">Điểm xuất phát</label>
+                            <div style="position: relative; z-index: 2000;">
+                                <input type="text" id="origin-input" placeholder="Ví dụ: Thành phố Hồ Chí Minh" autocomplete="off" required>
+                                <div id="origin-autocomplete" class="autocomplete-dropdown"></div>
+                            </div>
+                            <div class="location-actions">
+                                <button type="button" id="use-current-location-btn" class="btn-location" aria-live="polite">
+                                    <span class="btn-icon">📍</span>
+                                    <span class="btn-text">Dùng vị trí hiện tại</span>
+                                </button>
+                                <span id="location-status" class="location-status"></span>
+                            </div>
+                            <div id="detected-chip" class="detected-chip hidden">
+                                <span id="detected-address" class="chip-address"></span>
+                                <button type="button" id="edit-address-btn" class="chip-btn chip-edit" title="Sửa vị trí" aria-label="Sửa địa chỉ">✎</button>
+                                <button type="button" id="confirm-address-btn" class="chip-btn chip-confirm" title="Xác nhận sử dụng vị trí này" aria-label="Xác nhận địa chỉ">✓</button>
+                            </div>
+                            <div id="origin-mini-map" class="mini-map hidden" aria-hidden="true"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="destination-input">Điểm đến</label>
+                            <div style="position: relative; z-index: 1999;">
+                                <input type="text" id="destination-input" placeholder="Ví dụ: Thành phố Hà Nội" autocomplete="off" required>
+                                <div id="destination-autocomplete" class="autocomplete-dropdown"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="step1-result" style="display: none;"></div>
+                    
+                    <div class="workflow-actions">
+                        <div></div>
+                        <button type="submit" class="btn-workflow btn-primary">
+                            Tiếp tục →
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Step 2: Travel Info -->
+            <div class="step-content" id="step-2">
+                <div class="step-header">
+                    <h2>✈️ Thông tin du lịch</h2>
+                </div>
+                
+                <form id="step2-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="start-date">Ngày đi</label>
+                            <input type="text" id="start-date" placeholder="Chọn ngày bắt đầu" required readonly>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="days">Số ngày</label>
+                            <input type="number" id="days" min="1" max="14" value="3" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="travelers">Số người</label>
+                            <input type="number" id="travelers" min="1" max="20" value="2" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="travel-style">Phong cách du lịch</label>
+                            <select id="travel-style" required>
+                                <option value="budget">💰 Tiết kiệm</option>
+                                <option value="standard" selected>⭐ Tiêu chuẩn</option>
+                                <option value="luxury">✨ Sang trọng</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="step2-result" style="display: none;"></div>
+                    
+                    <div class="workflow-actions">
+                        <button type="button" class="btn-workflow btn-secondary" onclick="goToStep(1)">
+                            ← Quay lại
+                        </button>
+                        <button type="submit" class="btn-workflow btn-primary">
+                            Tiếp tục →
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Step 3: Budget & Hotels -->
+            <div class="step-content" id="step-3">
+                <div class="step-header">
+                    <h2>💰 Ngân sách & Khách sạn</h2>
+                    <p>Xem gợi ý ngân sách và chọn khách sạn phù hợp</p>
+                </div>
+                
+                <div id="step3-result">
+                    <div style="text-align: center; padding: 3rem; color: var(--color-gray-600);">
+                        <p>Đang tải thông tin...</p>
+                    </div>
+                </div>
+                
+                <div class="workflow-actions">
+                    <button type="button" class="btn-workflow btn-secondary" onclick="goToStep(2)">
+                        ← Quay lại
+                    </button>
+                    <button type="button" class="btn-workflow btn-primary" id="step3-continue" onclick="goToStep(4)" disabled>
+                        Tiếp tục →
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 4: Confirm & Plan -->
+            <div class="step-content" id="step-4">
+                <div class="step-header">
+                    <h2>✅ Xác nhận & Tạo kế hoạch</h2>
+                    <p>Xem lại và tạo lịch trình đầy đủ</p>
+                </div>
+                
+                <div id="step4-result">
+                    <div style="text-align: center; padding: 3rem; color: var(--color-accent);">
+                        <p>Đang tạo lịch trình...</p>
+                    </div>
+                </div>
+                
+                <div class="workflow-actions">
+                    <button type="button" class="btn-workflow btn-secondary" onclick="goToStep(3)">
+                        ← Quay lại
+                    </button>
+                    <button type="button" class="btn-workflow btn-success" id="step4-create" onclick="createFinalPlan()" disabled>
+                        ✨ Tạo lịch trình
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leaflet CSS for mini-map -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<!-- Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<!-- Flatpickr Vietnamese locale -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/vn.js"></script>
+<!-- Leaflet JS for mini-map -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+    /* Flatpickr custom styles */
+    .flatpickr-calendar {
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+        border-radius: 12px !important;
+        border: 1px solid var(--color-gray-200) !important;
+        font-family: inherit !important;
+    }
+    
+    .flatpickr-day {
+        border-radius: 8px !important;
+        margin: 2px !important;
+        transition: all 0.2s !important;
+    }
+    
+    .flatpickr-day:hover {
+        background: var(--color-gray-100) !important;
+    }
+    
+    .flatpickr-day.selected,
+    .flatpickr-day.startRange,
+    .flatpickr-day.endRange {
+        background: var(--color-secondary) !important;
+        border-color: var(--color-secondary) !important;
+        color: white !important;
+        font-weight: 600 !important;
+    }
+    
+    .flatpickr-day.today {
+        border-color: var(--color-secondary) !important;
+        color: var(--color-secondary) !important;
+        font-weight: 600 !important;
+    }
+    
+    .flatpickr-day.today.selected {
+        background: var(--color-secondary) !important;
+        color: white !important;
+    }
+    
+    .flatpickr-day.disabled,
+    .flatpickr-day.disabled:hover {
+        color: var(--color-gray-400) !important;
+        background: var(--color-gray-100) !important;
+        cursor: not-allowed !important;
+        opacity: 0.5 !important;
+        text-decoration: line-through !important;
+    }
+    
+    .flatpickr-day.prevMonthDay,
+    .flatpickr-day.nextMonthDay {
+        color: var(--color-gray-400) !important;
+    }
+    
+    .flatpickr-months {
+        padding: 1rem !important;
+    }
+    
+    .flatpickr-current-month {
+        font-size: 1.1rem !important;
+        font-weight: 600 !important;
+        color: var(--color-primary-dark) !important;
+    }
+    
+    .flatpickr-prev-month,
+    .flatpickr-next-month {
+        color: var(--color-secondary) !important;
+    }
+    
+    .flatpickr-prev-month:hover,
+    .flatpickr-next-month:hover {
+        color: var(--color-secondary-dark) !important;
+    }
+    
+    .flatpickr-weekdays {
+        background: var(--color-gray-50) !important;
+        padding: 0.5rem 0 !important;
+    }
+    
+    .flatpickr-weekday {
+        color: var(--color-primary-dark) !important;
+        font-weight: 600 !important;
+        font-size: 0.9rem !important;
+    }
+</style>
+
+<!-- Error Modal Popup -->
+<div id="error-modal-overlay" class="error-modal-overlay" onclick="closeErrorModal(event)">
+    <div class="error-modal" onclick="event.stopPropagation()">
+        <div class="error-modal-header">
+            <span class="error-icon">⚠️</span>
+            <h3>Thông báo</h3>
+        </div>
+        <div class="error-modal-body">
+            <div class="error-modal-message" id="error-modal-message"></div>
+        </div>
+        <div class="error-modal-footer">
+            <button class="error-modal-btn" onclick="closeErrorModal()">Đã hiểu</button>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'js/travel_plan_workflow.js' %}"></script>
+{% endblock %}
+

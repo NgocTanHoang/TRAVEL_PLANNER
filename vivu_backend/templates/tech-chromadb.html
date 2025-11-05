@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChromaDB RAG - Vi Vu Technology</title>
+    <link rel="icon" type="image/png" href="/static/img/logo_crop-Photoroom.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root{--color-primary:#153D68;--color-primary-rgb:21,61,104;--color-secondary:#00838F;--color-secondary-rgb:0,131,143;--color-accent:#DAA520;--color-accent-rgb:218,165,32;--color-text-light:#FFF;--font-family-base:'Inter',sans-serif;--font-family-heading:'Poppins',sans-serif}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:var(--font-family-base);line-height:1.6;color:var(--color-text-light);background:linear-gradient(180deg,#0d2842 0%,#153D68 100%);min-height:100vh}
+        .navbar{background:linear-gradient(135deg,#0d2842 0%,#153D68 100%);padding:0.5rem 2rem;box-shadow:0 2px 10px rgba(0,0,0,0.2);position:sticky;top:0;z-index:1000;border-bottom:2px solid rgba(0,131,143,0.3);transition:all 0.3s cubic-bezier(0.4,0,0.2,1)}
+        .navbar.scrolled{background:rgba(21,61,104,0.7);backdrop-filter:blur(20px)}
+        .nav-container{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center}
+        .logo{display:flex;align-items:center;gap:0.75rem;text-decoration:none}
+        .logo-image{height:46px;width:46px;object-fit:contain;border-radius:50%;background:white;padding:3px;border:2px solid transparent;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);transform:scale(1.0)}
+        .logo:hover .logo-image{border-color:var(--color-accent);box-shadow:0 6px 20px rgba(218,165,32,0.4)}
+        .logo-brand{font-family:var(--font-family-heading);font-size:1.4rem;font-weight:700;color:var(--color-text-light)}
+        .back-link{color:var(--color-accent);text-decoration:none;font-weight:600;padding:0.5rem 1.5rem;border:2px solid var(--color-accent);border-radius:8px;transition:all 0.3s}
+        .back-link:hover{background:var(--color-accent);color:#0d2842;transform:translateY(-2px)}
+        .hero-section{padding:4rem 2rem;text-align:center;background:linear-gradient(135deg,rgba(0,131,143,0.2) 0%,rgba(21,61,104,0.3) 100%)}
+        .tech-icon{font-size:6rem;margin-bottom:1.5rem;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.3))}
+        .hero-section h1{font-family:var(--font-family-heading);font-size:3.5rem;font-weight:800;margin-bottom:1rem;background:linear-gradient(135deg,#FFF 0%,#00a5b5 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.25;max-width:1100px;margin-left:auto;margin-right:auto;text-wrap:balance;word-break:normal;hyphens:auto}
+        .hero-subtitle{font-size:1.3rem;color:var(--color-accent);margin-bottom:2rem;font-weight:600}
+        .version-badge{display:inline-block;background:var(--color-secondary);color:var(--color-text-light);padding:0.5rem 1.5rem;border-radius:50px;font-weight:600;margin:0.5rem}
+        .content-section{max-width:1200px;margin:0 auto;padding:3rem 2rem}
+        .section-title{font-family:var(--font-family-heading);font-size:2.5rem;font-weight:700;margin-bottom:2rem;color:var(--color-text-light);text-align:center;line-height:1.3;text-wrap:balance;max-width:1000px;margin-left:auto;margin-right:auto}
+        .feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2rem;margin-bottom:4rem}
+        .feature-card{background:rgba(21,61,104,0.4);backdrop-filter:blur(10px);padding:2rem;border-radius:15px;border:2px solid var(--color-secondary);transition:all 0.3s}
+        .feature-card:hover{transform:translateY(-10px);border-color:var(--color-accent);box-shadow:0 10px 30px rgba(218,165,32,0.4);background:rgba(21,61,104,0.6)}
+        .feature-icon{font-size:3rem;margin-bottom:1rem}
+        .feature-card h3{font-family:var(--font-family-heading);font-size:1.5rem;color:var(--color-accent);margin-bottom:1rem}
+        .feature-card p{color:var(--color-text-light);line-height:1.8}
+        .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2rem;margin:3rem 0}
+        .stat-box{text-align:center;padding:2rem;background:rgba(0,131,143,0.2);border-radius:12px;border:2px solid var(--color-accent)}
+        .stat-number{font-size:3rem;font-weight:800;color:var(--color-accent);display:block}
+        .stat-label{font-size:1rem;color:var(--color-text-light);margin-top:0.5rem}
+        .highlight-box{background:rgba(218,165,32,0.1);border-left:4px solid var(--color-accent);padding:1.5rem;border-radius:8px;margin:2rem 0}
+        .highlight-box h4{color:var(--color-accent);margin-bottom:1rem;font-size:1.3rem}
+        .tech-list{list-style:none;padding:0}
+        .tech-list li{padding:0.8rem 0;border-bottom:1px solid rgba(0,131,143,0.3);color:var(--color-text-light)}
+        .tech-list li:before{content:"✓";color:var(--color-accent);font-weight:bold;margin-right:1rem;font-size:1.2rem}
+        .cta-section{text-align:center;padding:4rem 2rem;background:rgba(0,131,143,0.1)}
+        .cta-button{display:inline-block;background:var(--color-accent);color:#0d2842;padding:1rem 2.5rem;border-radius:50px;text-decoration:none;font-weight:700;font-size:1.1rem;transition:all 0.3s;box-shadow:0 4px 15px rgba(218,165,32,0.4)}
+        .cta-button:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(218,165,32,0.6)}
+        @media (max-width:768px){.hero-section h1{font-size:2.5rem}.feature-grid{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <img src="/static/img/logo_crop-Photoroom.png" alt="Vi Vu Logo" class="logo-image">
+                <h1 class="logo-brand">Vi Vu</h1>
+            </a>
+            <a href="/#tech" class="back-link">← Quay lại</a>
+        </div>
+    </nav>
+
+    <section class="hero-section">
+        <div class="tech-icon">🗄️</div>
+        <h1>ChromaDB RAG</h1>
+        <p class="hero-subtitle">AI-Native Vector Database for Intelligent Travel Search</p>
+        <span class="version-badge">ChromaDB 0.4+</span>
+        <span class="version-badge">Open Source</span>
+        <span class="version-badge">Embedding-First</span>
+    </section>
+
+    <section class="content-section">
+        <h2 class="section-title">ChromaDB RAG - Tìm kiếm thông minh cho 50K+ địa điểm</h2>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <h3>Semantic Search</h3>
+                <p>Tìm kiếm theo nghĩa, không phải keyword. "Bãi biển yên tĩnh" → tìm được hidden beaches, không chỉ có từ "yên tĩnh".</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Vector Similarity</h3>
+                <p>So sánh embeddings với cosine similarity. Query "núi cao, trekking" → Fansipan, Pu Luong, Tà Xùa với độ chính xác 95%+.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🧩</div>
+                <h3>RAG Architecture</h3>
+                <p>Retrieval-Augmented Generation: Retrieve relevant data từ ChromaDB → Augment GPT-4 prompt → Generate accurate itinerary.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Metadata Filtering</h3>
+                <p>Filter trước khi search: {"province": "Da Nang", "rating": ">4.5", "budget": "low"} → Chỉ search trong subset relevant.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🚀</div>
+                <h3>Fast & Scalable</h3>
+                <p>Query 50K+ documents < 100ms. Scale horizontally với persistence và incremental updates.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>OpenAI Embeddings</h3>
+                <p>text-embedding-3-small (1536 dimensions) cho balance cost/performance. 98% accuracy vs large model.</p>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-box">
+                <span class="stat-number">50K+</span>
+                <span class="stat-label">Vectors Stored</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number"><100ms</span>
+                <span class="stat-label">Query Time</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number">1536</span>
+                <span class="stat-label">Embedding Dimensions</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number">95%+</span>
+                <span class="stat-label">Search Accuracy</span>
+            </div>
+        </div>
+
+        <div class="highlight-box">
+            <h4>🎯 RAG Workflow trong Vi Vu</h4>
+            <ul class="tech-list">
+                <li><strong>1. Embedding:</strong> OpenAI text-embedding-3-small chuyển 50K+ địa điểm → 1536-dim vectors</li>
+                <li><strong>2. Store:</strong> ChromaDB lưu vectors + metadata (province, category, rating, price)</li>
+                <li><strong>3. Query:</strong> User input "bãi biển đẹp ở Đà Nẵng" → embedding → search ChromaDB</li>
+                <li><strong>4. Retrieve:</strong> Top 10 most similar places (cosine similarity > 0.8)</li>
+                <li><strong>5. Augment:</strong> Inject retrieved data vào GPT-4 prompt với context</li>
+                <li><strong>6. Generate:</strong> GPT-4 tạo itinerary dựa trên real data, không hallucinate</li>
+            </ul>
+        </div>
+
+        <div class="highlight-box">
+            <h4>💡 Tại sao RAG > Fine-tuning?</h4>
+            <ul class="tech-list">
+                <li><strong>Real-time Updates:</strong> Add/update places instantly, không cần retrain model</li>
+                <li><strong>Cost-effective:</strong> $0.0001/1K tokens vs $0.008/1K for fine-tuning GPT-4</li>
+                <li><strong>No Hallucination:</strong> Dữ liệu luôn grounded in facts từ database</li>
+                <li><strong>Explainable:</strong> Biết rõ source nào được sử dụng trong response</li>
+                <li><strong>Flexible:</strong> Dễ dàng thay đổi data source (ChromaDB → Pinecone → Weaviate)</li>
+            </ul>
+        </div>
+
+        <div class="highlight-box">
+            <h4>🔧 Tech Stack - ChromaDB Integration</h4>
+            <ul class="tech-list">
+                <li><strong>chromadb==0.4.22</strong> - Vector database core</li>
+                <li><strong>langchain-chroma==0.1.2</strong> - LangChain integration</li>
+                <li><strong>openai==1.12.0</strong> - Embedding API (text-embedding-3-small)</li>
+                <li><strong>tiktoken==0.6.0</strong> - Token counting cho embeddings</li>
+                <li><strong>Persistence:</strong> SQLite backend cho local dev, PostgreSQL cho production</li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <h2 class="section-title">Trải nghiệm tìm kiếm semantic</h2>
+        <p style="color:var(--color-text-light);font-size:1.2rem;margin-bottom:2rem">
+            Hệ thống RAG giúp tìm địa điểm hoàn hảo chỉ bằng mô tả tự nhiên
+        </p>
+        <a href="/" class="cta-button">🔍 Thử ngay</a>
+        &nbsp;&nbsp;
+        <a href="https://docs.trychroma.com/" class="cta-button" style="background:var(--color-secondary)" target="_blank">📚 ChromaDB Docs</a>
+    </section>
+    
+    <script>
+        const navbar=document.querySelector('.navbar');
+        if(navbar){
+            window.addEventListener('scroll',()=>{
+                const currentScroll=window.pageYOffset;
+                if(currentScroll>50){navbar.classList.add('scrolled')}else{navbar.classList.remove('scrolled')}
+            });
+        }
+    </script>
+    
+    <!-- FOOTER -->
+    {% include 'includes/footer.html' %}
+</body>
+</html>
+

@@ -1,0 +1,2 @@
+"""Places app initialization."""
+

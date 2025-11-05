@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="LangChain & LangGraph - Multi-Agent AI Framework cho Vi Vu Travel Planner">
+    <title>LangChain & LangGraph - Vi Vu Technology Stack</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/img/logo_crop-Photoroom.png">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --color-primary: #153D68;
+            --color-primary-light: #1e4d7f;
+            --color-primary-dark: #0d2842;
+            --color-primary-rgb: 21, 61, 104;
+            --color-secondary: #00838F;
+            --color-secondary-light: #00a5b5;
+            --color-secondary-dark: #00616b;
+            --color-secondary-rgb: 0, 131, 143;
+            --color-accent: #DAA520;
+            --color-accent-light: #f0c040;
+            --color-accent-dark: #b8860b;
+            --color-accent-rgb: 218, 165, 32;
+            --color-text-light: #FFFFFF;
+            --color-text-dark: #1A1A1A;
+            --font-family-base: 'Inter', sans-serif;
+            --font-family-heading: 'Poppins', sans-serif;
+            --font-family-code: 'Fira Code', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family-base);
+            line-height: 1.6;
+            color: var(--color-text-light);
+            background: linear-gradient(180deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
+            padding: 0.5rem 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 2px solid rgba(var(--color-secondary-rgb), 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .navbar.scrolled {
+            background: rgba(var(--color-primary-rgb), 0.7);
+            backdrop-filter: blur(20px);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+
+        .logo-image {
+            height: 70px;
+            width: 70px;
+            object-fit: contain;
+            border-radius: 50%;
+            background: white;
+            padding: 4px;
+            border: 2px solid transparent;
+            transition: var(--transition-base);
+        }
+        
+        .logo:hover .logo-image {
+            border-color: var(--color-accent);
+            box-shadow: 0 6px 20px rgba(var(--color-accent-rgb), 0.4);
+        }
+
+        .logo-brand {
+            font-family: var(--font-family-heading);
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--color-text-light);
+        }
+
+        .back-link {
+            color: var(--color-accent);
+            text-decoration: none;
+            font-weight: 600;
+            padding: 0.5rem 1.5rem;
+            border: 2px solid var(--color-accent);
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            background: var(--color-accent);
+            color: var(--color-primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .hero-section {
+            padding: 4rem 2rem;
+            text-align: center;
+            background: linear-gradient(135deg, rgba(var(--color-secondary-rgb), 0.2) 0%, rgba(var(--color-primary-rgb), 0.3) 100%);
+        }
+
+        .tech-icon {
+            font-size: 6rem;
+            margin-bottom: 1.5rem;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+        }
+
+        .hero-section h1 {
+            font-family: var(--font-family-heading);
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            color: var(--color-text-light);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            line-height: 1.25;
+            max-width: 1100px;
+            margin-left: auto;
+            margin-right: auto;
+            text-wrap: balance; /* modern browsers */
+            word-break: normal;
+            hyphens: auto;
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            color: var(--color-accent);
+            margin-bottom: 2rem;
+            font-weight: 600;
+        }
+
+        .version-badge {
+            display: inline-block;
+            background: var(--color-secondary);
+            color: var(--color-text-light);
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin: 0 0.5rem;
+        }
+
+        .content-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .section-title {
+            font-family: var(--font-family-heading);
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            color: var(--color-text-light);
+            text-align: center;
+            line-height: 1.3;
+            text-wrap: balance;
+            max-width: 1000px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .feature-card {
+            background: rgba(var(--color-primary-rgb), 0.4);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 15px;
+            border: 2px solid var(--color-secondary);
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--color-accent);
+            box-shadow: 0 10px 30px rgba(218, 165, 32, 0.4);
+            background: rgba(var(--color-primary-rgb), 0.6);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-family: var(--font-family-heading);
+            font-size: 1.5rem;
+            color: var(--color-accent);
+            margin-bottom: 1rem;
+        }
+
+        .feature-card p {
+            color: var(--color-text-light);
+            line-height: 1.8;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(var(--color-secondary-rgb), 0.2);
+            border-radius: 12px;
+            border: 2px solid var(--color-accent);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--color-accent);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            color: var(--color-text-light);
+            margin-top: 0.5rem;
+        }
+
+        .code-block {
+            background: #1e1e1e;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--color-accent);
+            margin: 2rem 0;
+            overflow-x: auto;
+        }
+
+        .code-block pre {
+            font-family: var(--font-family-code);
+            font-size: 0.95rem;
+            color: #d4d4d4;
+            margin: 0;
+        }
+
+        .highlight-box {
+            background: rgba(var(--color-accent-rgb), 0.1);
+            border-left: 4px solid var(--color-accent);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 2rem 0;
+        }
+
+        .highlight-box h4 {
+            color: var(--color-accent);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .tech-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .tech-list li {
+            padding: 0.8rem 0;
+            border-bottom: 1px solid rgba(var(--color-secondary-rgb), 0.3);
+            color: var(--color-text-light);
+        }
+
+        .tech-list li:before {
+            content: "✓";
+            color: var(--color-accent);
+            font-weight: bold;
+            margin-right: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .agent-flow {
+            background: rgba(var(--color-primary-rgb), 0.3);
+            border: 2px solid var(--color-secondary);
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .agent-step {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+            padding: 1rem;
+            background: rgba(var(--color-secondary-rgb), 0.2);
+            border-radius: 10px;
+            border-left: 4px solid var(--color-accent);
+        }
+
+        .agent-number {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--color-accent);
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .agent-content h4 {
+            color: var(--color-accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .cta-section {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: rgba(var(--color-secondary-rgb), 0.1);
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: var(--color-accent);
+            color: var(--color-primary-dark);
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(218, 165, 32, 0.4);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(218, 165, 32, 0.6);
+        }
+
+        @media (max-width: 768px) {
+            .hero-section h1 {
+                font-size: 2.4rem;
+                line-height: 1.3;
+                padding: 0 1rem;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .agent-step {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <img src="/static/img/logo_crop-Photoroom.png" alt="Vi Vu Logo" class="logo-image">
+                <h1 class="logo-brand">Vi Vu</h1>
+            </a>
+            <a href="/#tech" class="back-link">← Quay lại</a>
+        </div>
+    </nav>
+
+    <section class="hero-section">
+        <div class="tech-icon">🦜🔗</div>
+        <h1>LangChain & LangGraph</h1>
+        <p class="hero-subtitle">Framework for Building Advanced Multi-Agent AI Applications</p>
+        <span class="version-badge">LangChain 0.3+</span>
+        <span class="version-badge">LangGraph 0.2+</span>
+    </section>
+
+    <section class="content-section">
+        <h2 class="section-title">Vì sao LangChain & LangGraph là trái tim của Vi Vu?</h2>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <h3>Multi-Agent Orchestration</h3>
+                <p>LangGraph cho phép xây dựng 10+ AI agents hoạt động phối hợp: Planning Agent, Search Agent, Weather Agent, Route Agent, Budget Agent...</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🔄</div>
+                <h3>Stateful Workflows</h3>
+                <p>Quản lý state phức tạp với checkpoints và persistence. Agents có thể "nhớ" context và tiếp tục workflow ngay cả khi bị gián đoạn.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Streaming & Async</h3>
+                <p>Stream responses từ LLM real-time. Async execution cho phép xử lý nhiều requests đồng thời với hiệu suất cao.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🔌</div>
+                <h3>Tool Integration</h3>
+                <p>Kết nối với 100+ tools: Web Search (Tavily), Weather (OpenWeather), Maps (LocationIQ), RAG (ChromaDB), và custom tools.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>LangSmith Tracing</h3>
+                <p>Debug và monitoring agents với LangSmith. Xem toàn bộ workflow, token usage, latency, và errors trong real-time.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>Human-in-the-Loop</h3>
+                <p>Cho phép human review và approve trước khi agent thực hiện action quan trọng (booking, payment). Tăng tính an toàn và control.</p>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-box">
+                <span class="stat-number">90K+</span>
+                <span class="stat-label">GitHub Stars</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number">700+</span>
+                <span class="stat-label">Integrations</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number">10</span>
+                <span class="stat-label">AI Agents trong Vi Vu</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number">5s</span>
+                <span class="stat-label">Avg. Itinerary Gen Time</span>
+            </div>
+        </div>
+
+        <h2 class="section-title">Vi Vu Multi-Agent System Architecture</h2>
+        
+        <div class="agent-flow">
+            <div class="agent-step">
+                <div class="agent-number">01</div>
+                <div class="agent-content">
+                    <h4>🎯 Planning Agent</h4>
+                    <p>Nhận input từ user (điểm đến, ngày, ngân sách), phân tích requirements và tạo execution plan.</p>
+                </div>
+            </div>
+
+            <div class="agent-step">
+                <div class="agent-number">02</div>
+                <div class="agent-content">
+                    <h4>🌦️ Weather Agent</h4>
+                    <p>Gọi OpenWeather API để check thời tiết tại điểm đến, suggest thời gian tốt nhất.</p>
+                </div>
+            </div>
+
+            <div class="agent-step">
+                <div class="agent-number">03</div>
+                <div class="agent-content">
+                    <h4>🔍 Search Agent</h4>
+                    <p>Query ChromaDB RAG để tìm top địa điểm phù hợp với sở thích user từ 50K+ places.</p>
+                </div>
+            </div>
+
+            <div class="agent-step">
+                <div class="agent-number">04</div>
+                <div class="agent-content">
+                    <h4>🗺️ Route Agent</h4>
+                    <p>Tối ưu route với LocationIQ API, tính khoảng cách, thời gian di chuyển giữa các điểm.</p>
+                </div>
+            </div>
+
+            <div class="agent-step">
+                <div class="agent-number">05</div>
+                <div class="agent-content">
+                    <h4>💰 Budget Agent</h4>
+                    <p>Phân bổ ngân sách thông minh: accommodation, food, activities, transport.</p>
+                </div>
+            </div>
+
+            <div class="agent-step">
+                <div class="agent-number">06</div>
+                <div class="agent-content">
+                    <h4>✨ Optimization Agent</h4>
+                    <p>Review toàn bộ itinerary, tối ưu thời gian, chi phí, trải nghiệm. Generate final recommendations.</p>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="section-title">Code Example - LangGraph Multi-Agent Workflow</h2>
+        
+        <div class="code-block">
+            <pre><code># agents/workflow.py - Vi Vu Multi-Agent Graph
+from langgraph.graph import StateGraph, END
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import HumanMessage
+
+# Define state
+class TravelPlanState(TypedDict):
+    input: str
+    destination: str
+    budget: float
+    weather_info: dict
+    places: list
+    route: dict
+    itinerary: dict
+    final_plan: str
+
+# Initialize LLM
+llm = ChatOpenAI(model="gpt-4-turbo-preview", temperature=0.7)
+
+# Create workflow graph
+workflow = StateGraph(TravelPlanState)
+
+# Add agent nodes
+workflow.add_node("planner", planning_agent)
+workflow.add_node("weather", weather_agent)
+workflow.add_node("search", search_agent)
+workflow.add_node("router", route_agent)
+workflow.add_node("budget", budget_agent)
+workflow.add_node("optimizer", optimization_agent)
+
+# Define edges (agent flow)
+workflow.set_entry_point("planner")
+workflow.add_edge("planner", "weather")
+workflow.add_edge("weather", "search")
+workflow.add_edge("search", "router")
+workflow.add_edge("router", "budget")
+workflow.add_edge("budget", "optimizer")
+workflow.add_edge("optimizer", END)
+
+# Compile graph
+app = workflow.compile()
+
+# Execute
+result = app.invoke({
+    "input": "Plan 3-day trip to Da Nang, budget 10M VND"
+})
+</code></pre>
+        </div>
+
+        <div class="highlight-box">
+            <h4>🎯 Tính năng đặc biệt trong Vi Vu</h4>
+            <ul class="tech-list">
+                <li><strong>Conditional Routing:</strong> Agents tự động routing dựa trên context (budget cao → premium places)</li>
+                <li><strong>Error Handling:</strong> Retry logic với exponential backoff khi API call fails</li>
+                <li><strong>Parallel Execution:</strong> Weather + Search agents chạy song song để giảm latency</li>
+                <li><strong>Memory:</strong> ConversationBufferMemory lưu chat history để personalize recommendations</li>
+                <li><strong>Streaming:</strong> Stream từng bước của workflow đến frontend real-time</li>
+                <li><strong>LangSmith Integration:</strong> Full observability với traces, metrics, và debugging</li>
+            </ul>
+        </div>
+
+        <div class="highlight-box">
+            <h4>🔧 Tech Stack Dependencies</h4>
+            <ul class="tech-list">
+                <li><strong>langchain==0.3.0</strong> - Core LangChain framework</li>
+                <li><strong>langgraph==0.2.16</strong> - Multi-agent workflow orchestration</li>
+                <li><strong>langchain-openai==0.2.0</strong> - OpenAI LLM integration</li>
+                <li><strong>langchain-community==0.3.0</strong> - Community tools & integrations</li>
+                <li><strong>langsmith==0.1.98</strong> - Tracing và monitoring</li>
+                <li><strong>langchain-chroma==0.1.2</strong> - ChromaDB vector store</li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <h2 class="section-title">Trải nghiệm sức mạnh của AI Agents</h2>
+        <p style="color: var(--color-text-light); font-size: 1.2rem; margin-bottom: 2rem;">
+            Tạo lịch trình du lịch thông minh chỉ trong vài giây
+        </p>
+        <a href="/" class="cta-button">🚀 Tạo lịch trình ngay</a>
+        &nbsp;&nbsp;
+        <a href="https://python.langchain.com/docs/langgraph" class="cta-button" style="background: var(--color-secondary);" target="_blank">📚 LangGraph Docs</a>
+    </section>
+    
+    <script>
+        // Navbar scroll effect - transparency on scroll
+        const navbar = document.querySelector('.navbar');
+        if(navbar){
+            window.addEventListener('scroll', () => {
+                const currentScroll = window.pageYOffset;
+                if(currentScroll > 50){
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
+            });
+        }
+    </script>
+    
+    <!-- FOOTER -->
+    {% include 'includes/footer.html' %}
+</body>
+</html>
+

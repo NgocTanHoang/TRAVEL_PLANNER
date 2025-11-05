@@ -1,0 +1,135 @@
+        // Load Popular Places
+        function loadPopularPlaces() {
+            const grid = document.getElementById('popular-places-grid');
+            if (!grid) return;
+
+            // Fetch from API
+            fetch('/api/v1/places/?ordering=-danhGiaTrungBinh,-soLuotDanhGia&limit=6')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.results && data.results.length > 0) {
+                        grid.innerHTML = '';
+                        data.results.forEach(place => {
+                            const card = createPlaceCard(place);
+                            grid.appendChild(card);
+                        });
+                    } else {
+                        grid.innerHTML = '<div class="loading-placeholder">Không tìm thấy địa điểm phổ biến</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading popular places:', error);
+                    grid.innerHTML = '<div class="loading-placeholder">Không thể tải địa điểm phổ biến</div>';
+                });
+        }
+
+        // Load Nearby Places (requires user location)
+        function loadNearbyPlaces() {
+            const grid = document.getElementById('nearby-places-grid');
+            if (!grid) return;
+
+            // Get user location first
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        
+                        // Fetch nearby places (simplified - using search for now)
+                        // TODO: Implement actual nearby search with coordinates
+                        fetch('/api/v1/places/?limit=6')
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.results && data.results.length > 0) {
+                                    grid.innerHTML = '';
+                                    data.results.slice(0, 6).forEach(place => {
+                                        const card = createPlaceCard(place);
+                                        grid.appendChild(card);
+                                    });
+                                } else {
+                                    grid.innerHTML = '<div class="loading-placeholder">Không tìm thấy địa điểm gần đây</div>';
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error loading nearby places:', error);
+                                grid.innerHTML = '<div class="loading-placeholder">Không thể tải địa điểm gần đây</div>';
+                            });
+                    },
+                    error => {
+                        console.warn('Geolocation error:', error);
+                        // Fallback: load popular places
+                        fetch('/api/v1/places/?limit=6')
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.results && data.results.length > 0) {
+                                    grid.innerHTML = '';
+                                    data.results.forEach(place => {
+                                        const card = createPlaceCard(place);
+                                        grid.appendChild(card);
+                                    });
+                                }
+                            });
+                    }
+                );
+            } else {
+                // No geolocation support - load popular places as fallback
+                fetch('/api/v1/places/?limit=6')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.results && data.results.length > 0) {
+                            grid.innerHTML = '';
+                            data.results.forEach(place => {
+                                const card = createPlaceCard(place);
+                                grid.appendChild(card);
+                            });
+                        }
+                    });
+            }
+        }
+
+        // Create place card element
+        function createPlaceCard(place) {
+            const card = document.createElement('div');
+            card.className = 'place-card';
+            card.onclick = () => {
+                window.location.href = `/places/${place.maDiaDiem || place.id}/`;
+            };
+
+            const imageUrl = place.anhDaiDien || place.image || '/static/img/logo_crop-Photoroom.png';
+            const rating = place.danhGiaTrungBinh || place.rating || 0;
+            const ratingCount = place.soLuotDanhGia || place.review_count || 0;
+            const location = place.maTinhThanh?.tenTinhThanh || place.city || '';
+            const category = place.loaiDiaDiem || place.category || 'Địa điểm';
+
+            // Generate star rating
+            const stars = '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
+
+            card.innerHTML = `
+                <img src="${imageUrl}" alt="${place.tenDiaDiem || place.name}" class="place-card-image" onerror="this.src='/static/img/logo_crop-Photoroom.png'">
+                <div class="place-card-content">
+                    <h3 class="place-card-title">${place.tenDiaDiem || place.name}</h3>
+                    <div class="place-card-location">
+                        📍 ${location}
+                    </div>
+                    <div class="place-card-rating">
+                        <span class="rating-stars">${stars}</span>
+                        <span class="rating-score">${rating.toFixed(1)}</span>
+                        <span class="rating-count">(${ratingCount})</span>
+                    </div>
+                    <span class="place-card-category">${category}</span>
+                </div>
+            `;
+
+            return card;
+        }
+
+        // Load places when page loads
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                loadPopularPlaces();
+                loadNearbyPlaces();
+            });
+        } else {
+            loadPopularPlaces();
+            loadNearbyPlaces();
+        }
