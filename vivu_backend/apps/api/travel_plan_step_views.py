@@ -317,7 +317,7 @@ class Step2TravelInfoView(APIView):
             
             if travelers > 20:
                 raise ValidationError({
-                    'error': 'Số người không được vượt quá 20 người (tương ứng với 1 gia đình)',
+                    'error': 'Vui lòng nhập số người dưới 20 để đảm bảo chất lượng chuyến đi',
                     'travelers': travelers,
                     'max_travelers': 20
                 })
@@ -517,7 +517,7 @@ class Step3BudgetSuggestionView(APIView):
             
             if travelers > 20:
                 raise ValidationError({
-                    'error': 'Số người không được vượt quá 20 người (tương ứng với 1 gia đình)',
+                    'error': 'Vui lòng nhập số người dưới 20 để đảm bảo chất lượng chuyến đi',
                     'travelers': travelers,
                     'max_travelers': 20
                 })
@@ -790,7 +790,7 @@ class Step4ConfirmAndPlanView(APIView):
             
             if travelers > 20:
                 raise ValidationError({
-                    'error': 'Số người không được vượt quá 20 người (tương ứng với 1 gia đình)',
+                    'error': 'Vui lòng nhập số người dưới 20 để đảm bảo chất lượng chuyến đi',
                     'travelers': travelers,
                     'max_travelers': 20
                 })
