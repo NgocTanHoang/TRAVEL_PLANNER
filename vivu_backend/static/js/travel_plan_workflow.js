@@ -883,7 +883,7 @@ async function loadStep4() {
     
     if (!resultDiv) return;
     
-    resultDiv.innerHTML = '<div style="text-align: center; padding: 3rem;"><p>Đang tạo lịch trình...</p></div>';
+    resultDiv.innerHTML = '<div style="text-align: center; padding: 3rem;"><p style="color: #00838F; font-size: 1.1rem; font-weight: 500;">Đang tạo lịch trình...</p></div>';
     
     try {
         const payload = {
