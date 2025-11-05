@@ -936,6 +936,17 @@ function displayStep4Result(data) {
     // Support both daily_plans and itinerary array format
     const dailyPlans = itinerary.daily_plans || itinerary.itinerary || [];
     
+    // Get destination from workflow state
+    const destination = workflowState.step1Data?.destination?.name || plan.destination || 'Điểm đến';
+    
+    // Destination header
+    let destinationHTML = `
+        <div style="margin-bottom: 2rem; padding: 1.5rem; background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%); border-radius: 12px; color: white;">
+            <h3 style="color: white; margin: 0; font-size: 1.5rem; font-weight: 600;">📍 ${destination}</h3>
+            <p style="color: rgba(255,255,255,0.9); margin-top: 0.5rem; margin: 0;">Lịch trình ${dailyPlans.length} ngày</p>
+        </div>
+    `;
+    
     let activitiesHTML = '';
     if (activities.length > 0) {
         activitiesHTML = `
@@ -943,10 +954,10 @@ function displayStep4Result(data) {
                 <h4 style="margin-bottom: 1rem; color: var(--color-primary-dark);">🎯 Hoạt động đề xuất</h4>
                 <div>
                     ${activities.slice(0, 5).map(activity => `
-                        <div class="itinerary-activity">
-                            <strong>${activity.name || 'N/A'}</strong>
-                            ${activity.description ? `<div style="color: var(--color-gray-600); font-size: 0.9rem; margin-top: 0.25rem;">${activity.description}</div>` : ''}
-                            ${activity.cost_vnd ? `<div style="color: var(--color-gray-600); font-size: 0.9rem; margin-top: 0.25rem;">Chi phí: ${formatCurrency(activity.cost_vnd)} VNĐ</div>` : ''}
+                        <div class="itinerary-activity" style="color: #153D68;">
+                            <strong style="color: #153D68; font-size: 1rem;">${activity.name || 'N/A'}</strong>
+                            ${activity.description ? `<div style="color: #6c757d; font-size: 0.9rem; margin-top: 0.25rem;">${activity.description}</div>` : ''}
+                            ${activity.cost_vnd ? `<div style="color: #6c757d; font-size: 0.9rem; margin-top: 0.25rem;">Chi phí: ${formatCurrency(activity.cost_vnd)} VNĐ</div>` : ''}
                         </div>
                     `).join('')}
                 </div>
@@ -958,88 +969,109 @@ function displayStep4Result(data) {
     if (dailyPlans.length > 0) {
         itineraryHTML = `
             <div style="margin-top: 2rem;">
-                <h4 style="margin-bottom: 1rem; color: var(--color-primary-dark);">📅 Lịch trình chi tiết (${dailyPlans.length} ngày)</h4>
-                ${dailyPlans.map(dayPlan => {
-                    const day = dayPlan.day || 'N/A';
-                    const date = dayPlan.date || '';
-                    const theme = dayPlan.theme || '';
-                    const meals = dayPlan.meals || {};
-                    const activities_list = dayPlan.activities || [];
-                    const tips = dayPlan.tips || [];
-                    
-                    let mealsHTML = '';
-                    if (meals && Object.keys(meals).length > 0) {
-                        const mealLabels = {
-                            breakfast: 'Sáng',
-                            lunch: 'Trưa',
-                            dinner: 'Tối',
-                            snacks: 'Ăn vặt',
-                            drinks: 'Giải khát',
-                            afternoon_tea: 'Trà chiều'
-                        };
+                <h4 style="margin-bottom: 1rem; color: var(--color-primary-dark);">📅 Lịch trình chi tiết</h4>
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    ${dailyPlans.map((dayPlan, index) => {
+                        const day = dayPlan.day || (index + 1);
+                        const date = dayPlan.date || '';
+                        const theme = dayPlan.theme || '';
+                        const meals = dayPlan.meals || {};
+                        const activities_list = dayPlan.activities || [];
+                        const tips = dayPlan.tips || [];
+                        const dayId = `day-${index}`;
                         
-                        mealsHTML = '<div style="margin-top: 0.75rem;"><strong>🍽️ Bữa ăn:</strong><div style="margin-top: 0.5rem; padding-left: 1rem;">';
-                        Object.keys(mealLabels).forEach(mealType => {
-                            if (meals[mealType]) {
-                                const meal = meals[mealType];
-                                const mealName = typeof meal === 'string' ? meal : (meal.name || 'N/A');
-                                mealsHTML += `<div style="margin-bottom: 0.25rem; color: var(--color-gray-600);">${mealLabels[mealType]}: ${mealName}</div>`;
-                            }
-                        });
-                        mealsHTML += '</div></div>';
-                    }
-                    
-                    let activitiesHTML_day = '';
-                    if (activities_list.length > 0) {
-                        activitiesHTML_day = '<div style="margin-top: 0.75rem;"><strong>🎯 Hoạt động:</strong><div style="margin-top: 0.5rem;">';
-                        activities_list.forEach(actItem => {
-                            if (typeof actItem === 'string') {
-                                activitiesHTML_day += `<div class="itinerary-activity" style="margin-bottom: 0.5rem;">${actItem}</div>`;
-                            } else if (typeof actItem === 'object') {
-                                const time = actItem.time || actItem.time_slot || '';
-                                const actDesc = actItem.description || '';
-                                const activity = actItem.activity || {};
-                                const actName = typeof activity === 'string' ? activity : (activity.name || 'Hoạt động');
-                                
-                                activitiesHTML_day += `<div class="itinerary-activity" style="margin-bottom: 0.5rem;">`;
-                                if (time) {
-                                    activitiesHTML_day += `<div style="font-weight: 600; color: var(--color-secondary); margin-bottom: 0.25rem;">${time}</div>`;
+                        // Count activities
+                        const activityCount = activities_list.length;
+                        const totalHours = Math.ceil(activityCount * 1.5); // Estimate
+                        
+                        let mealsHTML = '';
+                        if (meals && Object.keys(meals).length > 0) {
+                            const mealLabels = {
+                                breakfast: 'Sáng',
+                                lunch: 'Trưa',
+                                dinner: 'Tối',
+                                snacks: 'Ăn vặt',
+                                drinks: 'Giải khát',
+                                afternoon_tea: 'Trà chiều'
+                            };
+                            
+                            mealsHTML = '<div style="margin-top: 0.75rem;"><strong style="color: #153D68;">🍽️ Bữa ăn:</strong><div style="margin-top: 0.5rem; padding-left: 1rem;">';
+                            Object.keys(mealLabels).forEach(mealType => {
+                                if (meals[mealType]) {
+                                    const meal = meals[mealType];
+                                    const mealName = typeof meal === 'string' ? meal : (meal.name || 'N/A');
+                                    mealsHTML += `<div style="margin-bottom: 0.25rem; color: #6c757d;">${mealLabels[mealType]}: ${mealName}</div>`;
                                 }
-                                activitiesHTML_day += `<div style="font-weight: 600; color: var(--color-primary-dark);">${actName}</div>`;
-                                if (actDesc) {
-                                    activitiesHTML_day += `<div style="color: var(--color-gray-600); font-size: 0.9rem; margin-top: 0.25rem;">${actDesc}</div>`;
+                            });
+                            mealsHTML += '</div></div>';
+                        }
+                        
+                        let activitiesHTML_day = '';
+                        if (activities_list.length > 0) {
+                            activitiesHTML_day = '<div style="margin-top: 0.75rem;"><strong style="color: #153D68;">🎯 Hoạt động:</strong><div style="margin-top: 0.5rem;">';
+                            activities_list.forEach(actItem => {
+                                if (typeof actItem === 'string') {
+                                    activitiesHTML_day += `<div class="itinerary-activity" style="margin-bottom: 0.5rem; color: #153D68;">${actItem}</div>`;
+                                } else if (typeof actItem === 'object') {
+                                    const time = actItem.time || actItem.time_slot || '';
+                                    const actDesc = actItem.description || '';
+                                    const activity = actItem.activity || {};
+                                    const actName = typeof activity === 'string' ? activity : (activity.name || 'Hoạt động');
+                                    
+                                    activitiesHTML_day += `<div class="itinerary-activity" style="margin-bottom: 0.5rem; color: #153D68;">`;
+                                    if (time) {
+                                        activitiesHTML_day += `<div style="font-weight: 600; color: #00838F; margin-bottom: 0.25rem;">${time}</div>`;
+                                    }
+                                    activitiesHTML_day += `<div style="font-weight: 600; color: #153D68;">${actName}</div>`;
+                                    if (actDesc) {
+                                        activitiesHTML_day += `<div style="color: #6c757d; font-size: 0.9rem; margin-top: 0.25rem;">${actDesc}</div>`;
+                                    }
+                                    activitiesHTML_day += `</div>`;
                                 }
-                                activitiesHTML_day += `</div>`;
-                            }
-                        });
-                        activitiesHTML_day += '</div></div>';
-                    }
-                    
-                    let tipsHTML = '';
-                    if (tips.length > 0) {
-                        tipsHTML = '<div style="margin-top: 0.75rem;"><strong>💡 Mẹo:</strong><ul style="margin-top: 0.5rem; padding-left: 1.5rem; color: var(--color-gray-600);">';
-                        tips.slice(0, 3).forEach(tip => {
-                            tipsHTML += `<li style="margin-bottom: 0.25rem;">${tip}</li>`;
-                        });
-                        tipsHTML += '</ul></div>';
-                    }
-                    
-                    return `
-                        <div class="itinerary-day" style="margin-bottom: 1.5rem;">
-                            <h4 style="color: var(--color-primary-dark); margin-bottom: 0.75rem;">
-                                📆 Ngày ${day}${date ? ` (${date})` : ''}${theme ? `: ${theme}` : ''}
-                            </h4>
-                            ${mealsHTML}
-                            ${activitiesHTML_day}
-                            ${tipsHTML}
-                        </div>
-                    `;
-                }).join('')}
+                            });
+                            activitiesHTML_day += '</div></div>';
+                        }
+                        
+                        let tipsHTML = '';
+                        if (tips.length > 0) {
+                            tipsHTML = '<div style="margin-top: 0.75rem;"><strong style="color: #153D68;">💡 Mẹo:</strong><ul style="margin-top: 0.5rem; padding-left: 1.5rem; color: #6c757d;">';
+                            tips.slice(0, 3).forEach(tip => {
+                                tipsHTML += `<li style="margin-bottom: 0.25rem;">${tip}</li>`;
+                            });
+                            tipsHTML += '</ul></div>';
+                        }
+                        
+                        return `
+                            <div class="day-card" style="background: #f8f9fa; border-radius: 12px; overflow: hidden; border: 1px solid #e0e0e0;">
+                                <div class="day-card-header" onclick="toggleDay('${dayId}')" style="padding: 1rem 1.5rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: white; border-bottom: 1px solid #e0e0e0;">
+                                    <div>
+                                        <h4 style="color: #153D68; margin: 0; font-size: 1.1rem; font-weight: 600;">
+                                            📆 Ngày ${day}${date ? ` (${date})` : ''}${theme ? `: ${theme}` : ''}
+                                        </h4>
+                                        <div style="color: #6c757d; font-size: 0.85rem; margin-top: 0.25rem;">
+                                            ${activityCount} hoạt động • ${totalHours} tiếng
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <button style="background: #DAA520; color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.85rem; cursor: pointer;">Ghi chú</button>
+                                        <span class="day-toggle-icon" id="icon-${dayId}" style="font-size: 1.2rem; color: #00838F; transition: transform 0.3s;">▼</span>
+                                    </div>
+                                </div>
+                                <div class="day-card-content" id="${dayId}" style="display: none; padding: 1.5rem;">
+                                    ${mealsHTML}
+                                    ${activitiesHTML_day}
+                                    ${tipsHTML}
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
             </div>
         `;
     }
     
     resultDiv.innerHTML = `
+        ${destinationHTML}
         <div class="budget-breakdown">
             <h4>💰 Tổng kết chi phí</h4>
             <div class="budget-item">
@@ -1066,6 +1098,22 @@ function displayStep4Result(data) {
         ${activitiesHTML}
         ${itineraryHTML}
     `;
+}
+
+// Toggle day card
+function toggleDay(dayId) {
+    const content = document.getElementById(dayId);
+    const icon = document.getElementById(`icon-${dayId}`);
+    
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        icon.textContent = '▲';
+        icon.style.transform = 'rotate(0deg)';
+    } else {
+        content.style.display = 'none';
+        icon.textContent = '▼';
+        icon.style.transform = 'rotate(0deg)';
+    }
 }
 
 function createFinalPlan() {
