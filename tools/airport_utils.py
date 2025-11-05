@@ -1,10 +1,10 @@
 """
 Airport mapping utilities - Xác định sân bay gần nhất
 """
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, Any
 
-    # Mapping tỉnh/thành phố → sân bay gần nhất
-    CITY_AIRPORT_MAP = {
+# Mapping tỉnh/thành phố → sân bay gần nhất
+CITY_AIRPORT_MAP = {
         # Miền Bắc
         'Hà Nội': ('HAN', 'Nội Bài', 'Hà Nội'),
         'Ha Noi': ('HAN', 'Nội Bài', 'Hà Nội'),
