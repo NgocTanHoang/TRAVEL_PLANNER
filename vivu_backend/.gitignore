@@ -29,7 +29,8 @@ db.sqlite3
 db.sqlite3-journal
 /media
 /staticfiles
-/static
+# Note: /static is kept for source files (CSS, JS, images)
+# Only /staticfiles (collected static) is ignored
 
 # Environment
 .env
