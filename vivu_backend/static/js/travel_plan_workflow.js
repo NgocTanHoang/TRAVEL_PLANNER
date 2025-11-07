@@ -15,6 +15,7 @@ const workflowState = {
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     initializeWorkflow();
+    loadTravelStyles(); // Load travel styles from API
 });
 
 function initializeWorkflow() {
@@ -952,10 +953,10 @@ function displayStep4Result(data) {
         activitiesHTML = `
             <div style="margin-top: 2rem;">
                 <h4 style="margin-bottom: 1rem; color: var(--color-primary-dark);">🎯 Hoạt động đề xuất</h4>
-                <div>
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
                     ${activities.slice(0, 5).map(activity => `
-                        <div class="itinerary-activity" style="color: #153D68;">
-                            <strong style="color: #153D68; font-size: 1rem;">${activity.name || 'N/A'}</strong>
+                        <div class="itinerary-activity" style="padding: 0.75rem; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">
+                            <strong style="color: #153D68; font-size: 1rem; display: block;">${activity.name || 'N/A'}</strong>
                             ${activity.description ? `<div style="color: #6c757d; font-size: 0.9rem; margin-top: 0.25rem;">${activity.description}</div>` : ''}
                             ${activity.cost_vnd ? `<div style="color: #6c757d; font-size: 0.9rem; margin-top: 0.25rem;">Chi phí: ${formatCurrency(activity.cost_vnd)} VNĐ</div>` : ''}
                         </div>
@@ -1042,7 +1043,7 @@ function displayStep4Result(data) {
                         }
                         
                         return `
-                            <div class="day-card" style="background: #f8f9fa; border-radius: 12px; overflow: hidden; border: 1px solid #e0e0e0;">
+                            <div class="day-card" style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); margin-bottom: 1rem;">
                                 <div class="day-card-header" onclick="toggleDay('${dayId}')" style="padding: 1rem 1.5rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: white; border-bottom: 1px solid #e0e0e0;">
                                     <div>
                                         <h4 style="color: #153D68; margin: 0; font-size: 1.1rem; font-weight: 600;">
@@ -1053,11 +1054,15 @@ function displayStep4Result(data) {
                                         </div>
                                     </div>
                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                        <button style="background: #DAA520; color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.85rem; cursor: pointer;">Ghi chú</button>
-                                        <span class="day-toggle-icon" id="icon-${dayId}" style="font-size: 1.2rem; color: #00838F; transition: transform 0.3s;">▼</span>
+                                        <button style="background: #DAA520; color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.25rem;">
+                                            <i class="fa-solid fa-note-sticky"></i> Ghi chú
+                                        </button>
+                                        <span class="day-toggle-icon" id="icon-${dayId}" style="font-size: 1.2rem; color: #00838F; transition: transform 0.3s; cursor: pointer;">
+                                            <i class="fa-solid fa-chevron-down"></i>
+                                        </span>
                                     </div>
                                 </div>
-                                <div class="day-card-content" id="${dayId}" style="display: none; padding: 1.5rem;">
+                                <div class="day-card-content" id="${dayId}" style="display: none; padding: 1.5rem; background: #f8f9fa;">
                                     ${mealsHTML}
                                     ${activitiesHTML_day}
                                     ${tipsHTML}
@@ -1107,11 +1112,11 @@ function toggleDay(dayId) {
     
     if (content.style.display === 'none') {
         content.style.display = 'block';
-        icon.textContent = '▲';
+        icon.innerHTML = '<i class="fa-solid fa-chevron-up"></i>';
         icon.style.transform = 'rotate(0deg)';
     } else {
         content.style.display = 'none';
-        icon.textContent = '▼';
+        icon.innerHTML = '<i class="fa-solid fa-chevron-down"></i>';
         icon.style.transform = 'rotate(0deg)';
     }
 }
@@ -1164,7 +1169,8 @@ function goToStep(step) {
 
 // Helper functions
 function formatCurrency(amount) {
-    return new Intl.NumberFormat('vi-VN').format(amount);
+    // Format số với dấu phẩy ngăn cách hàng nghìn, không có đơn vị (đã có VND ở nơi gọi)
+    return new Intl.NumberFormat('vi-VN').format(Math.round(amount || 0));
 }
 
 function getCookie(name) {
@@ -1180,6 +1186,99 @@ function getCookie(name) {
         }
     }
     return cookieValue;
+}
+
+// Load travel styles from API
+async function loadTravelStyles() {
+    const travelStyleSelect = document.getElementById('travel-style');
+    const smallText = travelStyleSelect ? travelStyleSelect.parentElement.querySelector('small') : null;
+    
+    if (!travelStyleSelect) return;
+    
+    try {
+        const response = await fetch('/api/v1/travel-styles/', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.styles) {
+            // Clear existing options (except default)
+            travelStyleSelect.innerHTML = '';
+            
+            // Style icons mapping
+            const styleIcons = {
+                'budget': '💰',
+                'standard': '⭐',
+                'luxury': '✨',
+                'adventure': '🏔️',
+                'cultural': '🏛️',
+                'gastronomy': '🍽️',
+                'eco': '🌱',
+                'wellness': '🧘',
+                'family': '👨‍👩‍👧‍👦',
+                'romantic': '💕',
+                'slow': '🐌',
+                'digital_nomad': '💻',
+                'shop_leisure': '🛍️',
+                'photography': '📸',
+                'religious': '🕉️',
+                'festival': '🎉',
+                'extreme': '⚡'
+            };
+            
+            // Group styles: Core first, then extended
+            const coreStyles = ['budget', 'standard', 'luxury'];
+            const extendedStyles = data.styles.filter(s => !coreStyles.includes(s.value));
+            
+            // Add core styles first
+            coreStyles.forEach(value => {
+                const style = data.styles.find(s => s.value === value);
+                if (style) {
+                    const option = document.createElement('option');
+                    option.value = style.value;
+                    option.textContent = `${styleIcons[style.value] || '⭐'} ${style.name}`;
+                    if (style.value === 'standard') option.selected = true;
+                    travelStyleSelect.appendChild(option);
+                }
+            });
+            
+            // Add separator
+            const separator = document.createElement('option');
+            separator.disabled = true;
+            separator.textContent = '───────────';
+            travelStyleSelect.appendChild(separator);
+            
+            // Add extended styles
+            extendedStyles.forEach(style => {
+                const option = document.createElement('option');
+                option.value = style.value;
+                option.textContent = `${styleIcons[style.value] || '⭐'} ${style.name}`;
+                travelStyleSelect.appendChild(option);
+            });
+            
+            // Hide loading text
+            if (smallText) {
+                smallText.style.display = 'none';
+            }
+        } else {
+            // Fallback to basic styles if API fails
+            if (smallText) {
+                smallText.textContent = 'Sử dụng phong cách cơ bản';
+                smallText.style.color = 'var(--color-gray-500)';
+            }
+        }
+    } catch (error) {
+        console.error('Error loading travel styles:', error);
+        // Fallback to basic styles
+        if (smallText) {
+            smallText.textContent = 'Sử dụng phong cách cơ bản';
+            smallText.style.color = 'var(--color-gray-500)';
+        }
+    }
 }
 
 // Export functions for use in HTML

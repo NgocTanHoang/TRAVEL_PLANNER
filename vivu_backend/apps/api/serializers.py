@@ -62,8 +62,15 @@ class DiaDiemListSerializer(serializers.ModelSerializer):
                   'viDo', 'kinhDo', 'diaChi', 'gioMoCua', 'gioDongCua', 'dienThoai', 'website']
     
     def get_hinhAnhChinh(self, obj):
-        hinh = obj.hinh_anhs.filter(laChinh=True).first()
-        return hinh.urlHinhAnh if hinh else None
+        try:
+            # Use prefetched hinh_anhs if available
+            if hasattr(obj, '_prefetched_objects_cache') and 'hinh_anhs' in obj._prefetched_objects_cache:
+                hinh = next((h for h in obj.hinh_anhs.all() if h.laChinh), None)
+            else:
+                hinh = obj.hinh_anhs.filter(laChinh=True).first()
+            return hinh.urlHinhAnh if hinh else None
+        except Exception:
+            return None
 
 
 class DiaDiemDetailSerializer(serializers.ModelSerializer):

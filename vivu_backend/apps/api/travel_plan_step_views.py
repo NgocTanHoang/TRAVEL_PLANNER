@@ -173,6 +173,21 @@ class Step1LocationSelectionView(APIView):
                 # Fallback: Tính khoảng cách đơn giản từ tọa độ (Haversine)
                 from math import radians, sin, cos, sqrt, atan2
                 
+                # Validate coordinates trước khi dùng
+                if not origin_coords or not origin_coords.get('lat') or not origin_coords.get('lon'):
+                    logger.error(f"Invalid origin_coords: {origin_coords}")
+                    return Response({
+                        'error': f'Không thể lấy tọa độ cho điểm xuất phát: "{origin}"',
+                        'origin': origin
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                
+                if not dest_coords or not dest_coords.get('lat') or not dest_coords.get('lon'):
+                    logger.error(f"Invalid dest_coords: {dest_coords}")
+                    return Response({
+                        'error': f'Không thể lấy tọa độ cho điểm đến: "{destination}"',
+                        'destination': destination
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                
                 lat1, lon1 = radians(origin_coords['lat']), radians(origin_coords['lon'])
                 lat2, lon2 = radians(dest_coords['lat']), radians(dest_coords['lon'])
                 

@@ -70,18 +70,6 @@ class AccommodationAgent(BaseAgent):
                 stars=stars
             )
             
-            # Tìm kiếm khách sạn
-            hotels = self.accommodation_tools.search_hotels(
-                city=destination,
-                check_in=check_in,
-                check_out=check_out,
-                guests=guests,
-                rooms=rooms,
-                min_price=min_price,
-                max_price=max_price,
-                stars=stars
-            )
-            
             # Tính tổng chi phí nếu đã chọn khách sạn
             selected_hotel = state.get('selected_hotel')
             if selected_hotel and check_in and check_out:

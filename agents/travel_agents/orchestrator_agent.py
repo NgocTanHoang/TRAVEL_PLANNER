@@ -228,9 +228,16 @@ class OrchestratorAgent(BaseAgent):
                         from tools.transport_tools import get_transport_tools
                         transport_tools = get_transport_tools()
                         method = state.get('transport', {}).get('suggested_method', 'bus')
-                        transport_cost = transport_tools._calculate_ground_transport_cost(distance_km, method)
+                        base_cost = transport_tools._calculate_ground_transport_cost(distance_km, method)
+                        # Nhân với số người (travelers) nếu là phương tiện cá nhân
+                        travelers = state.get('travelers', 1)
+                        if method in ['taxi', 'grab', 'car']:
+                            transport_cost = base_cost * travelers
+                        else:
+                            # Xe buýt/tàu: chi phí cố định hoặc nhân với số người tùy loại
+                            transport_cost = base_cost * travelers
                         state['transport']['estimated_cost_vnd'] = transport_cost
-                        logger.info(f"Calculated transport cost: {transport_cost:,.0f} VNĐ for {method}")
+                        logger.info(f"Calculated transport cost: {transport_cost:,.0f} VNĐ for {method} ({travelers} travelers)")
                 
                 state['transport_cost'] = transport_cost
             

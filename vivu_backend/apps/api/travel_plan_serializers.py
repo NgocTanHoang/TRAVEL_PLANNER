@@ -13,10 +13,9 @@ class TravelPlanRequestSerializer(serializers.Serializer):
     start_date = serializers.DateField(required=True, help_text="Ngày bắt đầu (YYYY-MM-DD)")
     days = serializers.IntegerField(required=True, min_value=1, max_value=14, help_text="Số ngày (tối đa 14 ngày)")
     travelers = serializers.IntegerField(required=True, min_value=1, max_value=20, help_text="Số người")
-    travel_style = serializers.ChoiceField(
-        choices=['budget', 'standard', 'luxury'],
+    travel_style = serializers.CharField(
         default='standard',
-        help_text="Phong cách du lịch"
+        help_text="Phong cách du lịch (string hoặc JSON array cho multiple styles). Ví dụ: 'budget', 'gastronomy', hoặc '[\"romantic\", \"luxury\"]'"
     )
     budget = serializers.FloatField(required=False, min_value=0, help_text="Ngân sách tối đa (VNĐ)")
     rooms = serializers.IntegerField(default=1, min_value=1, max_value=10, help_text="Số phòng")

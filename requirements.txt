@@ -25,19 +25,26 @@ argon2-cffi==23.1.0
 python-dotenv==1.0.1
 Pillow==10.2.0
 
+# Data Processing
+pandas>=2.0.0,<3.0.0
+numpy>=1.24.0,<2.0.0
+
 # Cache (Redis)
-redis>=5.0.0,<6.0.0
+redis>=5.0.0,<8.0.0
+django-redis>=5.4.0,<7.0.0  # Django Redis cache backend (supports version 6.0.0+)
 
 # ============================================================================
 # AI & LLM (for Multi-Agent System)
 # ============================================================================
 
 # LangChain & LangGraph
-langchain>=1.0.0,<2.0.0
-langchain-core>=1.0.0,<2.0.0
-langchain-openai>=1.0.0,<2.0.0
-langgraph>=1.0.0,<2.0.0
-langchain-tavily>=0.1.0,<1.0.0
+langchain>=1.0.2,<2.0.0
+langchain-core>=1.0.2,<2.0.0
+langchain-openai>=1.0.2,<2.0.0
+langgraph>=1.0.2,<2.0.0
+# langchain-tavily>=0.1.0,<1.0.0  # Commented: conflict with langchain 1.x, use langchain-tavily 0.2.13+ if needed
+langchain-tavily>=0.2.13,<1.0.0
+tavily-python>=0.7.0,<1.0.0  # Tavily API client for web search
 
 # OpenAI
 openai>=1.0.0,<3.0.0
@@ -70,18 +77,23 @@ surprise>=0.1,<1.0  # For SVD-based collaborative filtering
 # Deep Learning (optional - install separately)
 # PyTorch: pip install torch
 # TensorFlow: pip install tensorflow
-# XGBoost: pip install xgboost
+# XGBoost (optional - for advanced ML models)
+# xgboost>=2.0.0,<3.0.0
 
 # Google Gemini LangChain integration
-langchain-google-genai>=1.0.0,<2.0.0
+# langchain-google-genai>=1.0.0,<2.0.0  # Commented: conflict with langchain-core 1.x, use google-generativeai directly instead
 
 # Web scraping (for data collection agents)
 beautifulsoup4>=4.12.0,<5.0.0
 requests>=2.31.0,<3.0.0
 googlesearch-python>=1.2.3,<2.0.0
+duckduckgo-search>=6.0.0,<7.0.0  # Free search API - no API key needed
 
 # SerpAPI - Google Search Results
 google-search-results>=2.4.2,<3.0.0
+
+# Excel file handling (for data import scripts)
+openpyxl>=3.1.0,<4.0.0
 
 # ============================================================================
 # TESTING & CODE QUALITY

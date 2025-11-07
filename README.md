@@ -39,6 +39,12 @@ Vi Vu là nền tảng lập kế hoạch du lịch thế hệ mới được h�
 - Tối ưu route và thời gian
 - Bao gồm cả thông tin chi tiết về từng địa điểm
 
+### 🌐 Web Search Integration
+- **DuckDuckGo**: Tìm kiếm miễn phí, không cần API key
+- **Wikipedia**: Lấy thông tin từ Wikipedia tiếng Việt
+- **SerpAPI**: Google Search results (có free tier)
+- **Tavily**: Web search và data enrichment (optional)
+
 ---
 
 ## 🏗️ Kiến trúc hệ thống
@@ -61,90 +67,156 @@ Vi Vu là nền tảng lập kế hoạch du lịch thế hệ mới được h�
 │              LANGGRAPH WORKFLOW ORCHESTRATOR                 │
 │                                                              │
 │  Entry Point: Transport Agent                                │
-│      │                                                        │
-│      ├─► Flight Agent (conditional)                         │
-│      │                                                        │
+│      │                                                       │
+│      ├─► Flight Agent (conditional)                          │
+│      │                                                       │
 │      ├─► Accommodation Agent                                 │
-│      │                                                        │
+│      │                                                       │
 │      ├─► Activities Agent                                    │
-│      │                                                        │
+│      │                                                       │
 │      ├─► Budget Agent                                        │
-│      │                                                        │
-│      └─► Planning Agent                                       │
+│      │                                                       │
+│      └─► Planning Agent                                      │
 │                                                              │
-│  All agents integrated with:                                │
+│  All agents integrated with:                                 │
 │  • LangChain LLM (GPT-4)                                     │
 │  • LangSmith Tracing & Monitoring                            │
 │  • Retry Logic & Error Handling                              │
-└───────────────────────────┬───────────────────────────────────┘
-                            │
-┌────────────────────────────▼─────────────────────────────────┐
-│                     RAG ENGINE                              │
+└────────────────────────────┬─────────────────────────────────┘
+                             │
+┌────────────────────────────▼───────────────────────────────┐
+│                     RAG ENGINE                             │
 │  ┌──────────────┐  ┌──────────────┐  ┌─────────────────┐   │
 │  │  Embeddings  │──│ Vector Store │──│  LLM (GPT-4)    │   │
 │  │  (OpenAI)    │  │  (ChromaDB)  │  │                 │   │
 │  └──────────────┘  └──────────────┘  └─────────────────┘   │
-└───────────────────────────────────────────────────────────────┘
+└────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Hướng dẫn cài đặt
 
 ### Yêu cầu hệ thống
 
-- **Python**: 3.10+
+- **Python**: 3.10+ (khuyến nghị 3.11 hoặc 3.12)
 - **Database**: SQLite (mặc định) hoặc PostgreSQL (production)
-- **API Keys**: OpenAI, LangSmith, Tavily (xem `.env.example`)
+- **API Keys**: OpenAI, LangSmith (xem phần Environment Variables)
 
-### Cài đặt
+### Bước 1: Tạo và kích hoạt Virtual Environment
 
-1. **Clone repository:**
+**Quan trọng**: Virtual environment phải được tạo tại thư mục gốc của project.
+
 ```bash
-git clone https://github.com/NgocTanHoang/TRAVEL_PLANNER.git
-cd TRAVEL_PLANNER
-```
+# Di chuyển đến thư mục project
+cd "D:\KLTN\MAS (1)\MAS\TRAVEL_PLANNER"
 
-2. **Tạo virtual environment:**
-```bash
-python -m venv .venv
-# Windows
-.venv\Scripts\activate
+# Tạo virtual environment
+python -m venv venv
+
+# Kích hoạt virtual environment
+# Windows (PowerShell)
+.\venv\Scripts\Activate.ps1
+
+# Windows (Command Prompt)
+venv\Scripts\activate.bat
+
 # Linux/Mac
-source .venv/bin/activate
+source venv/bin/activate
 ```
 
-3. **Cài đặt dependencies:**
+Sau khi kích hoạt, bạn sẽ thấy `(venv)` ở đầu dòng command prompt.
+
+### Bước 2: Cài đặt Dependencies
+
 ```bash
+# Đảm bảo đang ở thư mục gốc TRAVEL_PLANNER
+# và virtual environment đã được kích hoạt
+
+# Cài đặt tất cả dependencies từ requirements.txt
 pip install -r requirements.txt
 ```
 
-4. **Cấu hình environment variables:**
-```bash
-# Copy file mẫu
-cp .env.example .env
+**Lưu ý**: Quá trình cài đặt có thể mất vài phút tùy thuộc vào tốc độ internet.
 
-# Chỉnh sửa .env và thêm các API keys cần thiết:
-# - OPENAI_API_KEY
-# - LANGCHAIN_API_KEY (LangSmith)
-# - TAVILY_API_KEY
-# - SERPAPI_API_KEY (optional)
-# - OPENROUTE_API_KEY (optional)
+### Bước 3: Cấu hình Environment Variables
+
+Tạo file `.env` trong thư mục gốc `TRAVEL_PLANNER`:
+
+```bash
+# Tạo file .env (Windows PowerShell)
+New-Item -Path .env -ItemType File
+
+# Hoặc tạo thủ công bằng text editor
 ```
 
-5. **Setup database:**
+Thêm các biến môi trường sau vào file `.env`:
+
+```env
+# Django
+DJANGO_SECRET_KEY=your-secret-key-here
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1
+
+# OpenAI (Bắt buộc)
+OPENAI_API_KEY=sk-...
+
+# LangSmith (Bắt buộc cho tracing)
+LANGCHAIN_API_KEY=lsv2_pt_...
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_PROJECT=vi-vu-travel-planner
+
+# Tavily (Tùy chọn - cho web search)
+TAVILY_API_KEY=tvly-...
+
+# SerpAPI (Tùy chọn - cho Google search)
+SERPAPI_API_KEY=...
+
+# OpenRouteService (Tùy chọn - cho routing)
+OPENROUTE_API_KEY=...
+
+# VietMap (Tùy chọn - cho geocoding Việt Nam)
+VIETMAP_API_KEY=...
+```
+
+### Bước 4: Setup Database
+
+**Quan trọng**: Phải di chuyển vào thư mục `vivu_backend` trước khi chạy các lệnh Django.
+
 ```bash
+# Di chuyển vào thư mục vivu_backend
 cd vivu_backend
+
+# Chạy migrations để tạo database
 python manage.py migrate
-python manage.py createsuperuser  # Tạo admin user
+
+# Tạo superuser (admin account)
+python manage.py createsuperuser
 ```
 
-6. **Chạy development server:**
+Khi tạo superuser, bạn sẽ được yêu cầu nhập:
+- Username
+- Email (tùy chọn)
+- Password (sẽ không hiển thị khi gõ)
+
+### Bước 5: Chạy Development Server
+
+**Quan trọng**: Server chỉ có thể chạy từ thư mục `vivu_backend`.
+
 ```bash
+# Đảm bảo đang ở trong thư mục vivu_backend
+cd "D:\KLTN\MAS (1)\MAS\TRAVEL_PLANNER\vivu_backend"
+
+# Chạy development server
 python manage.py runserver
 ```
 
 Server sẽ chạy tại: **http://127.0.0.1:8000**
+
+Mở trình duyệt và truy cập:
+- **Trang chủ**: http://127.0.0.1:8000
+- **Admin panel**: http://127.0.0.1:8000/admin
+- **API Documentation**: http://127.0.0.1:8000/api/docs/
 
 ---
 
@@ -153,99 +225,99 @@ Server sẽ chạy tại: **http://127.0.0.1:8000**
 ```
 TRAVEL_PLANNER/
 │
-├── vivu_backend/                    # Django Backend
-│   ├── manage.py                    # Django management
-│   ├── db.sqlite3                   # SQLite database
-│   ├── vivu_core/                   # Django settings
-│   │   ├── settings.py              # Main configuration
-│   │   ├── urls.py                  # URL routing
-│   │   └── wsgi.py                  # WSGI config
-│   │
-│   ├── apps/                        # Django apps
-│   │   ├── places/                  # Places management
-│   │   │   ├── models.py            # DiaDiem, TinhThanh models
-│   │   │   └── migrations/          # Database migrations
-│   │   ├── users/                   # User management
-│   │   ├── itineraries/             # Travel itineraries
-│   │   ├── analytics/               # Analytics & insights
-│   │   └── api/                     # REST API endpoints
-│   │       ├── views.py             # API views
-│   │       ├── serializers.py       # DRF serializers
-│   │       └── urls.py               # API routing
-│   │
-│   ├── templates/                   # HTML templates
-│   │   ├── index.html               # Landing page
-│   │   ├── travel_plan.html         # Travel plan page
-│   │   └── places/                  # Place templates
-│   │
-│   └── static/                      # Static files
-│       ├── css/
-│       │   ├── index.css            # Main styles
-│       │   ├── vivu-colors.css      # Color system
-│       │   └── vivu-design-system.css
-│       └── img/                     # Images & assets
+├── venv/                           # Virtual environment (tạo tại đây)
 │
-├── agents/                          # Multi-Agent System
-│   ├── base_agent.py                # Base agent class
-│   ├── state.py                     # Shared state definition
+├── vivu_backend/                   # Django Backend (chạy server từ đây)
+│   ├── manage.py                   # Django management
+│   ├── db.sqlite3                  # SQLite database
+│   ├── vivu_core/                  # Django settings
+│   │   ├── settings.py             # Main configuration
+│   │   ├── urls.py                 # URL routing
+│   │   └── wsgi.py                 # WSGI config
+│   │
+│   ├── apps/                       # Django apps
+│   │   ├── places/                 # Places management
+│   │   │   ├── models.py           # DiaDiem, TinhThanh models
+│   │   │   └── migrations/         # Database migrations
+│   │   ├── users/                  # User management
+│   │   ├── itineraries/            # Travel itineraries
+│   │   ├── analytics/              # Analytics & insights
+│   │   └── api/                    # REST API endpoints
+│   │       ├── views.py            # API views
+│   │       ├── serializers.py      # DRF serializers
+│   │       ├── urls.py             # API routing
+│   │       └── place_info_searcher.py  # Web search integration
+│   │
+│   ├── templates/                  # HTML templates
+│   │   ├── index.html              # Landing page
+│   │   ├── travel_plan.html        # Travel plan page
+│   │   └── places/                 # Place templates
+│   │
+│   └── static/                     # Static files
+│       ├── css/
+│       │   ├── index.css           # Main styles
+│       │   ├── vivu-colors.css     # Color system
+│       │   └── vivu-design-system.css
+│       └── js/
+│           ├── index.js            # Main JavaScript
+│           └── travel_plan_workflow.js
+│
+├── agents/                         # Multi-Agent System
+│   ├── base_agent.py               # Base agent class
+│   ├── state.py                    # Shared state definition
 │   ├── langgraph_workflow.py       # LangGraph workflow
 │   ├── interactive_workflow.py     # Interactive workflow
-│   ├── orchestrator.py              # High-level orchestrator
+│   ├── orchestrator.py             # High-level orchestrator
 │   │
-│   └── travel_agents/               # 7 specialized agents
+│   └── travel_agents/              # 7 specialized agents
 │       ├── orchestrator_agent.py   # Main orchestrator
 │       ├── transport_agent.py      # Transport planning
-│       ├── flight_agent.py          # Flight search
-│       ├── accommodation_agent.py # Hotel search
+│       ├── flight_agent.py         # Flight search
+│       ├── accommodation_agent.py   # Hotel search
 │       ├── activities_agent.py     # Activities & dining
 │       ├── budget_agent.py          # Budget calculation
 │       ├── planning_agent.py       # Itinerary planning
-│       ├── rag.py                   # RAG implementation
-│       └── vector_db.py             # Vector DB connector
+│       ├── rag.py                  # RAG implementation
+│       └── vector_db.py            # Vector DB connector
 │
-├── tools/                           # Agent tools
-│   ├── geo_tools.py                 # Geocoding & location
-│   ├── flight_tools.py              # Flight search
+├── tools/                          # Agent tools
+│   ├── geo_tools.py                # Geocoding & location
+│   ├── flight_tools.py             # Flight search
 │   ├── accommodation_tools.py      # Hotel search
-│   ├── activities_tools.py          # Place search
-│   ├── transport_tools.py           # Transport planning
-│   ├── budget_tools.py              # Budget calculation
-│   ├── planning_tools.py            # Itinerary tools
-│   ├── serpapi_tools.py             # SerpAPI integration
-│   └── vietmap_tools.py             # VietMap geocoding
+│   ├── activities_tools.py         # Place search
+│   ├── transport_tools.py          # Transport planning
+│   ├── budget_tools.py             # Budget calculation
+│   ├── planning_tools.py           # Itinerary tools
+│   ├── serpapi_tools.py            # SerpAPI integration
+│   ├── vietmap_tools.py            # VietMap geocoding
+│   └── travel_styles.py            # Travel style profiles
 │
-├── config/                          # Configuration
-│   ├── langsmith_config.py          # LangSmith centralized config
-│   └── __init__.py
+├── config/                         # Configuration
+│   └── langsmith_config.py         # LangSmith centralized config
 │
-├── utils/                           # Utilities
-│   ├── cache.py                     # Caching utilities
-│   ├── error_handling.py            # Error classification
-│   ├── retry.py                     # Retry decorators
-│   └── standardization.py           # Data standardization
+├── utils/                          # Utilities
+│   ├── cache.py                    # Caching utilities
+│   ├── error_handling.py           # Error classification
+│   ├── retry.py                    # Retry decorators
+│   └── standardization.py          # Data standardization
 │
-├── api/                             # FastAPI orchestrator
-│   └── orchestrator.py              # FastAPI endpoint
+├── vector_db/                      # ChromaDB vector store
+│   ├── connectors/                 # Vector DB connectors
+│   └── chroma.sqlite3              # ChromaDB database
 │
-├── vector_db/                       # ChromaDB vector store
-│   ├── connectors/                  # Vector DB connectors
-│   └── chroma.sqlite3              # ChromaDB database (gitignored)
-│
-├── data/                            # Data files
+├── data/                           # Data files
 │   ├── exports/                    # Data exports
 │   └── tourism_qa_dataset.json     # Tourism Q&A dataset
 │
-├── scripts/                         # Utility scripts
-│   ├── import_*.py                  # Data import scripts
-│   └── analyze_database.py          # DB analysis
+├── scripts/                        # Utility scripts
+│   ├── add_*.py                    # Image management scripts
+│   ├── export_diadiem.py          # Data export
+│   └── fix_and_enrich_places.py    # Data enrichment
 │
-├── docs/                            # Documentation
-│   └── OPENSKY_API.md               # API documentation
-│
-├── requirements.txt                 # Python dependencies
-├── .env.example                     # Environment template
+├── requirements.txt                # Python dependencies
+├── .env                            # Environment variables (tạo file này)
 ├── .gitignore
-└── README.md                        # This file
+└── README.md                       # This file
 ```
 
 ---
@@ -266,14 +338,17 @@ TRAVEL_PLANNER/
 - **ChromaDB** - Vector database for RAG
 
 ### External APIs
-- **Tavily** - Web search
-- **SerpAPI** - Google search results
-- **VietMap** - Vietnam geocoding
-- **OpenRouteService** - Route planning
-- **OpenSky Network** - Flight data
+- **DuckDuckGo** - Free web search (no API key needed)
+- **Wikipedia** - Free information source
+- **Tavily** - Web search and enrichment (optional)
+- **SerpAPI** - Google search results (optional, free tier available)
+- **VietMap** - Vietnam geocoding (optional)
+- **OpenRouteService** - Route planning (optional)
+- **OpenSky Network** - Flight data (optional)
 
 ### Frontend
 - **HTML5 + CSS3** - Modern responsive design
+- **JavaScript (Vanilla)** - Interactive features
 - **Inter** - Base font family
 - **Poppins** - Heading font family
 - **Color System**: 60:30:10 rule
@@ -340,8 +415,8 @@ TRAVEL_PLANNER/
 - `gioMoCua`, `gioDongCua`
 - `dienThoai`, `website`
 - `danhGiaTrungBinh`, `soLuotDanhGia`, `soLuotXem`
-- `dacDiem`, `tienNghi`
-- **Total**: 53 places (Hà Nội, TPHCM, Đà Nẵng)
+- `dacDiem`, `tienNghi` (JSON fields)
+- **Total**: 50+ places
 
 **HINHANHDIADIEM** (Place Images)
 - Links images to places
@@ -366,13 +441,22 @@ POST   /api/v1/auth/logout/          # User logout
 ```
 GET    /api/v1/places/               # List places (paginated)
 GET    /api/v1/places/{id}/          # Place details
+GET    /api/v1/places/{id}/enriched/ # Place details with web search
 GET    /api/v1/places/search/?q=...  # Search places
 ```
 
 ### Travel Planning
 ```
-POST   /api/v1/travel-plan/          # Create travel plan (AI-powered)
-GET    /api/v1/travel-plan/{id}/     # Get plan details
+POST   /api/v1/travel-plans/         # Create travel plan (AI-powered)
+POST   /api/v1/travel-plans/preview/ # Preview travel plan
+GET    /api/v1/travel-plans/{id}/    # Get plan details
+```
+
+### Travel Styles
+```
+GET    /api/v1/travel-styles/        # List all travel styles
+GET    /api/v1/travel-styles/{style}/ # Get style details
+POST   /api/v1/travel-styles/combine/ # Combine multiple styles
 ```
 
 ### Itineraries (Authenticated)
@@ -384,29 +468,31 @@ PUT    /api/v1/itineraries/{id}/     # Update itinerary
 DELETE /api/v1/itineraries/{id}/     # Delete itinerary
 ```
 
-### AI Chat
-```
-POST   /api/v1/chat/                 # Chat with AI assistant
-```
-
 ### API Documentation
 - **Swagger UI**: http://127.0.0.1:8000/api/docs/
 - **ReDoc**: http://127.0.0.1:8000/api/redoc/
 
 ---
 
-## 🔧 Development
+## 🔧 Development Commands
 
 ### Chạy Development Server
 
 ```bash
-cd vivu_backend
+# Di chuyển vào thư mục vivu_backend
+cd "D:\KLTN\MAS (1)\MAS\TRAVEL_PLANNER\vivu_backend"
+
+# Chạy server
 python manage.py runserver
+
+# Chạy trên port khác
+python manage.py runserver 8080
 ```
 
 ### Tạo Migrations
 
 ```bash
+cd vivu_backend
 python manage.py makemigrations
 python manage.py migrate
 ```
@@ -414,88 +500,124 @@ python manage.py migrate
 ### Tạo Superuser
 
 ```bash
+cd vivu_backend
 python manage.py createsuperuser
 ```
 
-### Test LangGraph Workflow
+### Collect Static Files
 
 ```bash
-python test_langgraph_tracing.py
+cd vivu_backend
+python manage.py collectstatic
 ```
 
-### Test Workflow Integration
+### Shell (Django Shell)
 
 ```bash
-python test_workflow_integration.py
-```
-
-### Kiểm tra LangSmith Tracing
-
-```bash
-python check_tracing.py
-```
-
-### Setup LangSmith Environment
-
-```bash
-python setup_langsmith_env.py
+cd vivu_backend
+python manage.py shell
 ```
 
 ---
 
 ## 📝 Environment Variables
 
-Tạo file `.env` trong root directory:
+Tạo file `.env` trong thư mục gốc `TRAVEL_PLANNER`:
 
 ```env
 # Django
-DJANGO_SECRET_KEY=your-secret-key
+DJANGO_SECRET_KEY=your-secret-key-here
 DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1
 
-# OpenAI
+# OpenAI (Bắt buộc)
 OPENAI_API_KEY=sk-...
 
-# LangSmith
+# LangSmith (Bắt buộc cho tracing)
 LANGCHAIN_API_KEY=lsv2_pt_...
 LANGCHAIN_TRACING_V2=true
 LANGCHAIN_PROJECT=vi-vu-travel-planner
 
-# Tavily
+# Tavily (Tùy chọn - cho web search)
 TAVILY_API_KEY=tvly-...
 
-# SerpAPI (optional)
+# SerpAPI (Tùy chọn - cho Google search)
 SERPAPI_API_KEY=...
 
-# OpenRouteService (optional)
+# OpenRouteService (Tùy chọn - cho routing)
 OPENROUTE_API_KEY=...
 
-# VietMap (optional)
+# VietMap (Tùy chọn - cho geocoding Việt Nam)
 VIETMAP_API_KEY=...
 ```
 
+**Lưu ý**: 
+- DuckDuckGo và Wikipedia không cần API key (hoàn toàn miễn phí)
+- Chỉ cần `OPENAI_API_KEY` và `LANGCHAIN_API_KEY` để chạy cơ bản
+- Các API khác là tùy chọn để có thêm tính năng
+
 ---
 
-## 🧪 Testing
+## 🆘 Troubleshooting
 
-### Run Tests
+### Server không chạy được
 
 ```bash
-# Django tests
-cd vivu_backend
-python manage.py test
+# Kiểm tra Python version
+python --version  # Cần >= 3.10
 
-# Pytest
-pytest
+# Kiểm tra virtual environment đã được kích hoạt chưa
+# Bạn sẽ thấy (venv) ở đầu dòng command prompt
 
-# With coverage
-pytest --cov=. --cov-report=html
+# Kiểm tra đang ở đúng thư mục
+# Phải ở trong: D:\KLTN\MAS (1)\MAS\TRAVEL_PLANNER\vivu_backend
+
+# Cài lại dependencies
+pip install -r requirements.txt
+
+# Kiểm tra port 8000
+netstat -ano | findstr :8000  # Windows
 ```
 
-### Test API Endpoints
+### Module not found
 
 ```bash
-python test_server.py
+# Đảm bảo virtual environment đã được kích hoạt
+# Đảm bảo đang ở đúng directory
+cd "D:\KLTN\MAS (1)\MAS\TRAVEL_PLANNER\vivu_backend"
+
+# Cài lại dependencies
+pip install -r requirements.txt
+```
+
+### Database errors
+
+```bash
+cd vivu_backend
+python manage.py migrate
+python manage.py migrate --run-syncdb
+```
+
+### Import errors khi chạy từ thư mục sai
+
+**Quan trọng**: 
+- Tạo venv tại: `D:\KLTN\MAS (1)\MAS\TRAVEL_PLANNER`
+- Chạy server từ: `D:\KLTN\MAS (1)\MAS\TRAVEL_PLANNER\vivu_backend`
+
+Nếu gặp lỗi import, đảm bảo:
+1. Virtual environment đã được kích hoạt
+2. Đang ở đúng thư mục khi chạy lệnh
+3. Đã cài đặt đầy đủ requirements.txt
+
+### API keys không hoạt động
+
+```bash
+# Kiểm tra file .env
+type .env  # Windows
+cat .env   # Linux/Mac
+
+# Đảm bảo file .env ở thư mục gốc TRAVEL_PLANNER
+# Không phải trong vivu_backend
 ```
 
 ---
@@ -507,6 +629,8 @@ python test_server.py
 - [x] 7 specialized agents với retry logic
 - [x] RAG với ChromaDB
 - [x] LangSmith tracing & monitoring
+- [x] Web search integration (DuckDuckGo, Wikipedia)
+- [x] Travel styles expansion (14+ styles)
 - [x] Database schema fixes
 - [x] Hero banner với image support
 - [x] Comprehensive documentation
@@ -553,72 +677,5 @@ Developed as part of a thesis project on **Multi-Agent Systems for Intelligent T
 
 ---
 
-## 🆘 Troubleshooting
-
-### Server không chạy được
-
-```bash
-# Kiểm tra Python version
-python --version  # Cần >= 3.10
-
-# Cài lại dependencies
-pip install -r requirements.txt
-
-# Kiểm tra port 8000
-netstat -ano | findstr :8000  # Windows
-lsof -i :8000                  # Linux/Mac
-```
-
-### Module not found
-
-```bash
-# Đảm bảo đang ở đúng directory
-cd vivu_backend
-
-# Cài lại dependencies
-pip install -r requirements.txt
-```
-
-### Database errors
-
-```bash
-cd vivu_backend
-python manage.py migrate
-python manage.py migrate --run-syncdb
-```
-
-### LangSmith tracing không hoạt động
-
-```bash
-# Kiểm tra environment variables
-python check_tracing.py
-
-# Setup lại LangSmith
-python setup_langsmith_env.py
-```
-
-### API keys không hoạt động
-
-```bash
-# Kiểm tra file .env
-cat .env  # Linux/Mac
-type .env # Windows
-
-# Verify config
-python check_config.py
-```
-
----
-
-## 📚 Documentation
-
-- [Architecture Analysis](ARCHITECTURE_ANALYSIS.md) - Chi tiết về cấu trúc hệ thống
-- [LangSmith Integration](LANGSMITH_FIX.md) - Hướng dẫn tích hợp LangSmith
-- [API Documentation](http://127.0.0.1:8000/api/docs/) - Swagger UI
-- [OpenSky API](docs/OPENSKY_API.md) - Flight data API
-
----
-
 **Vi Vu** - Because planning should be as fun as the trip itself! 🦢✈️🌏
 
-*Inspired by [TripAppia](https://www.tripappia.com/) - The Future of AI Travel Planning*

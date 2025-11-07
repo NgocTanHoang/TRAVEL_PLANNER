@@ -37,7 +37,7 @@
                     <a href="#home" class="nav-link active" role="menuitem">Trang chủ</a>
                 </li>
                 <li role="none" class="search-dropdown">
-                    <a href="#nearby-section" class="nav-link" role="menuitem">🔍 Tìm kiếm</a>
+                    <a href="#" class="nav-link search-toggle" role="menuitem" onclick="event.preventDefault(); return false;">🔍 Tìm kiếm</a>
                     <div class="search-dropdown-menu" role="menu">
                         <div class="search-dropdown-header">Tìm kiếm du lịch</div>
                         
@@ -48,15 +48,15 @@
                                     <span class="search-dropdown-item-icon">🗺️</span>
                                     <span>Tìm kiếm địa điểm</span>
                                 </a>
-                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                <a href="/places/search/?loai_dia_diem=di_tich_lich_su" class="search-dropdown-item" role="menuitem">
                                     <span class="search-dropdown-item-icon">🏛️</span>
                                     <span>Di tích lịch sử</span>
                                 </a>
-                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                <a href="/places/search/?loai_dia_diem=thang_canh" class="search-dropdown-item" role="menuitem">
                                     <span class="search-dropdown-item-icon">🏞️</span>
                                     <span>Thắng cảnh</span>
                                 </a>
-                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                <a href="/places/search/?loai_dia_diem=giai_tri" class="search-dropdown-item" role="menuitem">
                                     <span class="search-dropdown-item-icon">🎢</span>
                                     <span>Khu vui chơi</span>
                                 </a>
@@ -66,15 +66,15 @@
                         <div class="search-dropdown-category">
                             <div class="search-dropdown-category-title">🏨 Lưu trú</div>
                             <div class="search-dropdown-items">
-                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                <a href="/places/search/?loai_dia_diem=khach_san" class="search-dropdown-item" role="menuitem">
                                     <span class="search-dropdown-item-icon">🏨</span>
                                     <span>Tìm khách sạn</span>
                                 </a>
-                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                <a href="/places/search/?loai_dia_diem=homestay" class="search-dropdown-item" role="menuitem">
                                     <span class="search-dropdown-item-icon">🏡</span>
                                     <span>Homestay</span>
                                 </a>
-                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                <a href="/places/search/?loai_dia_diem=resort" class="search-dropdown-item" role="menuitem">
                                     <span class="search-dropdown-item-icon">🏖️</span>
                                     <span>Resort</span>
                                 </a>
@@ -84,19 +84,19 @@
                         <div class="search-dropdown-category">
                             <div class="search-dropdown-category-title">🍽️ Ăn uống</div>
                             <div class="search-dropdown-items">
-                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                <a href="/places/search/?loai_dia_diem=nha_hang" class="search-dropdown-item" role="menuitem">
                                     <span class="search-dropdown-item-icon">🍜</span>
                                     <span>Nhà hàng</span>
                                 </a>
-                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                <a href="/places/search/?loai_dia_diem=cafe" class="search-dropdown-item" role="menuitem">
                                     <span class="search-dropdown-item-icon">☕</span>
                                     <span>Quán cafe</span>
                                 </a>
-                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                <a href="/places/search/?loai_dia_diem=bar" class="search-dropdown-item" role="menuitem">
                                     <span class="search-dropdown-item-icon">🍻</span>
                                     <span>Bar & Pub</span>
                                 </a>
-                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                <a href="/places/search/?loai_dia_diem=dac_san" class="search-dropdown-item" role="menuitem">
                                     <span class="search-dropdown-item-icon">🥘</span>
                                     <span>Đặc sản địa phương</span>
                                 </a>
@@ -106,15 +106,15 @@
                         <div class="search-dropdown-category">
                             <div class="search-dropdown-category-title">🛍️ Mua sắm</div>
                             <div class="search-dropdown-items">
-                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                <a href="/places/search/?loai_dia_diem=trung_tam_thuong_mai" class="search-dropdown-item" role="menuitem">
                                     <span class="search-dropdown-item-icon">🏬</span>
                                     <span>Trung tâm thương mại</span>
                                 </a>
-                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                <a href="/places/search/?loai_dia_diem=cho" class="search-dropdown-item" role="menuitem">
                                     <span class="search-dropdown-item-icon">🛒</span>
                                     <span>Chợ địa phương</span>
                                 </a>
-                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                <a href="/places/search/?loai_dia_diem=qua_luu_niem" class="search-dropdown-item" role="menuitem">
                                     <span class="search-dropdown-item-icon">🎁</span>
                                     <span>Quà lưu niệm</span>
                                 </a>
@@ -122,21 +122,21 @@
                         </div>
                         
                         <div class="search-dropdown-category">
-                            <div class="search-dropdown-category-title">✈️ Vận chuyển</div>
+                            <div class="search-dropdown-category-title">✈️ Di chuyển</div>
                             <div class="search-dropdown-items">
-                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                <a href="/travel-plan/" class="search-dropdown-item" role="menuitem">
                                     <span class="search-dropdown-item-icon">✈️</span>
                                     <span>Tìm chuyến bay</span>
                                 </a>
-                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                <a href="/travel-plan/" class="search-dropdown-item" role="menuitem">
                                     <span class="search-dropdown-item-icon">🚂</span>
                                     <span>Vé tàu hỏa</span>
                                 </a>
-                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                <a href="/travel-plan/" class="search-dropdown-item" role="menuitem">
                                     <span class="search-dropdown-item-icon">🚌</span>
                                     <span>Vé xe khách</span>
                                 </a>
-                                <a href="#nearby-section" class="search-dropdown-item" role="menuitem">
+                                <a href="/travel-plan/" class="search-dropdown-item" role="menuitem">
                                     <span class="search-dropdown-item-icon">🚗</span>
                                     <span>Thuê xe</span>
                                 </a>

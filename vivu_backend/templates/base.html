@@ -263,6 +263,178 @@
             transform: translateY(0);
         }
 
+        /* Search Dropdown Styles - Available on all pages */
+        .search-dropdown {
+            position: relative;
+        }
+        
+        .search-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 0.5rem);
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--color-white);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            min-width: 800px;
+            max-width: 950px;
+            max-height: 70vh;
+            padding: 1.5rem;
+            margin-top: 0.5rem;
+            display: none;
+            z-index: 1000;
+            border: 1px solid var(--color-gray-200);
+            margin-top: 0.25rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            overflow-y: auto;
+            overflow-x: hidden;
+            overscroll-behavior: contain;
+        }
+        
+        .search-dropdown-menu::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .search-dropdown-menu::-webkit-scrollbar-track {
+            background: var(--color-gray-100);
+            border-radius: 10px;
+        }
+        
+        .search-dropdown-menu::-webkit-scrollbar-thumb {
+            background: var(--color-gray-600);
+            border-radius: 10px;
+        }
+        
+        .search-dropdown-menu::-webkit-scrollbar-thumb:hover {
+            background: var(--color-secondary);
+        }
+        
+        .search-dropdown:hover .search-dropdown-menu,
+        .search-dropdown-menu:hover,
+        .search-dropdown.active .search-dropdown-menu {
+            display: block;
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .search-dropdown::after {
+            content: '';
+            position: absolute;
+            bottom: -0.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120%;
+            height: 0.75rem;
+            background: transparent;
+            z-index: 999;
+        }
+        
+        .search-dropdown-header {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--color-accent);
+        }
+        
+        .search-dropdown-category {
+            margin-bottom: 1.25rem;
+        }
+        
+        .search-dropdown-category-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--color-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.75rem;
+        }
+        
+        .search-dropdown-items {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+        }
+        
+        .search-dropdown-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            padding: 0.6rem 0.5rem;
+            border-radius: 8px;
+            color: var(--color-text-dark);
+            text-decoration: none;
+            transition: all 0.2s;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            background: var(--color-white);
+            text-align: center;
+            min-height: 70px;
+        }
+        
+        .search-dropdown-item:hover {
+            background: var(--color-gray-100);
+            color: var(--color-primary);
+            transform: translateY(-2px);
+            border-color: rgba(0, 0, 0, 0.12);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .search-dropdown-item-icon {
+            font-size: 1.4rem;
+            width: auto;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        
+        .search-dropdown-item span:not(.search-dropdown-item-icon) {
+            font-size: 0.8rem;
+            line-height: 1.2;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+        
+        @media (max-width: 1024px) {
+            .search-dropdown-menu {
+                min-width: 650px;
+                max-width: 750px;
+            }
+            
+            .search-dropdown-items {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .search-dropdown-menu {
+                left: 0;
+                right: 0;
+                transform: none;
+                min-width: auto;
+                max-width: none;
+                width: calc(100vw - 2rem);
+                margin-left: 1rem;
+                margin-right: 1rem;
+            }
+            
+            .search-dropdown-items {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .search-dropdown-items {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .dropdown-item {
             display: flex;
             align-items: center;
@@ -408,8 +580,113 @@
                     <li role="none">
                         <a href="/" class="nav-link" role="menuitem">Trang chủ</a>
                     </li>
-                    <li role="none">
-                        <a href="/places/search/" class="nav-link" role="menuitem">Tìm kiếm</a>
+                    <li role="none" class="search-dropdown">
+                        <a href="#" class="nav-link search-toggle" role="menuitem" onclick="event.preventDefault(); return false;">🔍 Tìm kiếm</a>
+                        <div class="search-dropdown-menu" role="menu">
+                            <div class="search-dropdown-header">Tìm kiếm du lịch</div>
+                            
+                            <div class="search-dropdown-category">
+                                <div class="search-dropdown-category-title">📍 Địa điểm & Tham quan</div>
+                                <div class="search-dropdown-items">
+                                    <a href="/places/search/" class="search-dropdown-item" role="menuitem">
+                                        <span class="search-dropdown-item-icon">🗺️</span>
+                                        <span>Tìm kiếm địa điểm</span>
+                                    </a>
+                                    <a href="/places/search/?loai_dia_diem=di_tich_lich_su" class="search-dropdown-item" role="menuitem">
+                                        <span class="search-dropdown-item-icon">🏛️</span>
+                                        <span>Di tích lịch sử</span>
+                                    </a>
+                                    <a href="/places/search/?loai_dia_diem=thang_canh" class="search-dropdown-item" role="menuitem">
+                                        <span class="search-dropdown-item-icon">🏞️</span>
+                                        <span>Thắng cảnh</span>
+                                    </a>
+                                    <a href="/places/search/?loai_dia_diem=giai_tri" class="search-dropdown-item" role="menuitem">
+                                        <span class="search-dropdown-item-icon">🎢</span>
+                                        <span>Khu vui chơi</span>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="search-dropdown-category">
+                                <div class="search-dropdown-category-title">🏨 Lưu trú</div>
+                                <div class="search-dropdown-items">
+                                    <a href="/places/search/?loai_dia_diem=khach_san" class="search-dropdown-item" role="menuitem">
+                                        <span class="search-dropdown-item-icon">🏨</span>
+                                        <span>Tìm khách sạn</span>
+                                    </a>
+                                    <a href="/places/search/?loai_dia_diem=homestay" class="search-dropdown-item" role="menuitem">
+                                        <span class="search-dropdown-item-icon">🏡</span>
+                                        <span>Homestay</span>
+                                    </a>
+                                    <a href="/places/search/?loai_dia_diem=resort" class="search-dropdown-item" role="menuitem">
+                                        <span class="search-dropdown-item-icon">🏖️</span>
+                                        <span>Resort</span>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="search-dropdown-category">
+                                <div class="search-dropdown-category-title">🍽️ Ăn uống</div>
+                                <div class="search-dropdown-items">
+                                    <a href="/places/search/?loai_dia_diem=nha_hang" class="search-dropdown-item" role="menuitem">
+                                        <span class="search-dropdown-item-icon">🍜</span>
+                                        <span>Nhà hàng</span>
+                                    </a>
+                                    <a href="/places/search/?loai_dia_diem=cafe" class="search-dropdown-item" role="menuitem">
+                                        <span class="search-dropdown-item-icon">☕</span>
+                                        <span>Quán cafe</span>
+                                    </a>
+                                    <a href="/places/search/?loai_dia_diem=bar" class="search-dropdown-item" role="menuitem">
+                                        <span class="search-dropdown-item-icon">🍻</span>
+                                        <span>Bar & Pub</span>
+                                    </a>
+                                    <a href="/places/search/?loai_dia_diem=dac_san" class="search-dropdown-item" role="menuitem">
+                                        <span class="search-dropdown-item-icon">🥘</span>
+                                        <span>Đặc sản địa phương</span>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="search-dropdown-category">
+                                <div class="search-dropdown-category-title">🛍️ Mua sắm</div>
+                                <div class="search-dropdown-items">
+                                    <a href="/places/search/?loai_dia_diem=trung_tam_thuong_mai" class="search-dropdown-item" role="menuitem">
+                                        <span class="search-dropdown-item-icon">🏬</span>
+                                        <span>Trung tâm thương mại</span>
+                                    </a>
+                                    <a href="/places/search/?loai_dia_diem=cho" class="search-dropdown-item" role="menuitem">
+                                        <span class="search-dropdown-item-icon">🛒</span>
+                                        <span>Chợ địa phương</span>
+                                    </a>
+                                    <a href="/places/search/?loai_dia_diem=qua_luu_niem" class="search-dropdown-item" role="menuitem">
+                                        <span class="search-dropdown-item-icon">🎁</span>
+                                        <span>Quà lưu niệm</span>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="search-dropdown-category">
+                                <div class="search-dropdown-category-title">✈️ Di chuyển</div>
+                                <div class="search-dropdown-items">
+                                    <a href="/travel-plan/" class="search-dropdown-item" role="menuitem">
+                                        <span class="search-dropdown-item-icon">✈️</span>
+                                        <span>Tìm chuyến bay</span>
+                                    </a>
+                                    <a href="/travel-plan/" class="search-dropdown-item" role="menuitem">
+                                        <span class="search-dropdown-item-icon">🚂</span>
+                                        <span>Vé tàu hỏa</span>
+                                    </a>
+                                    <a href="/travel-plan/" class="search-dropdown-item" role="menuitem">
+                                        <span class="search-dropdown-item-icon">🚌</span>
+                                        <span>Vé xe khách</span>
+                                    </a>
+                                    <a href="/travel-plan/" class="search-dropdown-item" role="menuitem">
+                                        <span class="search-dropdown-item-icon">🚗</span>
+                                        <span>Thuê xe</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
                     </li>
                 {% endblock %}
                 
@@ -545,6 +822,41 @@
                 navMenu.classList.toggle('mobile-open');
                 const isExpanded = navMenu.classList.contains('mobile-open');
                 mobileMenuToggle.setAttribute('aria-expanded', isExpanded);
+            });
+        }
+
+        // Search Dropdown Toggle (click và hover)
+        const searchDropdown = document.querySelector('.search-dropdown');
+        const searchToggle = document.querySelector('.search-toggle');
+        const searchDropdownMenu = document.querySelector('.search-dropdown-menu');
+        
+        if (searchToggle && searchDropdownMenu) {
+            // Click để toggle dropdown
+            searchToggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                searchDropdown.classList.toggle('active');
+            });
+            
+            // Đóng dropdown khi click bên ngoài
+            document.addEventListener('click', function(e) {
+                if (searchDropdown && !searchDropdown.contains(e.target)) {
+                    searchDropdown.classList.remove('active');
+                }
+            });
+            
+            // Hover vào dropdown để giữ mở
+            searchDropdown.addEventListener('mouseenter', function() {
+                searchDropdown.classList.add('active');
+            });
+            
+            searchDropdown.addEventListener('mouseleave', function() {
+                // Chỉ đóng khi không hover (hover tự động được CSS xử lý)
+                setTimeout(() => {
+                    if (!searchDropdown.matches(':hover')) {
+                        searchDropdown.classList.remove('active');
+                    }
+                }, 200);
             });
         }
 

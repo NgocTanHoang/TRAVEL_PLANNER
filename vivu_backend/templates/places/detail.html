@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% if place %}{{ place.tenDiaDiem }} - Vi Vu{% else %}Địa điểm không tồn tại{% endif %}</title>
+    {% load humanize %}
     <link rel="icon" type="image/png" href="/static/img/logo_crop-Photoroom.png">
     
     <!-- Google Fonts -->
@@ -592,7 +593,7 @@
                         {% if place.giaVe %}
                         <div class="info-item">
                             <span class="info-label">💰 Giá vé:</span>
-                            <span class="info-value">{{ place.giaVe|floatformat:0 }} VNĐ</span>
+                            <span class="info-value">{{ place.giaVe|floatformat:0|intcomma }} VND</span>
                         </div>
                         {% endif %}
                         {% if place.gioMoCua %}

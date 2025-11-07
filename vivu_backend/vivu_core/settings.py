@@ -157,27 +157,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
-# REST Framework
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
-    ),
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 20,
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-    'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.AnonRateThrottle',
-        'rest_framework.throttling.UserRateThrottle'
-    ],
-    'DEFAULT_THROTTLE_RATES': {
-        'anon': '100/hour',
-        'user': '1000/hour'
-    },
-    'SEARCH_PARAM': 'q',
-}
+# REST Framework configuration will be set after Redis check
+# (See bottom of file for REST_FRAMEWORK settings)
 
 # JWT Settings
 SIMPLE_JWT = {
@@ -273,4 +254,131 @@ SERPAPI_API_KEY = os.getenv('SERPAPI_API_KEY', '')
 
 # Vector DB (Optional - for RAG)
 VECTOR_DB_PATH = str(BASE_DIR / 'vector_db')
+
+# Redis Cache Configuration
+# Redis is used for caching API results and session storage
+# If Redis is not available, Django will fallback to in-memory cache
+REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
+REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
+REDIS_DB = int(os.getenv('REDIS_DB', 0))
+REDIS_PASSWORD = os.getenv('REDIS_PASSWORD', None)
+
+# Django Cache Configuration
+# Using django-redis for full-featured Redis cache backend
+# Documentation: https://pypi.org/project/django-redis/
+import logging
+logger = logging.getLogger(__name__)
+
+# Build Redis URL
+redis_url = f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
+if REDIS_PASSWORD:
+    # Password in URL or OPTIONS (see django-redis docs)
+    redis_url = f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
+
+# Configure django-redis with IGNORE_EXCEPTIONS for graceful fallback
+# This allows cache operations to fail silently when Redis is unavailable
+# (similar to memcached behavior)
+redis_available = False
+try:
+    import django_redis
+    import redis
+    
+    # Test Redis connection
+    test_client = redis.Redis(
+        host=REDIS_HOST,
+        port=REDIS_PORT,
+        db=REDIS_DB,
+        password=REDIS_PASSWORD,
+        socket_connect_timeout=2,
+        socket_timeout=2
+    )
+    test_client.ping()
+    redis_available = True
+    test_client.close()
+    logger.info(f"✅ Redis server is available at {REDIS_HOST}:{REDIS_PORT}")
+except Exception as e:
+    logger.warning(f"⚠️  Redis server not available ({e}), using in-memory cache")
+    redis_available = False
+
+if redis_available:
+    try:
+        import django_redis
+        
+        CACHES = {
+            'default': {
+                'BACKEND': 'django_redis.cache.RedisCache',
+                'LOCATION': redis_url,
+                'OPTIONS': {
+                    'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                    # Ignore connection exceptions (like memcached behavior)
+                    # Cache operations will fail silently if Redis is unavailable
+                    'IGNORE_EXCEPTIONS': True,
+                    # Connection pool settings
+                    'CONNECTION_POOL_KWARGS': {
+                        'max_connections': 50,
+                        'retry_on_timeout': True,
+                        'socket_connect_timeout': 5,
+                        'socket_timeout': 5,
+                    },
+                    # Socket timeouts (alternative to CONNECTION_POOL_KWARGS)
+                    'SOCKET_CONNECT_TIMEOUT': 5,  # seconds
+                    'SOCKET_TIMEOUT': 5,  # seconds
+                },
+                'KEY_PREFIX': 'vivu',
+                'TIMEOUT': 3600,  # Default timeout: 1 hour
+            }
+        }
+        
+        # Global setting to log ignored exceptions (optional)
+        DJANGO_REDIS_LOG_IGNORED_EXCEPTIONS = True
+        
+        logger.info(f"✅ django-redis configured: {redis_url}")
+        logger.info("   IGNORE_EXCEPTIONS=True: Cache will fail gracefully if Redis is unavailable")
+    except ImportError:
+        # Fallback to Django's built-in RedisCache (Django 4.0+)
+        CACHES = {
+            'default': {
+                'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+                'LOCATION': redis_url,
+                'KEY_PREFIX': 'vivu',
+                'TIMEOUT': 3600,
+            }
+        }
+        logger.info("Using Django built-in RedisCache (django-redis not available)")
+else:
+    # Use in-memory cache when Redis is not available
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'vivu-cache',
+            'KEY_PREFIX': 'vivu',
+            'TIMEOUT': 3600,
+        }
+    }
+    logger.info("⚠️  Using in-memory cache (Redis not available)")
+    logger.info("   To enable Redis cache, install and start Redis server")
+    logger.info("   See REDIS_SETUP.md for installation instructions")
+
+# REST Framework configuration (after Redis check)
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    # Enable throttling if Redis is available (throttling requires cache backend)
+    'DEFAULT_THROTTLE_CLASSES': [] if not redis_available else [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',
+        'user': '1000/hour'
+    },
+    'SEARCH_PARAM': 'q',
+}
 

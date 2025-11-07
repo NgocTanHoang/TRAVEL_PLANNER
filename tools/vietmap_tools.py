@@ -49,40 +49,92 @@ class VietMapTools:
             logger.warning("VIETMAP_API_KEY not set")
             return None
         
-        try:
-            url = f"{self.base_url}/geocoding"
-            headers = {
-                'api-key': self.vietmap_api_key
-            }
-            params = {
-                'text': location,
-                'limit': limit
-            }
-            
-            response = requests.get(url, headers=headers, params=params, timeout=10)
-            response.raise_for_status()
-            data = response.json()
-            
-            # VietMap API response format (cần điều chỉnh theo format thực tế)
-            if isinstance(data, list) and len(data) > 0:
-                result = data[0]
-                return {
-                    'lat': result.get('lat') or result.get('latitude'),
-                    'lon': result.get('lon') or result.get('longitude') or result.get('lng'),
-                    'formatted_address': result.get('display_name') or result.get('address') or location,
-                    'confidence': result.get('confidence', 0.0)
-                }
-            elif isinstance(data, dict) and data.get('data'):
-                result = data['data'][0] if isinstance(data['data'], list) else data['data']
-                return {
-                    'lat': result.get('lat') or result.get('latitude'),
-                    'lon': result.get('lon') or result.get('longitude') or result.get('lng'),
-                    'formatted_address': result.get('display_name') or result.get('address') or location,
-                    'confidence': result.get('confidence', 0.0)
-                }
-        except Exception as e:
-            logger.error(f"VietMap geocoding error for {location}: {e}")
-            
+        # Thử các endpoint khác nhau
+        endpoints_to_try = [
+            ('/geocoding', {'apikey': self.vietmap_api_key, 'text': location}),
+            ('/search', {'apikey': self.vietmap_api_key, 'text': location, 'limit': limit}),
+            ('/migrate-address/v3', {'apikey': self.vietmap_api_key, 'text': location}),
+        ]
+        
+        for endpoint, params in endpoints_to_try:
+            try:
+                url = f"{self.base_url}{endpoint}"
+                response = requests.get(url, params=params, timeout=10)
+                
+                # Nếu 401 Unauthorized, có thể là API key sai hoặc endpoint không đúng
+                if response.status_code == 401:
+                    logger.warning(f"VietMap API 401 Unauthorized for {endpoint} - check API key")
+                    continue
+                
+                response.raise_for_status()
+                data = response.json()
+                
+                # Parse response - thử nhiều format
+                result = None
+                
+                # Format 1: List of results
+                if isinstance(data, list) and len(data) > 0:
+                    result = data[0]
+                    lat = result.get('lat') or result.get('latitude') or result.get('y')
+                    lon = result.get('lon') or result.get('longitude') or result.get('lng') or result.get('x')
+                    
+                    if lat is not None and lon is not None:
+                        return {
+                            'lat': float(lat),
+                            'lon': float(lon),
+                            'formatted_address': result.get('display_name') or result.get('address') or result.get('name') or location,
+                            'confidence': result.get('confidence', 0.8)
+                        }
+                
+                # Format 2: Dict with 'data' key
+                elif isinstance(data, dict):
+                    results = data.get('data', [])
+                    if isinstance(results, list) and len(results) > 0:
+                        result = results[0]
+                    elif isinstance(data.get('data'), dict):
+                        result = data.get('data')
+                    else:
+                        # Thử lấy từ boundaries nếu có
+                        boundaries = data.get('boundaries', [])
+                        if boundaries and isinstance(boundaries, list) and len(boundaries) > 0:
+                            boundary = boundaries[0]
+                            # Boundaries có thể chứa geometry với coordinates
+                            if isinstance(boundary, dict):
+                                geometry = boundary.get('geometry', {})
+                                if geometry:
+                                    coords = geometry.get('coordinates', [])
+                                    if coords and len(coords) >= 2:
+                                        return {
+                                            'lat': float(coords[1]),
+                                            'lon': float(coords[0]),
+                                            'formatted_address': data.get('display', data.get('address', location)),
+                                            'confidence': 0.8
+                                        }
+                    
+                    if result:
+                        lat = result.get('lat') or result.get('latitude') or result.get('y')
+                        lon = result.get('lon') or result.get('longitude') or result.get('lng') or result.get('x')
+                        
+                        if lat is not None and lon is not None:
+                            return {
+                                'lat': float(lat),
+                                'lon': float(lon),
+                                'formatted_address': result.get('display_name') or result.get('address') or result.get('name') or data.get('display', location),
+                                'confidence': result.get('confidence', 0.7)
+                            }
+                
+                # Nếu không parse được coordinates, log và tiếp tục thử endpoint khác
+                logger.debug(f"VietMap {endpoint} returned data but no coordinates found: {type(data)}")
+                
+            except requests.exceptions.RequestException as e:
+                logger.debug(f"VietMap {endpoint} failed: {e}")
+                continue
+            except Exception as e:
+                logger.debug(f"VietMap {endpoint} error: {e}")
+                continue
+        
+        # Nếu tất cả endpoints đều fail, return None để fallback về OpenRouteService
+        logger.warning(f"VietMap geocoding failed for all endpoints: {location}")
         return None
     
     def reverse_geocode(self, lat: float, lon: float) -> Optional[Dict[str, Any]]:
@@ -149,7 +201,12 @@ class VietMapTools:
             origin_coords = self.geocode(origin)
             dest_coords = self.geocode(destination)
             
-            if not origin_coords or not dest_coords:
+            if not origin_coords or not origin_coords.get('lat') or not origin_coords.get('lon'):
+                logger.warning(f"Cannot geocode origin: {origin}")
+                return None
+            
+            if not dest_coords or not dest_coords.get('lat') or not dest_coords.get('lon'):
+                logger.warning(f"Cannot geocode destination: {destination}")
                 return None
             
             origin = f"{origin_coords['lat']},{origin_coords['lon']}"

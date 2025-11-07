@@ -41,7 +41,7 @@
         padding: 1rem 4rem 1rem 1.5rem;
         font-size: 1.1rem;
         border: 2px solid rgba(255, 255, 255, 0.2);
-        border-radius: var(--radius-lg);
+        border-radius: 50px; /* Tròn hơn */
         background: rgba(255, 255, 255, 0.1);
         color: var(--color-text-light);
         backdrop-filter: blur(10px);
@@ -102,10 +102,11 @@
     }
 
     .search-content {
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: 1fr 2fr; /* Cột trái 1/3, cột phải 2/3 */
         gap: 2rem;
         margin-top: 2rem;
+        align-items: start;
     }
 
     .results-panel {
@@ -114,10 +115,19 @@
         padding: 1.5rem;
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.1);
+        width: 100%;
     }
 
     .map-panel {
-        order: 2;
+        width: 100%;
+        height: calc(100vh - 300px);
+        min-height: 600px;
+        position: relative;
+        /* Loại bỏ viền và khung */
+        padding: 0;
+        background: transparent;
+        border: none;
+        backdrop-filter: none;
     }
 
     .results-panel h2 {
@@ -239,23 +249,26 @@
         transform: translateY(-2px);
     }
 
-    .map-panel {
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: var(--radius-lg);
-        padding: 1.5rem;
-        padding-right: 2rem;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        height: calc(100vh - 300px);
-        min-height: 600px;
-        position: relative;
-    }
-
     #search-map {
         width: 100%;
         height: 100%;
-        border-radius: var(--radius-md);
+        border-radius: 16px; /* Border các góc */
         z-index: 1;
+        overflow: hidden; /* Đảm bảo border-radius áp dụng đúng */
+        position: relative;
+    }
+    
+    /* Đảm bảo Leaflet map container có border-radius */
+    #search-map .leaflet-container {
+        border-radius: 16px;
+        overflow: hidden;
+        height: 100% !important;
+        width: 100% !important;
+    }
+    
+    /* Đảm bảo các tile map cũng có border-radius */
+    #search-map .leaflet-tile-pane img {
+        border-radius: 16px;
     }
 
     .no-results {
@@ -371,13 +384,33 @@
     }
 
     @media (max-width: 1024px) {
+        .search-content {
+            grid-template-columns: 1fr; /* Chuyển sang 1 cột trên tablet */
+        }
+        
         .map-panel {
             height: 500px;
             min-height: 500px;
+            order: 2;
+        }
+        
+        .results-panel {
+            order: 1;
         }
         
         .result-item-meta {
             gap: 1rem;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .search-content {
+            grid-template-columns: 1fr;
+        }
+        
+        .map-panel {
+            height: 400px;
+            min-height: 400px;
         }
     }
 </style>
@@ -451,22 +484,44 @@
     let userLocation = null;
 
     function initSearchMap() {
-        // Default center: Ho Chi Minh City
-        searchMap = L.map('search-map').setView([10.762622, 106.660172], 13);
+        // Kiểm tra xem container có tồn tại không
+        const mapContainer = document.getElementById('search-map');
+        if (!mapContainer) {
+            console.error('Map container not found!');
+            return;
+        }
         
-        // Add OpenStreetMap tile layer
+        // Default center: Ho Chi Minh City
+        searchMap = L.map('search-map', {
+            center: [10.762622, 106.660172],
+            zoom: 13,
+            zoomControl: true,
+            attributionControl: true
+        });
+        
+        // Add OpenStreetMap tile layer với cấu hình đầy đủ
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            maxZoom: 19
+            maxZoom: 19,
+            minZoom: 3,
+            subdomains: ['a', 'b', 'c'],
+            tileSize: 256,
+            zoomOffset: 0
         }).addTo(searchMap);
+        
+        // Đảm bảo map được invalidate size sau khi load
+        setTimeout(() => {
+            searchMap.invalidateSize();
+        }, 100);
         
         // Add scale control
         L.control.scale({
             metric: true,
-            imperial: false
+            imperial: false,
+            position: 'bottomright'
         }).addTo(searchMap);
         
-        console.log('🗺️ Search map initialized');
+        console.log('🗺️ Search map initialized successfully');
     }
 
     // Search function
@@ -552,14 +607,30 @@
 
     // Calculate distance between two coordinates (Haversine formula)
     function calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371; // Earth's radius in kilometers
+        // Validate inputs - check for null/undefined, not for falsy values (0 is valid)
+        if (lat1 === null || lat1 === undefined || lon1 === null || lon1 === undefined ||
+            lat2 === null || lat2 === undefined || lon2 === null || lon2 === undefined ||
+            isNaN(lat1) || isNaN(lon1) || isNaN(lat2) || isNaN(lon2)) {
+            console.warn('Invalid coordinates for distance calculation:', {lat1, lon1, lat2, lon2});
+            return Infinity;
+        }
+        
+        // Validate coordinate ranges
+        if (lat1 < -90 || lat1 > 90 || lat2 < -90 || lat2 > 90 ||
+            lon1 < -180 || lon1 > 180 || lon2 < -180 || lon2 > 180) {
+            console.warn('Coordinates out of valid range:', {lat1, lon1, lat2, lon2});
+            return Infinity;
+        }
+        
+        const R = 6371; // Radius of Earth in km
         const dLat = (lat2 - lat1) * Math.PI / 180;
         const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        const a = 
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
             Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
             Math.sin(dLon / 2) * Math.sin(dLon / 2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c;
+        return R * c; // Distance in km
     }
 
     // Sort results by distance (from user location), then by rating
@@ -568,11 +639,20 @@
             let distance = Infinity;
             
             if (place.viDo && place.kinhDo && userLat && userLon) {
-                distance = calculateDistance(
-                    userLat, userLon,
-                    parseFloat(place.viDo),
-                    parseFloat(place.kinhDo)
-                );
+                // viDo = latitude, kinhDo = longitude
+                const placeLat = parseFloat(place.viDo);
+                const placeLon = parseFloat(place.kinhDo);
+                
+                // Validate coordinates
+                if (!isNaN(placeLat) && !isNaN(placeLon) && 
+                    placeLat >= -90 && placeLat <= 90 && 
+                    placeLon >= -180 && placeLon <= 180 &&
+                    !isNaN(userLat) && !isNaN(userLon)) {
+                    distance = calculateDistance(
+                        userLat, userLon,
+                        placeLat, placeLon
+                    );
+                }
             }
             
             return { place, distance };
@@ -605,12 +685,22 @@
             // Calculate and display distance
             let distanceHtml = '';
             if (userLat && userLon && place.viDo && place.kinhDo) {
-                const distance = calculateDistance(
-                    userLat, userLon,
-                    parseFloat(place.viDo),
-                    parseFloat(place.kinhDo)
-                );
-                distanceHtml = `<div class="distance">📍 ${distance.toFixed(1)} km</div>`;
+                // viDo = latitude, kinhDo = longitude
+                const placeLat = parseFloat(place.viDo);
+                const placeLon = parseFloat(place.kinhDo);
+                
+                // Validate coordinates before calculating
+                if (!isNaN(placeLat) && !isNaN(placeLon) && 
+                    placeLat >= -90 && placeLat <= 90 && 
+                    placeLon >= -180 && placeLon <= 180) {
+                    const distance = calculateDistance(
+                        userLat, userLon,
+                        placeLat, placeLon
+                    );
+                    if (distance !== Infinity && !isNaN(distance)) {
+                        distanceHtml = `<div class="distance">📍 ${distance.toFixed(1)} km</div>`;
+                    }
+                }
             }
 
             item.innerHTML = `
@@ -646,9 +736,16 @@
         if (!searchMap) return;
 
         results.forEach((place, index) => {
+            // viDo = latitude (vĩ độ), kinhDo = longitude (kinh độ)
             if (place.viDo && place.kinhDo) {
-                const lat = parseFloat(place.viDo);
-                const lon = parseFloat(place.kinhDo);
+                const lat = parseFloat(place.viDo); // Latitude
+                const lon = parseFloat(place.kinhDo); // Longitude
+                
+                // Validate coordinates
+                if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+                    console.warn(`Invalid coordinates for ${place.tenDiaDiem}: lat=${lat}, lon=${lon}`);
+                    return;
+                }
 
                 const marker = L.marker([lat, lon], {
                     icon: L.divIcon({
@@ -679,7 +776,15 @@
 
         // Fit map to show all markers
         if (markers.length > 0) {
-            const bounds = markers.map(m => [m.place.viDo, m.place.kinhDo]).filter(c => c[0] && c[1]);
+            const bounds = markers.map(m => {
+                // Đảm bảo thứ tự đúng: [latitude, longitude]
+                return [parseFloat(m.place.viDo), parseFloat(m.place.kinhDo)];
+            }).filter(c => {
+                // Validate: lat phải trong [-90, 90], lon phải trong [-180, 180]
+                const [lat, lon] = c;
+                return lat && lon && !isNaN(lat) && !isNaN(lon) && 
+                       lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
+            });
             if (bounds.length > 0) {
                 searchMap.fitBounds(bounds, { padding: [50, 50] });
             }
@@ -692,9 +797,16 @@
         if (!results[index]) return;
 
         const place = results[index];
+        // viDo = latitude, kinhDo = longitude
         if (place.viDo && place.kinhDo) {
-            const lat = parseFloat(place.viDo);
-            const lon = parseFloat(place.kinhDo);
+            const lat = parseFloat(place.viDo); // Latitude
+            const lon = parseFloat(place.kinhDo); // Longitude
+            
+            // Validate coordinates
+            if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+                console.warn(`Invalid coordinates for ${place.tenDiaDiem}: lat=${lat}, lon=${lon}`);
+                return;
+            }
 
             searchMap.setView([lat, lon], 16);
 
@@ -740,7 +852,7 @@
             { label: 'Loại địa điểm', value: getPlaceTypeLabel(place.loaiDiaDiem) },
             { label: 'Địa chỉ', value: place.diaChi || 'N/A', fullWidth: true },
             { label: 'Đánh giá', value: `${place.danhGiaTrungBinh || 0}/5.0 (${place.soLuotDanhGia || 0} đánh giá)` },
-            { label: 'Giá vé', value: place.giaVe ? `${place.giaVe.toLocaleString('vi-VN')} VNĐ` : 'Miễn phí' },
+            { label: 'Giá vé', value: place.giaVe ? `${place.giaVe.toLocaleString('vi-VN')} VND` : 'Miễn phí' },
             { label: 'Giờ mở cửa', value: place.gioMoCua || 'N/A' },
             { label: 'Giờ đóng cửa', value: place.gioDongCua || 'N/A' },
             { label: 'Điện thoại', value: place.dienThoai || 'N/A' },
@@ -815,7 +927,17 @@
 
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', () => {
-        initSearchMap();
+        // Đợi một chút để đảm bảo CSS đã được áp dụng
+        setTimeout(() => {
+            initSearchMap();
+            
+            // Invalid size sau khi layout hoàn tất
+            setTimeout(() => {
+                if (searchMap) {
+                    searchMap.invalidateSize();
+                }
+            }, 300);
+        }, 100);
         
         // Auto-search if query parameter exists
         const urlParams = new URLSearchParams(window.location.search);
@@ -823,6 +945,15 @@
         if (query) {
             document.getElementById('search-input').value = query;
             performSearch(query);
+        }
+    });
+    
+    // Invalid size khi window resize
+    window.addEventListener('resize', () => {
+        if (searchMap) {
+            setTimeout(() => {
+                searchMap.invalidateSize();
+            }, 100);
         }
     });
 </script>

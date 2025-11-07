@@ -50,14 +50,17 @@ class RegisterView(APIView):
 
 
 class PlaceListView(generics.ListAPIView):
-    """List places with search."""
+    """List places with search, ordering, and limit."""
     serializer_class = DiaDiemListSerializer
     permission_classes = [AllowAny]
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['tenDiaDiem', 'moTa', 'diaChi']
+    ordering_fields = ['danhGiaTrungBinh', 'soLuotDanhGia', 'soLuotXem', 'tenDiaDiem', 'ngayTao']
+    ordering = ['-danhGiaTrungBinh', '-soLuotDanhGia']  # Default ordering
+    pagination_class = None  # Disable pagination by default, handle in list() method
     
     def get_queryset(self):
-        queryset = DiaDiem.objects.filter(trangThai='active').select_related('maTinhThanh')
+        queryset = DiaDiem.objects.filter(trangThai='active').select_related('maTinhThanh').prefetch_related('hinh_anhs')
         
         # Filter by city
         city = self.request.query_params.get('city')
@@ -69,27 +72,59 @@ class PlaceListView(generics.ListAPIView):
         if category:
             queryset = queryset.filter(loaiDiaDiem=category)
         
-        return queryset.order_by('-danhGiaTrungBinh', '-soLuotDanhGia')
+        return queryset
     
     def list(self, request, *args, **kwargs):
-        """Override to save search history."""
-        response = super().list(request, *args, **kwargs)
-        
-        # Save search history if user is authenticated and has search query
-        if request.user.is_authenticated and 'search' in request.query_params:
-            query = request.query_params.get('search', '')
-            if query:
-                result_count = len(response.data.get('results', []))
-                
-                # Save search history
-                LichSuTimKiem.objects.create(
-                    maNguoiDung=request.user,
-                    tuKhoa=query,
-                    soKetQua=result_count,
-                    maDiaDiem=response.data.get('results', [{}])[0].get('maDiaDiem') if result_count > 0 else None
-                )
-        
-        return response
+        """Override to support limit parameter and save search history."""
+        try:
+            queryset = self.filter_queryset(self.get_queryset())
+            
+            # Get limit from query params
+            limit = request.query_params.get('limit')
+            if limit:
+                try:
+                    limit = int(limit)
+                    queryset = queryset[:limit]
+                except ValueError:
+                    limit = None
+            
+            # Serialize data
+            serializer = self.get_serializer(queryset, many=True)
+            results = serializer.data
+            
+            # Build response
+            response_data = {
+                'count': len(results),
+                'next': None,
+                'previous': None,
+                'results': results
+            }
+            
+            # Save search history if user is authenticated and has search query
+            if request.user.is_authenticated and 'search' in request.query_params:
+                query = request.query_params.get('search', '')
+                if query and len(results) > 0:
+                    try:
+                        LichSuTimKiem.objects.create(
+                            maNguoiDung=request.user,
+                            tuKhoa=query,
+                            soKetQua=len(results),
+                            maDiaDiem=results[0].get('maDiaDiem')
+                        )
+                    except Exception:
+                        pass  # Ignore search history errors
+            
+            return Response(response_data, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Error in PlaceListView.list: {e}", exc_info=True)
+            # Return empty response instead of crashing
+            return Response({
+                'count': 0,
+                'next': None,
+                'previous': None,
+                'results': []
+            }, status=status.HTTP_200_OK)
 
 
 class PlaceSearchView(APIView):
@@ -257,14 +292,19 @@ from .ml_recommendation_views import (
 
 def rate_limit_check(user_id: int, limit: int = 10, window: int = 60) -> bool:
     """Check if user has exceeded rate limit."""
-    cache_key = f"rate_limit:user_{user_id}"
-    count = cache.get(cache_key, 0)
-    
-    if count >= limit:
-        return False
-    
-    cache.set(cache_key, count + 1, window)
-    return True
+    try:
+        cache_key = f"rate_limit:user_{user_id}"
+        count = cache.get(cache_key, 0)
+        
+        if count >= limit:
+            return False
+        
+        cache.set(cache_key, count + 1, window)
+        return True
+    except Exception:
+        # If cache fails, allow the request (fail open)
+        logger.warning(f"Cache error in rate_limit_check for user {user_id}, allowing request")
+        return True
 
 
 class QueryView(APIView):

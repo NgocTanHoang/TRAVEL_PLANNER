@@ -3,10 +3,11 @@ Activities Tools - Công cụ hoạt động & ăn uống
 ===============================================
 - Tìm kiếm địa điểm tham quan
 - Tính chi phí hoạt động
-- Đề xuất nhà hàng (sử dụng SerpAPI)
+- Đề xuất nhà hàng (sử dụng SerpAPI + Tavily)
 - Tính chi phí ăn uống
 """
 import logging
+import os
 from typing import Dict, Any, Optional, List
 
 logger = logging.getLogger(__name__)
@@ -23,6 +24,18 @@ class ActivitiesTools:
         except Exception as e:
             logger.warning(f"SerpAPI tools not available: {e}")
             self.serpapi = None
+        
+        # Tavily for web search and enrichment
+        self.tavily_api_key = os.getenv('TAVILY_API_KEY', '')
+        self.tavily = None
+        if self.tavily_api_key:
+            try:
+                from tavily import TavilyClient
+                self.tavily = TavilyClient(api_key=self.tavily_api_key)
+                logger.info("Tavily client initialized for ActivitiesTools")
+            except Exception as e:
+                logger.warning(f"Tavily not available: {e}")
+                self.tavily = None
     
     # Chi phí tham quan ước tính (VNĐ/người)
     ACTIVITY_COSTS = {
@@ -95,9 +108,23 @@ class ActivitiesTools:
                     category = result.get('category', '').lower()
                     # Chỉ lấy địa điểm tham quan, không phải khách sạn/nhà hàng
                     if 'khách sạn' not in category and 'nhà hàng' not in category and 'restaurant' not in category and 'hotel' not in category:
+                        activity_name = result.get('name', '')
+                        description = result.get('description', '')
+                        
+                        # Enrich với Tavily nếu mô tả quá ngắn hoặc thiếu
+                        if self.tavily and (not description or len(description) < 100):
+                            try:
+                                tavily_info = self._enrich_with_tavily(activity_name, destination)
+                                if tavily_info:
+                                    description = tavily_info.get('description', description)
+                                    if result.get('rating', 0) == 0 and tavily_info.get('rating'):
+                                        result['rating'] = tavily_info['rating']
+                            except Exception as e:
+                                logger.debug(f"Tavily enrichment failed for {activity_name}: {e}")
+                        
                         activities.append({
-                            'name': result.get('name', ''),
-                            'description': result.get('description', ''),
+                            'name': activity_name,
+                            'description': description,
                             'category': result.get('category', ''),
                             'type': self._map_category_to_type(result.get('category', '')),
                             'price_per_person': result.get('price', 0),
@@ -154,6 +181,63 @@ class ActivitiesTools:
         
         return activities
     
+    def _enrich_with_tavily(
+        self, 
+        name: str, 
+        location: str, 
+        search_type: str = 'activity'
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Enrich thông tin với Tavily API
+        
+        Args:
+            name: Tên địa điểm/hoạt động
+            location: Địa điểm (thành phố)
+            search_type: 'activity' hoặc 'restaurant'
+            
+        Returns:
+            Dict với thông tin bổ sung hoặc None
+        """
+        if not self.tavily:
+            return None
+        
+        try:
+            # Xây dựng query
+            if search_type == 'restaurant':
+                query = f"{name} nhà hàng {location} Việt Nam review đánh giá"
+            else:
+                query = f"{name} {location} Việt Nam du lịch địa điểm tham quan"
+            
+            results = self.tavily.search(
+                query=query,
+                search_depth="basic",
+                max_results=3
+            )
+            
+            if results and results.get('results'):
+                # Lấy thông tin từ kết quả đầu tiên
+                first_result = results['results'][0]
+                content = first_result.get('content', '')
+                
+                # Extract rating từ content nếu có
+                rating = None
+                if content:
+                    # Tìm rating dạng "4.5/5" hoặc "4.5 stars"
+                    import re
+                    rating_match = re.search(r'(\d+\.?\d*)\s*/\s*5|(\d+\.?\d*)\s*star', content, re.IGNORECASE)
+                    if rating_match:
+                        rating = float(rating_match.group(1) or rating_match.group(2))
+                
+                return {
+                    'description': content[:500] if content else '',  # Giới hạn 500 ký tự
+                    'rating': rating,
+                    'source_url': first_result.get('url', '')
+                }
+        except Exception as e:
+            logger.debug(f"Tavily search error for {name}: {e}")
+        
+        return None
+
     def _map_category_to_type(self, category: str) -> str:
         """Map category từ DB sang activity type"""
         category_lower = category.lower()
@@ -294,9 +378,28 @@ class ActivitiesTools:
                 
                 if serpapi_result.get('status') == 'success' and serpapi_result.get('restaurants'):
                     for restaurant in serpapi_result['restaurants']:
+                        restaurant_name = restaurant.get('name', 'Unknown Restaurant')
+                        description = restaurant.get('description', '')
+                        
+                        # Enrich với Tavily nếu mô tả quá ngắn hoặc thiếu
+                        if self.tavily and (not description or len(description) < 100):
+                            try:
+                                tavily_info = self._enrich_with_tavily(
+                                    restaurant_name, 
+                                    destination, 
+                                    search_type='restaurant'
+                                )
+                                if tavily_info:
+                                    description = tavily_info.get('description', description)
+                                    # Cập nhật rating nếu có
+                                    if restaurant.get('rating', 0) == 0 and tavily_info.get('rating'):
+                                        restaurant['rating'] = tavily_info['rating']
+                            except Exception as e:
+                                logger.debug(f"Tavily enrichment failed for {restaurant_name}: {e}")
+                        
                         restaurants.append({
-                            'name': restaurant.get('name', 'Unknown Restaurant'),
-                            'description': restaurant.get('description', ''),
+                            'name': restaurant_name,
+                            'description': description,
                             'cuisine': cuisine or 'Vietnamese',
                             'price_range': restaurant.get('price_level', 'medium'),
                             'rating': restaurant.get('rating', 0),

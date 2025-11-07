@@ -50,12 +50,39 @@ class PlanningAgent(BaseAgent):
             restaurants = state.get('restaurants', [])
             activities = state.get('activities', [])
             
+            # Validation
             if not start_date or not destination:
                 state['planning_error'] = 'Missing start_date or destination'
                 return state
             
+            if days < 1:
+                state['planning_error'] = 'Days must be at least 1'
+                return state
+            
+            if days > 30:
+                state['planning_error'] = 'Days cannot exceed 30'
+                return state
+            
+            # Validate date format
+            try:
+                from datetime import datetime
+                datetime.strptime(start_date, '%Y-%m-%d')
+            except ValueError:
+                state['planning_error'] = f'Invalid date format: {start_date}. Expected YYYY-MM-DD'
+                return state
+            
             # Tạo lịch trình đầy đủ
+            # Support both string and list for travel_style
             travel_style = state.get('travel_style', 'standard')
+            # Convert JSON string to list if needed
+            if isinstance(travel_style, str):
+                try:
+                    import json
+                    travel_style = json.loads(travel_style)
+                except (json.JSONDecodeError, ValueError):
+                    pass  # Keep as string
+            
+            selected_hotel = state.get('selected_hotel')
             itinerary = self.planning_tools.create_full_itinerary(
                 start_date=start_date,
                 days=days,
@@ -63,7 +90,8 @@ class PlanningAgent(BaseAgent):
                 hotels=hotels,
                 restaurants=restaurants,
                 activities=activities,
-                travel_style=travel_style
+                travel_style=travel_style,
+                selected_hotel=selected_hotel
             )
             
             state['itinerary'] = itinerary
