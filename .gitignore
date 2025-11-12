@@ -1,10 +1,4 @@
-# ============================================================================
-# VI VU TRAVEL PLANNER - GIT IGNORE
-# ============================================================================
-
-# ============================================================================
 # Python
-# ============================================================================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -22,125 +16,74 @@ parts/
 sdist/
 var/
 wheels/
-share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
 MANIFEST
-pip-log.txt
-pip-delete-this-directory.txt
 
-# Virtual environments
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+/media
+/staticfiles
+
+# Virtual Environment
 venv/
-.venv/
-venv310/
 env/
 ENV/
 env.bak/
 venv.bak/
 
-# ============================================================================
-# Django
-# ============================================================================
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-/staticfiles/
-/media/
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
 
-# Django migrations (keep migrations but ignore temp files)
-# **/migrations/*.py
-# !**/migrations/__init__.py
-
-# ============================================================================
-# Environment Variables
-# ============================================================================
+# Environment variables
 .env
 .env.local
 .env.*.local
 
-# ============================================================================
-# IDEs
-# ============================================================================
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+.pnpm-debug.log*
 
-# VSCode
-.vscode/
-*.code-workspace
+# Build outputs
+vivu_backend/static/css/output.css
+vivu_backend/static/css/output.css.map
+*.css.map
 
-# PyCharm
-.idea/
-*.iml
-*.iws
-*.ipr
-
-# Jupyter Notebook
-.ipynb_checkpoints
-*.ipynb
-
-# ============================================================================
-# OS
-# ============================================================================
-
-# Windows
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-$RECYCLE.BIN/
-
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-
-# Linux
-*~
-
-# ============================================================================
-# Testing & Coverage
-# ============================================================================
+# Testing
 .pytest_cache/
 .coverage
 htmlcov/
 .tox/
-.nox/
 
-# ============================================================================
-# AI & ML
-# ============================================================================
-
-# Model files (uncomment if models are large)
-# *.pkl
-# *.h5
-# *.pb
-# *.onnx
-# saved_models/
+# Jupyter Notebook
+.ipynb_checkpoints
 
 # Vector DB
-# vector_db/ (keeping it for now as it's needed)
-vector_db/*.sqlite3
-vector_db/**/*.bin
-vector_db/**/*.pickle
+vector_db/*/
+!vector_db/.gitkeep
+
+# ChromaDB
+chroma.sqlite3
+*.pickle
 
 # Logs
 logs/
 *.log
 
-# ============================================================================
-# Project Specific
-# ============================================================================
-
-# Data files (uncomment if data is too large)
-# data/*.csv
-# data/*.json
-
-# Temporary files
-temp/
-tmp/
-*.tmp
-
-# Old/backup files
-*.bak
-*.old
-*_old/
-*_backup/
+# OS
+.DS_Store
+Thumbs.db

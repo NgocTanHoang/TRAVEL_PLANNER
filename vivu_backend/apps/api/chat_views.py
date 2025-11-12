@@ -12,11 +12,17 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from django.core.cache import cache
+from django.db.models import Q
 import logging
 
-# Add project root to path
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
+# Add backend directory to path for agents, tools, ml, etc.
+# BASE_DIR (vivu_backend) is already added in settings.py, but adding here for safety
+BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
+
+# Django imports
+from apps.places.models import DiaDiem, TinhThanh
 
 logger = logging.getLogger(__name__)
 
@@ -61,8 +67,99 @@ class ChatView(APIView):
             logger.warning(f"Travel Chatbot initialization failed: {e}")
             self.travel_chatbot = None
     
+    def _search_places_from_db(self, query: str, destination: str = None, limit: int = 10) -> list:
+        """Tìm kiếm địa điểm từ database"""
+        try:
+            places_query = DiaDiem.objects.filter(trangThai='active').select_related('maTinhThanh')
+            
+            # Filter by destination if provided
+            if destination:
+                places_query = places_query.filter(
+                    Q(maTinhThanh__tenTinhThanh__icontains=destination) |
+                    Q(diaChi__icontains=destination)
+                )
+            
+            # Search by query
+            if query:
+                places_query = places_query.filter(
+                    Q(tenDiaDiem__icontains=query) |
+                    Q(moTa__icontains=query) |
+                    Q(diaChi__icontains=query)
+                )
+            
+            places = places_query.order_by('-danhGiaTrungBinh', '-soLuotDanhGia')[:limit]
+            
+            results = []
+            for place in places:
+                results.append({
+                    'name': place.tenDiaDiem,
+                    'description': place.moTa or '',
+                    'address': place.diaChi or '',
+                    'city': place.maTinhThanh.tenTinhThanh if place.maTinhThanh else '',
+                    'category': place.loaiDiaDiem,
+                    'rating': float(place.danhGiaTrungBinh) if place.danhGiaTrungBinh else 0,
+                    'price': place.giaVe or 0
+                })
+            
+            return results
+        except Exception as e:
+            logger.error(f"Error searching places from DB: {e}", exc_info=True)
+            return []
+    
+    def _get_context_from_multiple_sources(self, message: str, destination: str = None) -> str:
+        """Lấy context từ nhiều nguồn: Database, Vector DB, Web search"""
+        context_parts = []
+        
+        # 1. Search từ Database
+        try:
+            db_places = self._search_places_from_db(message, destination, limit=5)
+            if db_places:
+                context_parts.append("=== Địa điểm từ Database ===")
+                for place in db_places:
+                    context_parts.append(
+                        f"- {place['name']} ({place['city']}, {place['category']}): "
+                        f"{place['description'][:150] if place['description'] else 'Không có mô tả'}. "
+                        f"Đánh giá: {place['rating']}/5"
+                    )
+        except Exception as e:
+            logger.error(f"Error getting DB context: {e}")
+        
+        # 2. Search từ Vector DB (semantic search)
+        try:
+            if self.rag_agent and hasattr(self.rag_agent, 'vector_db') and self.rag_agent.vector_db:
+                vector_results = self.rag_agent.vector_db.semantic_search(
+                    query=message,
+                    n_results=5,
+                    city_filter=destination
+                )
+                if vector_results:
+                    context_parts.append("\n=== Địa điểm từ Vector DB (Semantic Search) ===")
+                    for place in vector_results[:5]:
+                        name = place.get('name', '')
+                        desc = place.get('description', '')
+                        city = place.get('city', '')
+                        if name:
+                            context_parts.append(f"- {name} ({city}): {desc[:150] if desc else 'Không có mô tả'}")
+        except Exception as e:
+            logger.error(f"Error getting Vector DB context: {e}")
+        
+        # 3. Search từ Travel Chatbot Vector DB nếu có
+        try:
+            if self.travel_chatbot and self.travel_chatbot.vector_db:
+                vector_context = self.travel_chatbot._get_context_from_vector_db(
+                    f"{message} {destination}" if destination else message,
+                    n_results=5
+                )
+                if vector_context:
+                    context_parts.append("\n=== Thông tin bổ sung ===")
+                    context_parts.append(vector_context)
+        except Exception as e:
+            logger.error(f"Error getting Travel Chatbot context: {e}")
+        
+        return "\n".join(context_parts)
+    
     def post(self, request):
-        """Xử lý câu hỏi từ user"""
+        """Xử lý câu hỏi từ user với workflow tìm kiếm thông tin"""
         try:
             message = request.data.get('message', '').strip()
             destination = request.data.get('destination')
@@ -84,26 +181,47 @@ class ChatView(APIView):
                 }, status=status.HTTP_429_TOO_MANY_REQUESTS)
             cache.set(cache_key, count + 1, 60)
             
-            # Ưu tiên sử dụng Travel Chatbot với LLM
-            if use_chatbot and self.travel_chatbot:
+            # Bước 1: Tìm kiếm thông tin từ nhiều nguồn
+            logger.info(f"Searching information for query: {message}, destination: {destination}")
+            context = self._get_context_from_multiple_sources(message, destination)
+            
+            # Bước 2: Sử dụng Travel Chatbot với context đã tìm được
+            if use_chatbot and self.travel_chatbot and self.travel_chatbot.llm:
                 try:
+                    # Tạo enhanced message với context
+                    enhanced_message = message
+                    if context:
+                        enhanced_message = f"{message}\n\nThông tin tìm được:\n{context}"
+                    
                     chatbot_response = self.travel_chatbot.chat(
-                        user_message=message,
-                        use_rag=True,
+                        user_message=enhanced_message,
+                        use_rag=False,  # Đã có context rồi, không cần RAG nữa
                         destination=destination
                     )
                     
                     if 'error' not in chatbot_response:
+                        # Lấy sources từ database search
+                        db_places = self._search_places_from_db(message, destination, limit=3)
+                        sources = [
+                            {
+                                'name': place['name'],
+                                'city': place['city'],
+                                'category': place['category']
+                            }
+                            for place in db_places
+                        ]
+                        
                         return Response({
                             'status': 'success',
                             'message': chatbot_response.get('response', ''),
-                            'context_used': chatbot_response.get('context_used', False),
-                            'destination': chatbot_response.get('destination'),
-                            'source': 'travel_chatbot',
+                            'context_used': bool(context),
+                            'destination': destination or chatbot_response.get('destination'),
+                            'sources': sources,
+                            'source': 'travel_chatbot_with_search',
                             'conversation_id': conversation_id
                         }, status=status.HTTP_200_OK)
                 except Exception as e:
-                    logger.error(f"Error in Travel Chatbot: {e}", exc_info=True)
+                    logger.error(f"Error in Travel Chatbot with search: {e}", exc_info=True)
                     # Fallback to RAG Agent
             
             # Fallback: Sử dụng RAG Agent nếu có
@@ -140,19 +258,35 @@ class ChatView(APIView):
                     
                 except Exception as e:
                     logger.error(f"Error in RAG chat: {e}", exc_info=True)
-                    # Fallback to simple response
-                    response_text = self._fallback_response(message)
-            else:
-                # Fallback nếu không có agent nào
-                response_text = self._fallback_response(message)
             
+            # Final fallback: Sử dụng database search và format response
+            db_places = self._search_places_from_db(message, destination, limit=5)
+            if db_places:
+                response_text = self._format_response_from_places(message, db_places)
+                sources = [
+                    {
+                        'name': place['name'],
+                        'city': place['city'],
+                        'category': place['category']
+                    }
+                    for place in db_places[:3]
+                ]
+                return Response({
+                    'status': 'success',
+                    'message': response_text,
+                    'sources': sources,
+                    'source': 'database_search',
+                    'conversation_id': conversation_id
+                }, status=status.HTTP_200_OK)
+            
+            # Ultimate fallback
             return Response({
                 'status': 'success',
-                'message': response_text,
+                'message': self._fallback_response(message),
                 'sources': [],
                 'source': 'fallback',
                 'conversation_id': conversation_id,
-                'note': 'Vector database hoặc LLM chưa được khởi tạo. Vui lòng kiểm tra API keys.'
+                'note': 'Không tìm thấy thông tin. Vui lòng kiểm tra API keys hoặc thử lại với câu hỏi khác.'
             }, status=status.HTTP_200_OK)
             
         except Exception as e:
@@ -160,6 +294,57 @@ class ChatView(APIView):
             return Response({
                 'error': 'Có lỗi xảy ra khi xử lý tin nhắn'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    def _format_response_from_places(self, query: str, places: list) -> str:
+        """Format response từ danh sách địa điểm tìm được"""
+        if not places:
+            return self._fallback_response(query)
+        
+        message_lower = query.lower()
+        
+        # Phân loại câu hỏi
+        if any(word in message_lower for word in ['địa điểm', 'thăm quan', 'du lịch', 'đâu đẹp', 'nơi nào']):
+            response = f"Dựa trên thông tin từ database, đây là các địa điểm phù hợp:\n\n"
+            for i, place in enumerate(places[:5], 1):
+                response += f"{i}. **{place['name']}** ({place['city']})\n"
+                if place['description']:
+                    response += f"   {place['description'][:200]}...\n"
+                if place['rating'] > 0:
+                    response += f"   ⭐ Đánh giá: {place['rating']}/5\n"
+                response += "\n"
+            return response
+        
+        elif any(word in message_lower for word in ['khách sạn', 'hotel', 'nghỉ']):
+            hotels = [p for p in places if p['category'] == 'khach_san']
+            if hotels:
+                response = f"Tìm thấy {len(hotels)} khách sạn phù hợp:\n\n"
+                for i, hotel in enumerate(hotels[:5], 1):
+                    response += f"{i}. **{hotel['name']}** ({hotel['city']})\n"
+                    if hotel['address']:
+                        response += f"   📍 {hotel['address']}\n"
+                    if hotel['rating'] > 0:
+                        response += f"   ⭐ {hotel['rating']}/5\n"
+                    response += "\n"
+                return response
+        
+        elif any(word in message_lower for word in ['nhà hàng', 'restaurant', 'ăn', 'ẩm thực']):
+            restaurants = [p for p in places if p['category'] == 'nha_hang']
+            if restaurants:
+                response = f"Tìm thấy {len(restaurants)} nhà hàng:\n\n"
+                for i, restaurant in enumerate(restaurants[:5], 1):
+                    response += f"{i}. **{restaurant['name']}** ({restaurant['city']})\n"
+                    if restaurant['address']:
+                        response += f"   📍 {restaurant['address']}\n"
+                    if restaurant['rating'] > 0:
+                        response += f"   ⭐ {restaurant['rating']}/5\n"
+                    response += "\n"
+                return response
+        
+        # Default response
+        response = f"Tìm thấy {len(places)} địa điểm liên quan:\n\n"
+        for i, place in enumerate(places[:5], 1):
+            response += f"{i}. **{place['name']}** - {place['city']}\n"
+        return response
     
     def _fallback_response(self, message: str) -> str:
         """Fallback response khi không có agent nào"""

@@ -9,8 +9,14 @@ from datetime import timedelta
 from dotenv import load_dotenv
 
 # Build paths
-BASE_DIR = Path(__file__).resolve().parent.parent
-PROJECT_ROOT = BASE_DIR.parent  # Go up one more level to project root
+BASE_DIR = Path(__file__).resolve().parent.parent  # vivu_backend/
+PROJECT_ROOT = BASE_DIR.parent  # TRAVEL_PLANNER/
+FRONTEND_DIR = PROJECT_ROOT / 'vivu_frontend'  # vivu_frontend/
+
+# Add backend directories to Python path for imports
+import sys
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
 
 # Load environment variables from .env file
 # Try loading with UTF-8 first, fallback to other encodings if needed
@@ -36,7 +42,7 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-dev-key-CHANGE-IN-P
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 # Allowed hosts: include LAN IP by default for local network access
 # Django 4.0+ supports wildcard patterns starting with dot (.*) or asterisk (*)
-allowed_hosts_default = 'localhost,127.0.0.1,192.168.1.3'
+allowed_hosts_default = 'localhost,127.0.0.1,192.168.1.3,testserver'
 if DEBUG:
     # In debug mode, allow all ngrok domains
     allowed_hosts_default += ',.ngrok-free.app,.ngrok.io'
@@ -89,8 +95,11 @@ ROOT_URLCONF = 'vivu_core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],  # Add templates directory
-        'APP_DIRS': True,
+        'DIRS': [
+            FRONTEND_DIR / 'templates',  # Frontend templates
+            BASE_DIR / 'templates',  # Backend templates (admin, etc.) - keep for admin
+        ],
+        'APP_DIRS': True,  # Also search in app templates directories
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -143,8 +152,11 @@ USE_TZ = True
 
 # Static files
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [BASE_DIR / 'static']  # Add static directory
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # Collected static files location
+STATICFILES_DIRS = [
+    FRONTEND_DIR / 'static',  # Frontend static files (CSS, JS, images)
+    BASE_DIR / 'static',  # Backend static files (if any) - keep for admin
+]
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = 'media/'
@@ -253,6 +265,7 @@ TAVILY_API_KEY = os.getenv('TAVILY_API_KEY', '')
 SERPAPI_API_KEY = os.getenv('SERPAPI_API_KEY', '')
 
 # Vector DB (Optional - for RAG)
+# Keep vector_db in backend for now, can move to data/ later if needed
 VECTOR_DB_PATH = str(BASE_DIR / 'vector_db')
 
 # Redis Cache Configuration

@@ -1,0 +1,589 @@
+/* ===================================
+ * VI VU ANIMATIONS & EFFECTS
+ * Comprehensive animation system for smooth UX
+ * =================================== */
+
+/* ===================================
+ * KEYFRAME ANIMATIONS
+ * =================================== */
+
+/* Fade In animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Floating animation - Subtle movement */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* Pulse animation - For attention */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Glow animation - Using Vi Vu secondary color (Teal) */
+@keyframes glow {
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(0, 131, 143, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(0, 131, 143, 0.5);
+  }
+}
+
+/* Shimmer loading effect */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+/* Bounce animation - Subtle bounce */
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* Ripple effect for buttons */
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* Slide in from bottom */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===================================
+ * NAVBAR ANIMATIONS
+ * =================================== */
+
+.navbar {
+  animation: fadeInDown 0.5s ease-out;
+}
+
+.logo {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Logo hover - Subtle float on desktop only */
+@media (min-width: 769px) {
+  .logo:hover {
+    animation: float 3s ease-in-out infinite;
+  }
+}
+
+.nav-link {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+}
+
+.nav-link::before {
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Enhanced user avatar animations */
+.user-avatar-btn {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Subtle float on hover - desktop only */
+@media (min-width: 769px) {
+  .user-avatar-btn:hover {
+    animation: float 3s ease-in-out infinite;
+  }
+}
+
+/* ===================================
+ * SEARCH DROPDOWN ANIMATIONS
+ * =================================== */
+
+.search-dropdown-menu {
+  animation: fadeIn 0.3s ease-out;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.search-dropdown-item {
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.search-dropdown-item:hover {
+  animation: scaleIn 0.3s ease-out;
+}
+
+/* ===================================
+ * HERO SECTION ANIMATIONS
+ * =================================== */
+
+.hero-banner {
+  animation: fadeIn 0.8s ease-out;
+}
+
+.hero-banner-image {
+  transition: transform 0.5s ease-out;
+}
+
+.hero-banner-image:hover {
+  transform: scale(1.02);
+}
+
+/* ===================================
+ * SECTION TITLE ANIMATIONS
+ * =================================== */
+
+.popular-section-title {
+  animation: fadeInLeft 0.6s ease-out;
+}
+
+.section-header h2 {
+  animation: fadeInUp 0.6s ease-out 0.1s both;
+}
+
+.section-header p {
+  animation: fadeInUp 0.6s ease-out 0.2s both;
+}
+
+/* ===================================
+ * PLACE CARD ANIMATIONS
+ * =================================== */
+
+.place-bar {
+  animation: fadeInUp 0.5s ease-out;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.place-bar:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0, 131, 143, 0.25);
+}
+
+/* Glow effect on hover - desktop only */
+@media (min-width: 769px) {
+  .place-bar:hover {
+    animation: glow 2s ease-in-out infinite;
+  }
+}
+
+.place-bar.selected {
+  animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.place-bar-image {
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.place-bar:hover .place-bar-image {
+  transform: scale(1.05);
+  filter: brightness(1.1);
+}
+
+/* Stagger animation for cards in list */
+#nearby-places-list .place-bar {
+  animation: slideInUp 0.5s ease-out backwards;
+}
+
+#nearby-places-list .place-bar:nth-child(1) {
+  animation-delay: 0s;
+}
+
+#nearby-places-list .place-bar:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+#nearby-places-list .place-bar:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+#nearby-places-list .place-bar:nth-child(4) {
+  animation-delay: 0.3s;
+}
+
+#nearby-places-list .place-bar:nth-child(5) {
+  animation-delay: 0.4s;
+}
+
+#nearby-places-list .place-bar:nth-child(n+6) {
+  animation-delay: 0.5s;
+}
+
+/* Stagger for popular places horizontal scroll */
+#popular-places-horizontal .place-bar {
+  animation: fadeInUp 0.5s ease-out backwards;
+}
+
+#popular-places-horizontal .place-bar:nth-child(1) {
+  animation-delay: 0s;
+}
+
+#popular-places-horizontal .place-bar:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+#popular-places-horizontal .place-bar:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+#popular-places-horizontal .place-bar:nth-child(4) {
+  animation-delay: 0.3s;
+}
+
+#popular-places-horizontal .place-bar:nth-child(n+5) {
+  animation-delay: 0.4s;
+}
+
+/* ===================================
+ * BUTTON ANIMATIONS & EFFECTS
+ * =================================== */
+
+.place-bar-add-btn,
+.place-bar-info-btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.place-bar-add-btn::before,
+.place-bar-info-btn::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.place-bar-add-btn:active::before,
+.place-bar-info-btn:active::before {
+  width: 200px;
+  height: 200px;
+  animation: ripple 0.6s ease-out;
+}
+
+.place-bar-add-btn:hover {
+  animation: bounce 0.4s ease-out;
+}
+
+.nav-link-signup {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.nav-link-signup:hover {
+  animation: bounce 0.6s ease-out;
+}
+
+/* ===================================
+ * FEATURE CARDS ANIMATIONS
+ * =================================== */
+
+.feature-card {
+  animation: fadeInUp 0.6s ease-out backwards;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.feature-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.feature-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.feature-card:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.feature-icon {
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.feature-card:hover .feature-icon {
+  animation: bounce 0.6s ease-out;
+}
+
+/* Subtle float on hover - desktop only */
+@media (min-width: 769px) {
+  .feature-card:hover {
+    animation: float 3s ease-in-out infinite;
+  }
+}
+
+/* ===================================
+ * MODAL ANIMATIONS
+ * =================================== */
+
+.logout-modal,
+.place-info-modal {
+  animation: slideInUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.logout-modal-overlay,
+.place-info-modal-overlay {
+  animation: fadeIn 0.3s ease-out;
+  backdrop-filter: blur(5px);
+}
+
+/* ===================================
+ * CHAT BUBBLE ANIMATIONS
+ * =================================== */
+
+.ai-bubble {
+  animation: fadeIn 0.5s ease-out;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Subtle pulse on hover */
+.ai-bubble:hover {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.ai-chat-modal {
+  animation: slideInUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ===================================
+ * NEARBY PLACE DETAIL ANIMATIONS
+ * =================================== */
+
+.nearby-place-detail-image {
+  animation: fadeInUp 0.5s ease-out 0.2s both;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.nearby-place-detail-image:hover {
+  transform: scale(1.02);
+  filter: brightness(1.05);
+}
+
+.nearby-place-detail h3 {
+  animation: fadeInUp 0.5s ease-out 0.3s both;
+}
+
+.nearby-place-detail-section {
+  animation: fadeInUp 0.5s ease-out backwards;
+}
+
+.nearby-place-detail-section:nth-child(1) {
+  animation-delay: 0.4s;
+}
+
+.nearby-place-detail-section:nth-child(2) {
+  animation-delay: 0.5s;
+}
+
+.nearby-place-detail-section:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+.nearby-place-detail-section:nth-child(n+4) {
+  animation-delay: 0.7s;
+}
+
+/* ===================================
+ * LOADING STATES ANIMATIONS
+ * =================================== */
+
+.loading-placeholder {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Shimmer skeleton loading */
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* ===================================
+ * SCROLL TRIGGER ANIMATIONS
+ * =================================== */
+
+/* For elements that animate on scroll - use with JS */
+.scroll-animate {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.scroll-animate.animate {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ===================================
+ * RESPONSIVE ANIMATIONS
+ * =================================== */
+
+@media (max-width: 768px) {
+  /* Reduce animation intensity on mobile */
+  .place-bar:hover {
+    transform: translateY(-4px);
+  }
+
+  .feature-card:hover {
+    transform: scale(1.02);
+  }
+
+  /* Disable float animations on mobile for better performance */
+  .logo:hover,
+  .user-avatar-btn:hover,
+  .feature-card:hover {
+    animation: none;
+  }
+
+  /* Simpler hover effects on mobile */
+  .logo:hover {
+    transform: scale(1.05);
+  }
+
+  .user-avatar-btn:hover {
+    transform: scale(1.1);
+  }
+}
+
+/* ===================================
+ * ACCESSIBILITY - Respects prefers-reduced-motion
+ * =================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Keep essential transitions but make them instant */
+  .nav-link::before,
+  .place-bar,
+  .feature-card {
+    transition-duration: 0.1s !important;
+  }
+}
+
+/* ===================================
+ * PERFORMANCE OPTIMIZATIONS
+ * =================================== */
+
+/* Use will-change for frequently animated elements */
+.place-bar,
+.feature-card,
+.logo,
+.user-avatar-btn {
+  will-change: transform;
+}
+
+/* Remove will-change after animation completes to save resources */
+.place-bar:not(:hover),
+.feature-card:not(:hover),
+.logo:not(:hover),
+.user-avatar-btn:not(:hover) {
+  will-change: auto;
+}
+

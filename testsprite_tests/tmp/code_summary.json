@@ -1,0 +1,625 @@
+{
+  "tech_stack": [
+    "Python",
+    "Django",
+    "Django REST Framework",
+    "SQLite",
+    "Redis",
+    "LangChain",
+    "LangGraph",
+    "OpenAI",
+    "ChromaDB",
+    "scikit-learn",
+    "pandas",
+    "numpy"
+  ],
+  "features": [
+    {
+      "name": "User Registration",
+      "description": "Register a new user account",
+      "files": ["vivu_backend/apps/api/views.py"],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/api/v1/auth/register/": {
+            "post": {
+              "summary": "User Registration",
+              "requestBody": {
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "username": {"type": "string"},
+                        "email": {"type": "string", "format": "email"},
+                        "password": {"type": "string"},
+                        "hoTen": {"type": "string"}
+                      },
+                      "required": ["username", "password"]
+                    }
+                  }
+                }
+              },
+              "responses": {
+                "201": {
+                  "description": "User created successfully",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "message": {"type": "string"},
+                          "maNguoiDung": {"type": "integer"},
+                          "tenDangNhap": {"type": "string"}
+                        }
+                      }
+                    }
+                  }
+                },
+                "400": {"description": "Bad request"}
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "User Login",
+      "description": "Authenticate user and get JWT tokens",
+      "files": ["vivu_backend/apps/api/urls.py"],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/api/v1/auth/login/": {
+            "post": {
+              "summary": "User Login",
+              "requestBody": {
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "username": {"type": "string"},
+                        "password": {"type": "string"}
+                      },
+                      "required": ["username", "password"]
+                    }
+                  }
+                }
+              },
+              "responses": {
+                "200": {
+                  "description": "Login successful",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "access": {"type": "string"},
+                          "refresh": {"type": "string"}
+                        }
+                      }
+                    }
+                  }
+                },
+                "401": {"description": "Invalid credentials"}
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Place List",
+      "description": "List all places with search, filtering, and pagination",
+      "files": ["vivu_backend/apps/api/views.py"],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/api/v1/places/": {
+            "get": {
+              "summary": "List Places",
+              "parameters": [
+                {"name": "search", "in": "query", "schema": {"type": "string"}},
+                {"name": "city", "in": "query", "schema": {"type": "string"}},
+                {"name": "category", "in": "query", "schema": {"type": "string"}},
+                {"name": "limit", "in": "query", "schema": {"type": "integer"}},
+                {"name": "ordering", "in": "query", "schema": {"type": "string"}}
+              ],
+              "responses": {
+                "200": {
+                  "description": "List of places",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "count": {"type": "integer"},
+                          "results": {
+                            "type": "array",
+                            "items": {"type": "object"}
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Place Search",
+      "description": "Search places by query string",
+      "files": ["vivu_backend/apps/api/views.py"],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/api/v1/places/search/": {
+            "get": {
+              "summary": "Search Places",
+              "parameters": [
+                {"name": "q", "in": "query", "required": true, "schema": {"type": "string"}}
+              ],
+              "responses": {
+                "200": {
+                  "description": "Search results",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "results": {"type": "array"},
+                          "count": {"type": "integer"},
+                          "query": {"type": "string"}
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Place Detail",
+      "description": "Get detailed information about a specific place",
+      "files": ["vivu_backend/apps/api/views.py"],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/api/v1/places/{id}/": {
+            "get": {
+              "summary": "Get Place Detail",
+              "parameters": [
+                {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
+              ],
+              "responses": {
+                "200": {"description": "Place details"},
+                "404": {"description": "Place not found"}
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Travel Plan Preview",
+      "description": "Preview a travel plan without saving to database using 7 AI agents",
+      "files": ["vivu_backend/apps/api/travel_plan_views.py"],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/api/v1/travel-plans/preview/": {
+            "get": {
+              "summary": "Preview Travel Plan",
+              "parameters": [
+                {"name": "origin", "in": "query", "required": true, "schema": {"type": "string"}},
+                {"name": "destination", "in": "query", "required": true, "schema": {"type": "string"}},
+                {"name": "days", "in": "query", "required": true, "schema": {"type": "integer", "minimum": 1, "maximum": 14}},
+                {"name": "travelers", "in": "query", "schema": {"type": "integer", "default": 2}},
+                {"name": "travel_style", "in": "query", "schema": {"type": "string", "default": "standard"}}
+              ],
+              "responses": {
+                "200": {
+                  "description": "Travel plan preview",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "origin": {"type": "string"},
+                          "destination": {"type": "string"},
+                          "days": {"type": "integer"},
+                          "travelers": {"type": "integer"},
+                          "transport": {"type": "object"},
+                          "accommodation": {"type": "object"},
+                          "activities": {"type": "array"},
+                          "budget": {"type": "object"}
+                        }
+                      }
+                    }
+                  }
+                },
+                "400": {"description": "Bad request"},
+                "500": {"description": "Internal server error"}
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Travel Plan Create",
+      "description": "Create and save a travel plan to database",
+      "files": ["vivu_backend/apps/api/travel_plan_views.py"],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/api/v1/travel-plans/": {
+            "post": {
+              "summary": "Create Travel Plan",
+              "requestBody": {
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "origin": {"type": "string"},
+                        "destination": {"type": "string"},
+                        "start_date": {"type": "string", "format": "date"},
+                        "days": {"type": "integer"},
+                        "travelers": {"type": "integer"},
+                        "travel_style": {"type": "string"},
+                        "budget": {"type": "number"},
+                        "rooms": {"type": "integer"},
+                        "interests": {"type": "array", "items": {"type": "string"}},
+                        "selected_hotel": {"type": "object"}
+                      },
+                      "required": ["origin", "destination", "start_date", "days", "travelers"]
+                    }
+                  }
+                }
+              },
+              "responses": {
+                "201": {"description": "Travel plan created"},
+                "400": {"description": "Bad request"},
+                "500": {"description": "Internal server error"}
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Step 1 - Location Selection",
+      "description": "Step 1 of 4-step workflow: Select and validate origin and destination locations",
+      "files": ["vivu_backend/apps/api/travel_plan_step_views.py"],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/api/v1/travel-plans/step1/": {
+            "post": {
+              "summary": "Step 1: Location Selection",
+              "requestBody": {
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "origin": {"type": "string"},
+                        "destination": {"type": "string"}
+                      },
+                      "required": ["origin", "destination"]
+                    }
+                  }
+                }
+              },
+              "responses": {
+                "200": {
+                  "description": "Location validation result",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "origin": {"type": "object"},
+                          "destination": {"type": "object"},
+                          "distance_km": {"type": "number"},
+                          "estimated_duration": {"type": "string"},
+                          "recommended_transport": {"type": "string"}
+                        }
+                      }
+                    }
+                  }
+                },
+                "400": {"description": "Bad request"}
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Step 2 - Travel Info",
+      "description": "Step 2 of 4-step workflow: Collect travel information (dates, travelers, style)",
+      "files": ["vivu_backend/apps/api/travel_plan_step_views.py"],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/api/v1/travel-plans/step2/": {
+            "post": {
+              "summary": "Step 2: Travel Information",
+              "requestBody": {
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "origin": {"type": "string"},
+                        "destination": {"type": "string"},
+                        "start_date": {"type": "string", "format": "date"},
+                        "days": {"type": "integer"},
+                        "travelers": {"type": "integer"},
+                        "travel_style": {"type": "string"}
+                      },
+                      "required": ["origin", "destination", "start_date", "days", "travelers"]
+                    }
+                  }
+                }
+              },
+              "responses": {
+                "200": {"description": "Travel info processed"},
+                "400": {"description": "Bad request"}
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Step 3 - Budget Suggestion",
+      "description": "Step 3 of 4-step workflow: Get budget suggestions based on travel preferences",
+      "files": ["vivu_backend/apps/api/travel_plan_step_views.py"],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/api/v1/travel-plans/step3/": {
+            "post": {
+              "summary": "Step 3: Budget Suggestion",
+              "requestBody": {
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "origin": {"type": "string"},
+                        "destination": {"type": "string"},
+                        "days": {"type": "integer"},
+                        "travelers": {"type": "integer"},
+                        "travel_style": {"type": "string"}
+                      }
+                    }
+                  }
+                }
+              },
+              "responses": {
+                "200": {"description": "Budget suggestions"},
+                "400": {"description": "Bad request"}
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Step 4 - Confirm and Plan",
+      "description": "Step 4 of 4-step workflow: Confirm and generate final travel plan",
+      "files": ["vivu_backend/apps/api/travel_plan_step_views.py"],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/api/v1/travel-plans/step4/": {
+            "post": {
+              "summary": "Step 4: Confirm and Generate Plan",
+              "requestBody": {
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "origin": {"type": "string"},
+                        "destination": {"type": "string"},
+                        "start_date": {"type": "string", "format": "date"},
+                        "days": {"type": "integer"},
+                        "travelers": {"type": "integer"},
+                        "travel_style": {"type": "string"},
+                        "budget": {"type": "number"},
+                        "selected_hotel": {"type": "object"}
+                      }
+                    }
+                  }
+                }
+              },
+              "responses": {
+                "200": {"description": "Travel plan generated"},
+                "400": {"description": "Bad request"}
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Travel Styles List",
+      "description": "Get list of available travel styles",
+      "files": ["vivu_backend/apps/api/travel_styles_views.py"],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/api/v1/travel-styles/": {
+            "get": {
+              "summary": "List Travel Styles",
+              "responses": {
+                "200": {
+                  "description": "List of travel styles",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "styles": {
+                            "type": "array",
+                            "items": {"type": "object"}
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Content-Based Recommendation",
+      "description": "Get content-based recommendations for places based on query",
+      "files": ["vivu_backend/apps/api/ml_recommendation_views.py"],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/api/v1/recommendations/content-based/": {
+            "post": {
+              "summary": "Content-Based Recommendations",
+              "requestBody": {
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "query": {"type": "string"},
+                        "destination": {"type": "string"},
+                        "n_results": {"type": "integer", "default": 10},
+                        "filters": {"type": "object"}
+                      },
+                      "required": ["query"]
+                    }
+                  }
+                }
+              },
+              "responses": {
+                "200": {"description": "Recommendations"},
+                "400": {"description": "Bad request"}
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Hybrid Recommendation",
+      "description": "Get hybrid recommendations combining content-based and collaborative filtering",
+      "files": ["vivu_backend/apps/api/ml_recommendation_views.py"],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/api/v1/recommendations/hybrid/": {
+            "post": {
+              "summary": "Hybrid Recommendations",
+              "requestBody": {
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "user_id": {"type": "integer"},
+                        "query": {"type": "string"},
+                        "destination": {"type": "string"},
+                        "n_results": {"type": "integer", "default": 10}
+                      }
+                    }
+                  }
+                }
+              },
+              "responses": {
+                "200": {"description": "Hybrid recommendations"},
+                "400": {"description": "Bad request"}
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Location Suggestions",
+      "description": "Get location suggestions based on query",
+      "files": ["vivu_backend/apps/api/views.py"],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/api/v1/locations/suggestions/": {
+            "get": {
+              "summary": "Location Suggestions",
+              "parameters": [
+                {"name": "q", "in": "query", "required": true, "schema": {"type": "string"}}
+              ],
+              "responses": {
+                "200": {"description": "Location suggestions"},
+                "400": {"description": "Bad request"}
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Analytics",
+      "description": "Get analytics data about places, users, and itineraries",
+      "files": ["vivu_backend/apps/api/views.py"],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/api/v1/analytics/": {
+            "get": {
+              "summary": "Analytics",
+              "responses": {
+                "200": {
+                  "description": "Analytics data",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "total_places": {"type": "integer"},
+                          "total_users": {"type": "integer"},
+                          "total_itineraries": {"type": "integer"}
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
+
+

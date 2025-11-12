@@ -1,0 +1,278 @@
+/*
+ * ===================================
+ * VI VU BRAND COLORS - 60:30:10 RULE
+ * ===================================
+ * Based on Vi Vu Logo Design
+ * ===================================
+ */
+
+:root {
+    /* ===================================
+     * PRIMARY COLOR (60%) - Navy Blue
+     * Màu chủ đạo - Xanh Navy Đậm
+     * Usage: Backgrounds, large blocks
+     * =================================== */
+    --primary-color: #153D68;
+    --primary-light: #1e4d7f;
+    --primary-lighter: #2a5e96;
+    --primary-dark: #0d2842;
+    --primary-darker: #071a2d;
+    
+    /* ===================================
+     * SECONDARY COLOR (30%) - Teal
+     * Màu thứ cấp - Xanh Ngọc Đậm
+     * Usage: Content blocks, titles, icons
+     * =================================== */
+    --secondary-color: #00838F;
+    --secondary-light: #00a5b5;
+    --secondary-lighter: #00c3d7;
+    --secondary-dark: #00616b;
+    --secondary-darker: #004449;
+    
+    /* ===================================
+     * ACCENT COLOR (10%) - Gold
+     * Màu nhấn - Vàng Kim
+     * Usage: CTAs, highlights, attention
+     * =================================== */
+    --accent-color: #DAA520;
+    --accent-light: #f0c040;
+    --accent-lighter: #ffd966;
+    --accent-dark: #b8860b;
+    --accent-darker: #997008;
+    
+    /* ===================================
+     * TEXT COLORS
+     * =================================== */
+    --text-primary: #153D68;    /* Navy for text on light bg */
+    --text-light: #ffffff;       /* White for text on dark bg */
+    --text-secondary: #00838F;   /* Teal for secondary text */
+    --text-accent: #DAA520;      /* Gold for highlighted text */
+    --text-muted: #6c757d;       /* Gray for muted text */
+    
+    /* ===================================
+     * BACKGROUND VARIATIONS
+     * =================================== */
+    --bg-primary: #153D68;
+    --bg-secondary: #00838F;
+    --bg-accent: #DAA520;
+    --bg-light: #f8f9fa;
+    --bg-white: #ffffff;
+    --bg-dark: #0d2842;
+    
+    /* ===================================
+     * GRADIENTS
+     * =================================== */
+    --gradient-primary: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+    --gradient-secondary: linear-gradient(135deg, var(--secondary-dark) 0%, var(--secondary-color) 100%);
+    --gradient-accent: linear-gradient(135deg, var(--accent-dark) 0%, var(--accent-color) 100%);
+    --gradient-hero: linear-gradient(135deg, 
+        var(--primary-darker) 0%, 
+        var(--primary-dark) 50%, 
+        var(--secondary-dark) 100%);
+    
+    /* ===================================
+     * SHADOWS
+     * =================================== */
+    --shadow-sm: 0 2px 4px rgba(21, 61, 104, 0.1);
+    --shadow-md: 0 4px 8px rgba(21, 61, 104, 0.15);
+    --shadow-lg: 0 8px 16px rgba(21, 61, 104, 0.2);
+    --shadow-xl: 0 12px 24px rgba(21, 61, 104, 0.25);
+    --shadow-accent: 0 4px 12px rgba(218, 165, 32, 0.3);
+    --shadow-secondary: 0 4px 12px rgba(0, 131, 143, 0.3);
+    
+    /* ===================================
+     * BORDERS
+     * =================================== */
+    --border-primary: 1px solid var(--primary-color);
+    --border-secondary: 1px solid var(--secondary-color);
+    --border-accent: 2px solid var(--accent-color);
+    --border-light: 1px solid rgba(255, 255, 255, 0.2);
+    
+    /* ===================================
+     * SPACING (8px grid system)
+     * =================================== */
+    --spacing-xs: 0.5rem;   /* 8px */
+    --spacing-sm: 1rem;     /* 16px */
+    --spacing-md: 1.5rem;   /* 24px */
+    --spacing-lg: 2rem;     /* 32px */
+    --spacing-xl: 3rem;     /* 48px */
+    --spacing-xxl: 4rem;    /* 64px */
+    
+    /* ===================================
+     * BORDER RADIUS
+     * =================================== */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-round: 50%;
+    
+    /* ===================================
+     * TRANSITIONS
+     * =================================== */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.3s ease;
+    --transition-slow: 0.5s ease;
+}
+
+/* ===================================
+ * UTILITY CLASSES
+ * =================================== */
+
+/* Background Colors - 60% Primary */
+.bg-primary { background-color: var(--primary-color) !important; }
+.bg-primary-light { background-color: var(--primary-light) !important; }
+.bg-primary-dark { background-color: var(--primary-dark) !important; }
+
+/* Background Colors - 30% Secondary */
+.bg-secondary { background-color: var(--secondary-color) !important; }
+.bg-secondary-light { background-color: var(--secondary-light) !important; }
+.bg-secondary-dark { background-color: var(--secondary-dark) !important; }
+
+/* Background Colors - 10% Accent */
+.bg-accent { background-color: var(--accent-color) !important; }
+.bg-accent-light { background-color: var(--accent-light) !important; }
+.bg-accent-dark { background-color: var(--accent-dark) !important; }
+
+/* Text Colors */
+.text-primary { color: var(--text-primary) !important; }
+.text-secondary { color: var(--text-secondary) !important; }
+.text-accent { color: var(--text-accent) !important; }
+.text-light { color: var(--text-light) !important; }
+.text-muted { color: var(--text-muted) !important; }
+
+/* Border Colors */
+.border-primary { border-color: var(--primary-color) !important; }
+.border-secondary { border-color: var(--secondary-color) !important; }
+.border-accent { border-color: var(--accent-color) !important; }
+
+/* Gradients */
+.gradient-primary { background: var(--gradient-primary) !important; }
+.gradient-secondary { background: var(--gradient-secondary) !important; }
+.gradient-accent { background: var(--gradient-accent) !important; }
+.gradient-hero { background: var(--gradient-hero) !important; }
+
+/* Shadows */
+.shadow-sm { box-shadow: var(--shadow-sm) !important; }
+.shadow-md { box-shadow: var(--shadow-md) !important; }
+.shadow-lg { box-shadow: var(--shadow-lg) !important; }
+.shadow-xl { box-shadow: var(--shadow-xl) !important; }
+.shadow-accent { box-shadow: var(--shadow-accent) !important; }
+.shadow-secondary { box-shadow: var(--shadow-secondary) !important; }
+
+/* ===================================
+ * COMPONENT EXAMPLES
+ * =================================== */
+
+/* Button Primary (10% Accent) */
+.btn-vivu-primary {
+    background: var(--accent-color);
+    color: var(--primary-dark);
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: var(--radius-lg);
+    font-weight: 600;
+    transition: var(--transition-normal);
+}
+
+.btn-vivu-primary:hover {
+    background: var(--accent-light);
+    box-shadow: var(--shadow-accent);
+    transform: translateY(-2px);
+}
+
+/* Button Secondary (30% Teal) */
+.btn-vivu-secondary {
+    background: var(--secondary-color);
+    color: var(--text-light);
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: var(--radius-lg);
+    font-weight: 600;
+    transition: var(--transition-normal);
+}
+
+.btn-vivu-secondary:hover {
+    background: var(--secondary-light);
+    box-shadow: var(--shadow-secondary);
+    transform: translateY(-2px);
+}
+
+/* Card (30% Secondary background) */
+.card-vivu {
+    background: var(--secondary-color);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-lg);
+    border: 2px solid transparent;
+    transition: var(--transition-normal);
+}
+
+.card-vivu:hover {
+    border-color: var(--accent-color);
+    box-shadow: var(--shadow-accent);
+    transform: translateY(-4px);
+}
+
+/* Header (60% Primary background) */
+.header-vivu {
+    background: var(--gradient-primary);
+    padding: var(--spacing-lg);
+    color: var(--text-light);
+}
+
+/* Section (60% Primary variations) */
+.section-primary {
+    background: var(--primary-color);
+    color: var(--text-light);
+    padding: var(--spacing-xxl) var(--spacing-lg);
+}
+
+.section-secondary {
+    background: var(--bg-light);
+    color: var(--text-primary);
+    padding: var(--spacing-xxl) var(--spacing-lg);
+}
+
+/* Icon Accent (10% Gold) */
+.icon-accent {
+    color: var(--accent-color);
+    font-size: 2rem;
+}
+
+/* Badge Accent (10% Gold) */
+.badge-vivu {
+    background: var(--accent-color);
+    color: var(--primary-dark);
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+/* ===================================
+ * USAGE GUIDELINES
+ * ===================================
+ * 
+ * 60% PRIMARY (Navy Blue #153D68):
+ * - Main backgrounds
+ * - Large sections
+ * - Headers/Footers
+ * - Base layout
+ * 
+ * 30% SECONDARY (Teal #00838F):
+ * - Content cards
+ * - Sidebars
+ * - Navigation
+ * - Important headings
+ * - Icons
+ * 
+ * 10% ACCENT (Gold #DAA520):
+ * - Call-to-action buttons
+ * - Highlights
+ * - Numbers/Stats
+ * - Hover effects
+ * - Active states
+ * - Important notifications
+ * 
+ * =================================== */
+

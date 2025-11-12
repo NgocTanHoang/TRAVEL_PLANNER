@@ -1,0 +1,219 @@
+﻿
+================================================================================
+TEST CASE TC_ITIN_001_romantic_dalat
+================================================================================
+
+[Origin] Quß║¡n 1, Ho Chi Minh City, Vietnam
+[Destination] Da Lat, Lam Dong, Vietnam
+[Start date] 2026-01-06
+[Days] 4
+[Travelers] 2
+[Travel style] romantic,wellness
+
+--------------------------------------------------------------------------------
+TEST 1: GET /api/v1/travel-plans/preview/ (Quick Preview)
+--------------------------------------------------------------------------------
+python : INFO 2025-11-07 19:19:30,744 base_agent Initialized agent: transport_agent
+At line:1 char:1
++ python scripts/test_tc_itin_001.py 2>&1 | Out-File -FilePath test_out ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (INFO 2025-11-07...transport_agent:Strin 
+   g) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+INFO 2025-11-07 19:19:30,744 base_agent LangSmith tracing enabled for transport_agent
+INFO 2025-11-07 19:19:30,744 geo_tools VietMap API initialized (preferred for 
+Vietnam addresses)
+INFO 2025-11-07 19:19:30,744 base_agent Initialized agent: budget_agent
+INFO 2025-11-07 19:19:30,744 base_agent LangSmith tracing enabled for budget_agent
+INFO 2025-11-07 19:19:30,744 base_agent [transport_agent] Input: {'origin': 'Quß║¡n 
+1, Ho Chi Minh City, Vietnam', 'destination': 'Da Lat, Lam Dong, Vietnam', 'days': 
+4, 'travelers': 2, 'travel_style': 'romantic,wellness', 'preview_mode': True}
+INFO 2025-11-07 19:19:30,769 cache Redis connected: localhost:6379
+ERROR 2025-11-07 19:19:30,778 vietmap_tools VietMap parse location error: could not 
+convert string to float: 'Quß║¡n 1', location=Quß║¡n 1, Ho Chi Minh City, Vietnam
+WARNING 2025-11-07 19:19:31,054 vietmap_tools VietMap geocoding failed for all 
+endpoints: Quß║¡n 1, Ho Chi Minh City, Vietnam
+ERROR 2025-11-07 19:19:31,179 vietmap_tools VietMap parse location error: could not 
+convert string to float: 'Quß║¡n 1', location=Quß║¡n 1, Ho Chi Minh City, Vietnam
+ERROR 2025-11-07 19:19:31,329 vietmap_tools VietMap parse location error: could not 
+convert string to float: 'Quß║¡n 1', location=Quß║¡n 1, Ho Chi Minh City, Vietnam
+ERROR 2025-11-07 19:19:31,454 vietmap_tools VietMap parse location error: could not 
+convert string to float: 'Quß║¡n 1', location=Quß║¡n 1, Ho Chi Minh City, Vietnam
+D:\KLTN\MAS (1)\MAS\TRAVEL_PLANNER\tools\transport_tools.py:144: RuntimeWarning: 
+This package (`duckduckgo_search`) has been renamed to `ddgs`! Use `pip install 
+ddgs` instead.
+  ddgs = DDGS()
+INFO 2025-11-07 19:19:31,909 lib response: https://www.bing.com/search?q=ga+t%C3%A0u+
+Qu%E1%BA%ADn+1%2C+Ho+Chi+Minh+City%2C+Vietnam+Vi%E1%BB%87t+Nam 200
+ERROR 2025-11-07 19:19:32,774 vietmap_tools VietMap parse location error: could not 
+convert string to float: 'Da Lat', location=Da Lat, Lam Dong, Vietnam
+WARNING 2025-11-07 19:19:33,284 vietmap_tools VietMap geocoding failed for all 
+endpoints: Da Lat, Lam Dong, Vietnam
+ERROR 2025-11-07 19:19:33,406 vietmap_tools VietMap parse location error: could not 
+convert string to float: 'Da Lat', location=Da Lat, Lam Dong, Vietnam
+ERROR 2025-11-07 19:19:33,518 vietmap_tools VietMap parse location error: could not 
+convert string to float: 'Da Lat', location=Da Lat, Lam Dong, Vietnam
+ERROR 2025-11-07 19:19:33,594 vietmap_tools VietMap parse location error: could not 
+convert string to float: 'Da Lat', location=Da Lat, Lam Dong, Vietnam
+D:\KLTN\MAS (1)\MAS\TRAVEL_PLANNER\tools\transport_tools.py:144: RuntimeWarning: 
+This package (`duckduckgo_search`) has been renamed to `ddgs`! Use `pip install 
+ddgs` instead.
+  ddgs = DDGS()
+INFO 2025-11-07 19:19:33,960 lib response: https://www.bing.com/search?q=ga+t%C3%A0u+
+Da+Lat%2C+Lam+Dong%2C+Vietnam+Vi%E1%BB%87t+Nam 200
+INFO 2025-11-07 19:19:34,027 base_agent [transport_agent] Output: {'origin': 'Quß║¡n 
+1, Ho Chi Minh City, Vietnam', 'destination': 'Da Lat, Lam Dong, Vietnam', 'days': 
+4, 'travelers': 2, 'travel_style': 'romantic,wellness', 'preview_mode': True, 
+'transport': {'origin'...
+
+Status Code: 200
+[OK] Status: success
+
+[Preview Data]
+   - Transport: True
+   - Budget: True
+
+[Transport Details]
+   - Method: long_distance_bus
+   - Distance: 300.8 km
+   - Duration: 214.6 minutes
+   - Cost: 400,000 VN─É
+
+[Budget Estimate]
+   - Total: 10,290,000 VN─É
+   - Per person: 5,145,000 VN─É
+
+--------------------------------------------------------------------------------
+TEST 2: POST /api/v1/travel-plans/ (Full Plan Creation)
+--------------------------------------------------------------------------------
+INFO 2025-11-07 19:19:34,059 base_agent Initialized agent: orchestrator_agent
+INFO 2025-11-07 19:19:34,059 base_agent LangSmith tracing enabled for 
+orchestrator_agent
+INFO 2025-11-07 19:19:34,059 base_agent Initialized agent: transport_agent
+INFO 2025-11-07 19:19:34,059 base_agent LangSmith tracing enabled for transport_agent
+INFO 2025-11-07 19:19:34,059 base_agent Initialized agent: flight_agent
+INFO 2025-11-07 19:19:34,059 base_agent LangSmith tracing enabled for flight_agent
+WARNING 2025-11-07 19:19:34,061 serpapi_tools serpapi not installed. Install with: 
+pip install google-search-results
+WARNING 2025-11-07 19:19:34,061 serpapi_tools serpapi package not installed. SerpAPI 
+tools will be disabled.
+INFO 2025-11-07 19:19:34,064 base_agent Initialized agent: accommodation_agent
+INFO 2025-11-07 19:19:34,064 base_agent LangSmith tracing enabled for 
+accommodation_agent
+INFO 2025-11-07 19:19:34,064 base_agent Initialized agent: budget_agent
+INFO 2025-11-07 19:19:34,064 base_agent LangSmith tracing enabled for budget_agent
+INFO 2025-11-07 19:19:34,064 base_agent Initialized agent: planning_agent
+INFO 2025-11-07 19:19:34,064 base_agent LangSmith tracing enabled for planning_agent
+INFO 2025-11-07 19:19:34,064 base_agent Initialized agent: activities_agent
+INFO 2025-11-07 19:19:34,064 base_agent LangSmith tracing enabled for 
+activities_agent
+INFO 2025-11-07 19:19:34,087 activities_tools Tavily client initialized for 
+ActivitiesTools
+INFO 2025-11-07 19:19:34,087 base_agent Initialized agent: vector_db_agent
+INFO 2025-11-07 19:19:34,087 base_agent LangSmith tracing enabled for vector_db_agent
+
+thread '<unnamed>' panicked at rust\sqlite\src\db.rs:157:42:
+range start index 10 out of range for slice of length 9
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+WARNING 2025-11-07 19:19:34,254 activities_agent Vector DB not available for 
+Activities Agent: PanicException: range start index 10 out of range for slice of 
+length 9
+INFO 2025-11-07 19:19:34,254 base_agent [orchestrator_agent] Input: {'origin': 
+'Quß║¡n 1, Ho Chi Minh City, Vietnam', 'destination': 'Da Lat, Lam Dong, Vietnam', 
+'start_date': '2026-01-06', 'days': 4, 'travelers': 2, 'travel_style': 
+'romantic,wellness', 'rooms': 1, 'int...
+INFO 2025-11-07 19:19:34,254 orchestrator_agent Step 1: Transport calculation...
+INFO 2025-11-07 19:19:34,254 base_agent [transport_agent] Input: {'origin': 'Quß║¡n 
+1, Ho Chi Minh City, Vietnam', 'destination': 'Da Lat, Lam Dong, Vietnam', 
+'start_date': '2026-01-06', 'days': 4, 'travelers': 2, 'travel_style': 
+'romantic,wellness', 'rooms': 1, 'int...
+INFO 2025-11-07 19:19:34,264 base_agent [transport_agent] Output: {'origin': 'Quß║¡n 
+1, Ho Chi Minh City, Vietnam', 'destination': 'Da Lat, Lam Dong, Vietnam', 
+'start_date': '2026-01-06', 'days': 4, 'travelers': 2, 'travel_style': 
+'romantic,wellness', 'rooms': 1, 'int...
+INFO 2025-11-07 19:19:34,264 orchestrator_agent Step 3: Hotel search...
+INFO 2025-11-07 19:19:34,269 orchestrator_agent Planning: days=4 nights=3 
+travelers=2 travel_style=romantic,wellness
+INFO 2025-11-07 19:19:34,276 base_agent [accommodation_agent] Input: {'origin': 
+'Quß║¡n 1, Ho Chi Minh City, Vietnam', 'destination': 'Da Lat, Lam Dong, Vietnam', 
+'start_date': '2026-01-06', 'days': 4, 'travelers': 2, 'travel_style': 
+'romantic,wellness', 'rooms': 1, 'int...
+INFO 2025-11-07 19:19:34,284 base_agent [accommodation_agent] Output: {'origin': 
+'Quß║¡n 1, Ho Chi Minh City, Vietnam', 'destination': 'Da Lat, Lam Dong, Vietnam', 
+'start_date': '2026-01-06', 'days': 4, 'travelers': 2, 'travel_style': 
+'romantic,wellness', 'rooms': 1, 'int...
+INFO 2025-11-07 19:19:34,284 orchestrator_agent Step 4: Activities and dining...
+INFO 2025-11-07 19:19:34,294 base_agent [activities_agent] Input: {'origin': 'Quß║¡n 
+1, Ho Chi Minh City, Vietnam', 'destination': 'Da Lat, Lam Dong, Vietnam', 
+'start_date': '2026-01-06', 'days': 4, 'travelers': 2, 'travel_style': 
+'romantic,wellness', 'rooms': 1, 'int...
+INFO 2025-11-07 19:19:34,301 base_agent Initialized agent: vector_db_agent
+INFO 2025-11-07 19:19:34,301 base_agent LangSmith tracing enabled for vector_db_agent
+ERROR 2025-11-07 19:19:34,308 vector_db Failed to initialize ChromaDB client: Could 
+not connect to tenant default_tenant. Are you sure it exists?
+WARNING 2025-11-07 19:19:34,308 vector_db ChromaDB client not available, vector 
+search will be disabled
+WARNING 2025-11-07 19:19:34,308 activities_agent No activities found for Da Lat, Lam 
+Dong, Vietnam, ensuring generic fallback
+ERROR 2025-11-07 19:19:34,314 activities_agent CRITICAL: No activities at all for Da 
+Lat, Lam Dong, Vietnam, creating emergency fallback
+INFO 2025-11-07 19:19:34,314 activities_agent Created 4 emergency fallback 
+activities for Da Lat, Lam Dong, Vietnam
+INFO 2025-11-07 19:19:34,314 activities_agent Final activities count: 4 for Da Lat, 
+Lam Dong, Vietnam
+INFO 2025-11-07 19:19:34,322 base_agent [activities_agent] Output: {'origin': 
+'Quß║¡n 1, Ho Chi Minh City, Vietnam', 'destination': 'Da Lat, Lam Dong, Vietnam', 
+'start_date': '2026-01-06', 'days': 4, 'travelers': 2, 'travel_style': 
+'romantic,wellness', 'rooms': 1, 'int...
+INFO 2025-11-07 19:19:34,324 orchestrator_agent Step 5: Budget calculation...
+INFO 2025-11-07 19:19:34,332 base_agent [budget_agent] Input: {'origin': 'Quß║¡n 1, 
+Ho Chi Minh City, Vietnam', 'destination': 'Da Lat, Lam Dong, Vietnam', 
+'start_date': '2026-01-06', 'days': 4, 'travelers': 2, 'travel_style': 
+'romantic,wellness', 'rooms': 1, 'int...
+INFO 2025-11-07 19:19:34,341 base_agent [budget_agent] Output: {'origin': 'Quß║¡n 1, 
+Ho Chi Minh City, Vietnam', 'destination': 'Da Lat, Lam Dong, Vietnam', 
+'start_date': '2026-01-06', 'days': 4, 'travelers': 2, 'travel_style': 
+'romantic,wellness', 'rooms': 1, 'int...
+INFO 2025-11-07 19:19:34,341 orchestrator_agent Step 6: Itinerary creation...
+INFO 2025-11-07 19:19:34,350 base_agent [planning_agent] Input: {'origin': 'Quß║¡n 
+1, Ho Chi Minh City, Vietnam', 'destination': 'Da Lat, Lam Dong, Vietnam', 
+'start_date': '2026-01-06', 'days': 4, 'travelers': 2, 'travel_style': 
+'romantic,wellness', 'rooms': 1, 'int...
+INFO 2025-11-07 19:19:34,365 base_agent [planning_agent] Output: {'origin': 'Quß║¡n 
+1, Ho Chi Minh City, Vietnam', 'destination': 'Da Lat, Lam Dong, Vietnam', 
+'start_date': '2026-01-06', 'days': 4, 'travelers': 2, 'travel_style': 
+'romantic,wellness', 'rooms': 1, 'int...
+INFO 2025-11-07 19:19:34,365 orchestrator_agent Orchestration completed successfully
+INFO 2025-11-07 19:19:34,370 base_agent [orchestrator_agent] Output: {'origin': 
+'Quß║¡n 1, Ho Chi Minh City, Vietnam', 'destination': 'Da Lat, Lam Dong, Vietnam', 
+'start_date': '2026-01-06', 'days': 4, 'travelers': 2, 'travel_style': 
+'romantic,wellness', 'rooms': 1, 'int...
+
+Status Code: 201
+[OK] Status: success
+
+[Cost Breakdown]
+   - Transport: 400,000.0 VN─É
+   - Accommodation: 2,400,000.0 VN─É
+   - Activities: 1,500,000.0 VN─É
+   - Dining: 6,840,000.0 VN─É
+   - Total: 11,697,000.0 VN─É
+
+[Cost Validation]
+   [WARN] Transport cost 400,000.0 VN─É outside expected range (800k-2.5M)
+   [WARN] Accommodation cost 2,400,000.0 VN─É outside expected range (6M-12M)
+   [OK] Activities cost 1,500,000.0 VN─É within range (0.5M-3.0M)
+   [WARN] Dining cost 6,840,000.0 VN─É outside expected range (2.0M-5.5M)
+   [OK] Total cost consistent (diff: 557,000.0 VN─É, tolerance: 557,000.0 VN─É)
+
+[Itinerary]
+   - Number of daily schedules: 4
+   - Expected: 4
+   [OK] Daily schedules count matches
+   [OK] Found wellness/spa activity: Spa & Wellness tß║íi Da Lat, Lam Dong, Vietnam
+
+================================================================================
+TEST COMPLETED
+================================================================================
+

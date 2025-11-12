@@ -16,9 +16,11 @@ from django.core.cache import cache
 import logging
 import asyncio
 
-# Add project root to path
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
+# Add backend directory to path for agents, tools, utils, etc.
+# BASE_DIR (vivu_backend) is already added in settings.py, but adding here for safety
+BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
 
 # Import caching utilities
 from utils.cache import cache_get, cache_set, generate_cache_key
@@ -624,12 +626,28 @@ class Step3BudgetSuggestionView(APIView):
                         
                         # Ước tính nếu không có giá từ API
                         if flight_price == 0:
-                            distance_km = state_result.get('transport', {}).get('distance_km', 0)
-                            if distance_km > 0:
-                                estimated_price_per_person = min(max(distance_km * 2000, 1_500_000), 8_000_000)
-                                flight_price = estimated_price_per_person * travelers
-                            else:
-                                flight_price = 3_000_000 * travelers
+                            # Dùng flight_tools để ước tính giá dựa trên route giữa các sân bay
+                            from tools.flight_tools import get_flight_tools
+                            flight_tools = get_flight_tools()
+                            
+                            # Ước tính giá dựa trên route giữa sân bay
+                            estimated_flight = flight_tools._estimate_price(
+                                origin_airport_info[0],
+                                dest_airport_info[0],
+                                'oneway',
+                                travelers
+                            )
+                            flight_price = estimated_flight.get('price_vnd', 0)
+                            
+                            # Đảm bảo giá tối thiểu hợp lý (ít nhất 1.5M/người cho route dài)
+                            if flight_price == 0 or flight_price < (1_500_000 * travelers):
+                                # Route dài như SGN-HAN phải có giá tối thiểu 2M/người
+                                if origin_airport_info[0] in ['SGN', 'HAN'] and dest_airport_info[0] in ['SGN', 'HAN']:
+                                    flight_price = 2_000_000 * travelers
+                                else:
+                                    flight_price = 1_500_000 * travelers
+                            
+                            logger.info(f"Estimated flight price: {flight_price:,.0f} VNĐ for {origin_airport_info[0]}->{dest_airport_info[0]} ({travelers} travelers)")
                         
                         # 3. Tính chi phí từ sân bay đến → destination
                         airport_to_dest_route = geo_tools.calculate_distance_time(
@@ -876,10 +894,10 @@ class Step4ConfirmAndPlanView(APIView):
                     'itinerary': result_state.get('itinerary', {})
                 },
                 'costs': {
-                    'transport': result_state.get('transport_cost', 0),
-                    'accommodation': result_state.get('accommodation_cost', 0),
-                    'activities': result_state.get('activities_cost', 0),
-                    'dining': result_state.get('dining_cost', 0),
+                    'transport': result_state.get('transport_cost', 0) or result_state.get('budget', {}).get('breakdown', {}).get('transport', 0),
+                    'accommodation': result_state.get('accommodation_cost', 0) or result_state.get('budget', {}).get('breakdown', {}).get('accommodation', 0),
+                    'activities': result_state.get('activities_cost', 0) or result_state.get('budget', {}).get('breakdown', {}).get('activities', 0),
+                    'dining': result_state.get('dining_cost', 0) or result_state.get('budget', {}).get('breakdown', {}).get('dining', 0),
                     'total': result_state.get('budget', {}).get('total_vnd', 0)
                 },
                 'timestamp': timezone.now()

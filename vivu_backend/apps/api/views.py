@@ -409,11 +409,12 @@ class GeneratePlanView(APIView):
                     'error': 'Rate limit exceeded. Maximum 10 requests per minute.',
                 }, status=status.HTTP_429_TOO_MANY_REQUESTS)
             
-            # Add project root to path
+            # Add backend directory to path for agents, etc.
             import sys
             from pathlib import Path
-            PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent.parent
-            sys.path.insert(0, str(PROJECT_ROOT))
+            BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
+            if str(BACKEND_DIR) not in sys.path:
+                sys.path.insert(0, str(BACKEND_DIR))
             
             # Import 7 agents orchestrator
             from agents.travel_agents.orchestrator_agent import OrchestratorAgent

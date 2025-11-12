@@ -19,9 +19,11 @@ from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from apps.places.models import DiaDiem, TinhThanh, HinhAnhDiaDiem
 
-# Add project root to path for agent imports
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
+# Add backend directory to path for agents, etc.
+# BASE_DIR (vivu_backend) is already added in settings.py, but adding here for safety
+BACKEND_DIR = Path(__file__).resolve().parent.parent.parent.parent
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
 
 logger = logging.getLogger(__name__)
 

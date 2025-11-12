@@ -1,0 +1,323 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | Vi Vu Admin{% endblock %}
+
+{% block branding %}
+<div class="vivu-admin-branding">
+    <a href="{% url 'admin:index' %}" class="vivu-admin-logo">
+        <img src="{% static 'img/logo_crop-Photoroom.png' %}" alt="Vi Vu Logo" height="48" style="width: 48px; height: 48px; object-fit: contain; border-radius: 50%; background: white; padding: 5px; border: 2px solid rgba(0, 131, 143, 0.5); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);">
+        <h1 id="site-name">Vi Vu Admin</h1>
+    </a>
+</div>
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    /* ============================================================================
+     * VI VU ADMIN - CUSTOM STYLING
+     * Brand Colors: 60% Navy | 30% Teal | 10% Gold
+     * ============================================================================ */
+    
+    :root {
+        --vivu-primary: #153D68;
+        --vivu-primary-light: #1e4d7f;
+        --vivu-primary-dark: #0d2842;
+        --vivu-secondary: #00838F;
+        --vivu-secondary-light: #00a5b5;
+        --vivu-accent: #DAA520;
+        --vivu-accent-light: #f0c040;
+    }
+
+    /* Header - 60% Primary Navy */
+    #header {
+        background: linear-gradient(135deg, var(--vivu-primary-dark) 0%, var(--vivu-primary) 100%);
+        color: #fff;
+        border-bottom: 3px solid var(--vivu-secondary);
+        padding: 15px 20px;
+    }
+
+    /* Branding */
+    .vivu-admin-branding {
+        display: flex;
+        align-items: center;
+    }
+
+    .vivu-admin-logo {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .vivu-admin-logo:hover {
+        transform: translateY(-2px);
+    }
+
+    .vivu-admin-logo img {
+        filter: none;
+    }
+
+    #site-name {
+        color: #fff !important;
+        font-size: 1.5rem;
+        font-weight: 800;
+        margin: 0;
+        letter-spacing: 0.05em;
+    }
+
+    /* User tools */
+    #user-tools {
+        color: #fff;
+        padding: 0;
+        margin: 0;
+        text-align: right;
+    }
+
+    #user-tools a {
+        color: #fff;
+        text-decoration: none;
+        padding: 8px 15px;
+        border-radius: 6px;
+        transition: all 0.3s;
+    }
+
+    #user-tools a:hover {
+        background: var(--vivu-accent);
+        color: var(--vivu-primary-dark);
+    }
+
+    /* Breadcrumbs */
+    .breadcrumbs {
+        background: var(--vivu-primary-light);
+        color: #fff;
+        padding: 12px 20px;
+    }
+
+    .breadcrumbs a {
+        color: var(--vivu-accent-light);
+        text-decoration: none;
+    }
+
+    .breadcrumbs a:hover {
+        color: #fff;
+        text-decoration: underline;
+    }
+
+    /* Module headers - 30% Secondary Teal */
+    .module h2,
+    .module caption {
+        background: var(--vivu-secondary);
+        color: #fff;
+        border-radius: 6px 6px 0 0;
+        padding: 12px 15px;
+        font-weight: 600;
+    }
+
+    /* Buttons - 10% Accent Gold */
+    .button,
+    input[type="submit"],
+    input[type="button"],
+    .submit-row input,
+    button {
+        background: var(--vivu-accent);
+        color: var(--vivu-primary-dark);
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .button:hover,
+    input[type="submit"]:hover,
+    input[type="button"]:hover,
+    .submit-row input:hover {
+        background: var(--vivu-accent-light);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(218, 165, 32, 0.3);
+    }
+
+    .button.default,
+    input[type="submit"].default {
+        background: var(--vivu-secondary);
+        color: #fff;
+    }
+
+    .button.default:hover,
+    input[type="submit"].default:hover {
+        background: var(--vivu-secondary-light);
+    }
+
+    /* Links */
+    a:link,
+    a:visited {
+        color: var(--vivu-secondary);
+        text-decoration: none;
+    }
+
+    a:hover {
+        color: var(--vivu-accent);
+        text-decoration: underline;
+    }
+
+    /* Table rows */
+    table tbody tr:hover {
+        background: rgba(0, 131, 143, 0.05);
+    }
+
+    /* Login form */
+    .login #header {
+        height: auto;
+        padding: 30px 20px;
+    }
+
+    .login .vivu-admin-branding {
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+
+    .login #site-name {
+        font-size: 2rem;
+    }
+
+    .login #content {
+        background: rgba(21, 61, 104, 0.03);
+        border: 2px solid var(--vivu-secondary);
+        border-radius: 12px;
+        padding: 30px;
+    }
+
+    .login .submit-row {
+        padding: 20px 0 0;
+    }
+
+    .login form input[type="text"],
+    .login form input[type="password"] {
+        border: 2px solid #ddd;
+        border-radius: 6px;
+        padding: 10px;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+
+    .login form input[type="text"]:focus,
+    .login form input[type="password"]:focus {
+        border-color: var(--vivu-secondary);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(0, 131, 143, 0.1);
+    }
+
+    /* Dashboard modules */
+    #content-main .module {
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    /* Selected items */
+    .selected {
+        background: rgba(0, 131, 143, 0.1);
+        border-color: var(--vivu-secondary);
+    }
+
+    /* Messages */
+    .success,
+    .messagelist .success {
+        background: #10B981;
+        border-color: #059669;
+    }
+
+    .warning,
+    .messagelist .warning {
+        background: #F59E0B;
+        border-color: #D97706;
+    }
+
+    .error,
+    .messagelist .error {
+        background: #EF4444;
+        border-color: #DC2626;
+    }
+
+    /* Pagination */
+    .paginator a:link,
+    .paginator a:visited {
+        background: var(--vivu-primary);
+        color: #fff;
+        padding: 5px 12px;
+        border-radius: 4px;
+        margin: 0 2px;
+    }
+
+    .paginator a:hover {
+        background: var(--vivu-secondary);
+    }
+
+    .paginator .this-page {
+        background: var(--vivu-accent);
+        color: var(--vivu-primary-dark);
+        padding: 5px 12px;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+
+    /* Footer */
+    #footer {
+        background: var(--vivu-primary-dark);
+        color: rgba(255, 255, 255, 0.8);
+        padding: 15px 20px;
+        text-align: center;
+        border-top: 3px solid var(--vivu-secondary);
+    }
+
+    /* Changelist filters */
+    #changelist-filter {
+        background: #f9fafb;
+        border-left: 3px solid var(--vivu-secondary);
+    }
+
+    #changelist-filter h2 {
+        background: var(--vivu-primary);
+        color: #fff;
+        padding: 10px;
+    }
+
+    #changelist-filter li.selected a {
+        color: var(--vivu-accent);
+        font-weight: 600;
+    }
+
+    /* Object tools */
+    .object-tools a:link,
+    .object-tools a:visited {
+        background: var(--vivu-secondary);
+        color: #fff;
+        border-radius: 6px;
+        padding: 8px 16px;
+    }
+
+    .object-tools a:hover {
+        background: var(--vivu-accent);
+        color: var(--vivu-primary-dark);
+    }
+</style>
+{% endblock %}
+
+{% block footer %}
+<div id="footer">
+    <p>
+        <strong>Vi Vu Admin Panel</strong> | 
+        AI-Powered Travel Planner | 
+        <a href="/" style="color: var(--vivu-accent);">← Back to Website</a>
+    </p>
+    <p style="margin-top: 5px; font-size: 0.9em;">
+        Powered by Django | Brand Colors: 60% Navy | 30% Teal | 10% Gold
+    </p>
+</div>
+{% endblock %}
+

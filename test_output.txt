@@ -1,0 +1,167 @@
+
+================================================================================
+  TEST TÍNH CHI PHÍ DU LỊCH
+================================================================================
+📍 Điểm xuất phát: Gò Vấp, TPHCM
+📍 Điểm đến: Vũng Tàu
+💑 Phong cách: romantic (Lãng mạn)
+📅 Số ngày: 3
+👥 Số người: 2
+🛏️  Số phòng: 1
+📆 Ngày bắt đầu: 2025-11-14
+
+================================================================================
+  1. GEOCODING & TÍNH KHOẢNG CÁCH
+================================================================================
+✅ Origin: Ho Chi Minh City, HC, Vietnam
+   Tọa độ: (10.781971, 106.693081)
+✅ Destination: Saint James, BV, Vietnam
+   Tọa độ: (10.34599, 107.08426)
+
+📏 Khoảng cách: 94.83 km
+⏱️  Thời gian: 88.3 phút (~1.5 giờ)
+
+================================================================================
+  2. CHI PHÍ DI CHUYỂN
+================================================================================
+
+📊 So sánh các phương tiện:
+
+1. Xe máy tự lái
+   💰 Chi phí: 189,660 VNĐ
+   💰/người: 94,830 VNĐ
+   ⏱️  Thời gian: 126.4 phút (~2.1 giờ)
+   📝 Xe máy tự lái - 94.8km, ~126.4 phút
+
+2. Xe buýt đường dài
+   💰 Chi phí: 400,000 VNĐ
+   💰/người: 200,000 VNĐ
+   ⏱️  Thời gian: 94.8 phút (~1.6 giờ)
+   📝 Xe buýt đường dài - 94.8km, ~94.8 phút
+
+3. Ô tô tự lái
+   💰 Chi phí: 474,150 VNĐ
+   💰/người: 237,075 VNĐ
+   ⏱️  Thời gian: 113.8 phút (~1.9 giờ)
+   📝 Ô tô tự lái - 94.8km, ~113.8 phút
+
+💰 Rẻ nhất: Xe máy tự lái - 189,660 VNĐ
+⚡ Nhanh nhất: Xe buýt đường dài - 94.8 phút
+
+✅ Đề xuất: Xe máy tự lái - 189,660 VNĐ
+
+================================================================================
+  3. CHI PHÍ LƯU TRÚ
+================================================================================
+
+🏨 Tìm thấy 0 khách sạn
+
+✅ Chi phí lưu trú ước tính: 6,000,000 VNĐ
+   (2,000,000.0 VNĐ/phòng/đêm)
+
+================================================================================
+  4. CHI PHÍ HOẠT ĐỘNG & ĂN UỐNG
+================================================================================
+   Đang tìm kiếm hoạt động và nhà hàng...
+
+🎯 Hoạt động: Tìm thấy 2 hoạt động
+
+📋 Top 5 hoạt động:
+
+1. Tham quan Bà Rịa – Vũng Tàu
+   📝 Khám phá các điểm tham quan nổi tiếng tại Bà Rịa – Vũng Tàu...
+   💰 0 VNĐ/người
+
+2. Bảo tàng/Văn hóa Bà Rịa – Vũng Tàu
+   📝 Tìm hiểu văn hóa và lịch sử địa phương tại Bà Rịa – Vũng Tàu...
+   💰 50,000 VNĐ/người
+
+✅ Chi phí hoạt động: 100,000 VNĐ
+
+🍽️  Nhà hàng: Tìm thấy 1 nhà hàng
+
+📋 Top 5 nhà hàng:
+
+1. Nhà hàng địa phương Vũng Tàu
+   ⭐ Rating: 4.5/5
+   💰 Price level: medium
+
+✅ Chi phí ăn uống: 10,260,000 VNĐ
+   (1,710,000.0 VNĐ/người/ngày)
+
+================================================================================
+  5. TỔNG KẾT CHI PHÍ
+================================================================================
+
+💰 CHI TIẾT CHI PHÍ:
+   🚗 Di chuyển:     189,660.0 VNĐ
+   🏨 Lưu trú:       9,600,000.0 VNĐ
+   🎯 Hoạt động:     100,000.0 VNĐ
+   🍽️  Ăn uống:       16,416,000.0 VNĐ
+   📦 Khác:          1,315,283.0 VNĐ
+   ──────────────────────────────────────────────────
+   💵 TỔNG CỘNG:     27,620,943 VNĐ
+
+   💰/người:        13,810,472 VNĐ
+   💰/người/ngày:    4,603,490 VNĐ
+
+================================================================================
+  6. ĐỀ XUẤT
+================================================================================
+
+✅ Phân bổ ngân sách hợp lý!
+
+💑 Phong cách lãng mạn:
+   - Ưu tiên khách sạn/resort cao cấp
+   - Nhà hàng lãng mạn, fine dining
+   - Hoạt động riêng tư, không gian yên tĩnh
+   - Chi phí cao hơn phong cách standard (~1.75x)
+
+================================================================================
+  KẾT THÚC TEST
+================================================================================
+
+✅ Test hoàn tất!
+📊 Tổng chi phí: 27,620,943 VNĐ cho 2 người trong 3 ngày
+📍 Từ Gò Vấp, TPHCM đến Vũng Tàu
+INFO 2025-11-07 18:24:59,972 geo_tools VietMap API initialized (preferred for Vietnam addresses)
+WARNING 2025-11-07 18:24:59,975 serpapi_tools serpapi not installed. Install with: pip install google-search-results
+WARNING 2025-11-07 18:24:59,975 serpapi_tools serpapi package not installed. SerpAPI tools will be disabled.
+INFO 2025-11-07 18:24:59,991 activities_tools Tavily client initialized for ActivitiesTools
+INFO 2025-11-07 18:24:59,997 cache Redis connected: localhost:6379
+ERROR 2025-11-07 18:24:59,997 vietmap_tools VietMap search places error for 'ga tàu Gò Vấp, TPHCM': could not convert string to float: 'Gò Vấp'
+ERROR 2025-11-07 18:24:59,997 vietmap_tools VietMap search places error for 'nhà ga Gò Vấp, TPHCM': could not convert string to float: 'Gò Vấp'
+ERROR 2025-11-07 18:24:59,997 vietmap_tools VietMap search places error for 'ga xe lửa Gò Vấp, TPHCM': could not convert string to float: 'Gò Vấp'
+ERROR 2025-11-07 18:25:00,003 vietmap_tools VietMap search places error for 'train station Gò Vấp, TPHCM': could not convert string to float: 'Gò Vấp'
+D:\KLTN\MAS (1)\MAS\TRAVEL_PLANNER\tools\transport_tools.py:144: RuntimeWarning: This package (`duckduckgo_search`) has been renamed to `ddgs`! Use `pip install ddgs` instead.
+  ddgs = DDGS()
+INFO 2025-11-07 18:25:00,385 lib response: https://www.bing.com/search?q=ga+t%C3%A0u+G%C3%B2+V%E1%BA%A5p%2C+TPHCM+Vi%E1%BB%87t+Nam 200
+WARNING 2025-11-07 18:25:00,705 vietmap_tools VietMap geocoding failed for all endpoints: Vũng Tàu
+D:\KLTN\MAS (1)\MAS\TRAVEL_PLANNER\tools\transport_tools.py:144: RuntimeWarning: This package (`duckduckgo_search`) has been renamed to `ddgs`! Use `pip install ddgs` instead.
+  ddgs = DDGS()
+INFO 2025-11-07 18:25:01,469 lib response: https://www.bing.com/search?q=ga+t%C3%A0u+V%C5%A9ng+T%C3%A0u+Vi%E1%BB%87t+Nam 200
+INFO 2025-11-07 18:25:01,529 base_agent Initialized agent: accommodation_agent
+INFO 2025-11-07 18:25:01,529 base_agent LangSmith tracing enabled for accommodation_agent
+INFO 2025-11-07 18:25:01,529 base_agent [accommodation_agent] Input: {'destination': 'Vũng Tàu', 'check_in': '2025-11-14', 'check_out': '2025-11-17', 'guests': 2, 'rooms': 1, 'travel_style': 'romantic', 'days': 3}
+INFO 2025-11-07 18:25:01,530 base_agent [accommodation_agent] Output: {'destination': 'Vũng Tàu', 'check_in': '2025-11-14', 'check_out': '2025-11-17', 'guests': 2, 'rooms': 1, 'travel_style': 'romantic', 'days': 3, 'accommodation_cost': 6000000, 'hotels': [], 'accommoda...
+INFO 2025-11-07 18:25:01,531 base_agent Initialized agent: activities_agent
+INFO 2025-11-07 18:25:01,531 base_agent LangSmith tracing enabled for activities_agent
+INFO 2025-11-07 18:25:01,531 base_agent Initialized agent: vector_db_agent
+INFO 2025-11-07 18:25:01,531 base_agent LangSmith tracing enabled for vector_db_agent
+
+thread '<unnamed>' panicked at rust\sqlite\src\db.rs:157:42:
+range start index 10 out of range for slice of length 9
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+WARNING 2025-11-07 18:25:01,776 activities_agent Vector DB not available for Activities Agent: PanicException: range start index 10 out of range for slice of length 9
+INFO 2025-11-07 18:25:01,776 base_agent [activities_agent] Input: {'destination': 'Vũng Tàu', 'travel_style': 'romantic', 'travelers': 2, 'days': 3}
+INFO 2025-11-07 18:25:01,795 activities_agent Found 2 fallback activities from database for Vũng Tàu
+INFO 2025-11-07 18:25:01,795 base_agent Initialized agent: vector_db_agent
+INFO 2025-11-07 18:25:01,795 base_agent LangSmith tracing enabled for vector_db_agent
+ERROR 2025-11-07 18:25:01,803 vector_db Failed to initialize ChromaDB client: Could not connect to tenant default_tenant. Are you sure it exists?
+WARNING 2025-11-07 18:25:01,803 vector_db ChromaDB client not available, vector search will be disabled
+INFO 2025-11-07 18:25:01,803 activities_agent Final activities count: 2 for Vũng Tàu
+INFO 2025-11-07 18:25:01,803 base_agent [activities_agent] Output: {'destination': 'Vũng Tàu', 'travel_style': 'romantic', 'travelers': 2, 'days': 3, 'activities': [{'name': 'Tham quan Bà Rịa – Vũng Tàu', 'description': 'Khám phá các điểm tham quan nổi tiếng tại Bà R...
+INFO 2025-11-07 18:25:01,803 base_agent Initialized agent: budget_agent
+INFO 2025-11-07 18:25:01,803 base_agent LangSmith tracing enabled for budget_agent
+INFO 2025-11-07 18:25:01,803 base_agent [budget_agent] Input: {'transport_cost': 189660, 'accommodation_cost': 6000000, 'activities_cost': 100000, 'dining_cost': 10260000, 'days': 3, 'travelers': 2, 'travel_style': 'romantic'}
+INFO 2025-11-07 18:25:01,803 base_agent [budget_agent] Output: {'transport_cost': 189660, 'accommodation_cost': 6000000, 'activities_cost': 100000, 'dining_cost': 10260000, 'days': 3, 'travelers': 2, 'travel_style': 'romantic', 'budget': {'total_vnd': 27620943, '...

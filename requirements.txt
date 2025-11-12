@@ -85,6 +85,7 @@ surprise>=0.1,<1.0  # For SVD-based collaborative filtering
 
 # Web scraping (for data collection agents)
 beautifulsoup4>=4.12.0,<5.0.0
+lxml>=4.9.0,<6.0.0  # HTML/XML parser (recommended for beautifulsoup4 - faster parsing)
 requests>=2.31.0,<3.0.0
 googlesearch-python>=1.2.3,<2.0.0
 duckduckgo-search>=6.0.0,<7.0.0  # Free search API - no API key needed

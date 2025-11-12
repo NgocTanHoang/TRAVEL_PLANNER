@@ -21,10 +21,13 @@ from django.utils import timezone
 from django.core.cache import cache
 import logging
 import asyncio
+from typing import Dict, Any, List
 
-# Add project root to path
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
+# Add backend directory to path for agents, tools, etc.
+# BASE_DIR (vivu_backend) is already added in settings.py, but adding here for safety
+BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
 
 from .travel_plan_serializers import (
     TravelPlanRequestSerializer,
@@ -71,8 +74,10 @@ class TravelPlanPreviewView(APIView):
             # Validate params
             origin = request.query_params.get('origin')
             destination = request.query_params.get('destination')
-            days = request.query_params.get('days', type=int)
-            travelers = request.query_params.get('travelers', type=int, default=2)
+            days_str = request.query_params.get('days')
+            days = int(days_str) if days_str else None
+            travelers_str = request.query_params.get('travelers', '2')
+            travelers = int(travelers_str) if travelers_str else 2
             travel_style = request.query_params.get('travel_style', 'standard')
             
             if not all([origin, destination, days]):

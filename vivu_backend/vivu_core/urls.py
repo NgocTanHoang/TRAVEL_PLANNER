@@ -22,6 +22,9 @@ urlpatterns = [
     # Travel Plan Workflow - 4 Steps
     path('travel-plan/', TemplateView.as_view(template_name='travel_plan.html'), name='travel-plan'),
     
+    # AI Chat Assistant
+    path('ai-chat/', TemplateView.as_view(template_name='ai_chat.html'), name='ai-chat'),
+    
     # Place search
     path('places/search/', PlaceSearchView.as_view(), name='place_search'),
     path('places/<int:id>/', PlaceDetailView.as_view(), name='place_detail'),

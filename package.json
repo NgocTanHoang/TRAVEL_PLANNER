@@ -1,0 +1,54 @@
+{
+  "name": "vivu-travel-planner",
+  "version": "1.0.0",
+  "description": "Vi Vu - AI-Powered Travel Planner Frontend",
+  "private": true,
+  "scripts": {
+    "dev": "echo 'Django development server: python manage.py runserver'",
+    "build:css": "tailwindcss -i ./vivu_backend/static/css/global.css -o ./vivu_backend/static/css/output.css --minify",
+    "watch:css": "tailwindcss -i ./vivu_backend/static/css/global.css -o ./vivu_backend/static/css/output.css --watch",
+    "lint:css": "stylelint 'vivu_backend/static/css/**/*.css'",
+    "lint:js": "eslint 'vivu_backend/static/js/**/*.js'",
+    "format:css": "prettier --write 'vivu_backend/static/css/**/*.css'",
+    "format:js": "prettier --write 'vivu_backend/static/js/**/*.js'",
+    "collectstatic": "echo 'Run: python manage.py collectstatic'",
+    "test": "echo 'Django tests: python manage.py test'"
+  },
+  "dependencies": {
+    "date-fns": "^4.1.0",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^3.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.9",
+    "@types/node": "^22.0.0",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.0",
+    "postcss": "^8.5.0",
+    "postcss-cli": "^11.0.0",
+    "prettier": "^3.3.3",
+    "stylelint": "^16.9.0",
+    "stylelint-config-standard": "^36.0.1",
+    "tailwindcss": "^4.1.9",
+    "tw-animate-css": "^1.3.3",
+    "typescript": "^5.6.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "."
+  },
+  "keywords": [
+    "django",
+    "travel-planner",
+    "ai",
+    "multi-agent-system",
+    "vietnam-tourism"
+  ],
+  "author": "Vi Vu Team",
+  "license": "MIT"
+}
+

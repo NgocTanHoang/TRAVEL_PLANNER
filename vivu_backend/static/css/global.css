@@ -1,0 +1,521 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ===================================
+ * VI VU DESIGN SYSTEM - Global CSS
+ * Color System: 60% Navy, 30% Teal, 10% Gold
+ * Typography: Inter (base), Poppins (headings)
+ * =================================== */
+
+:root {
+  /* ===================================
+   * BACKGROUND & FOREGROUND
+   * =================================== */
+  --background: oklch(0.99 0 0); /* White #FFFFFF */
+  --foreground: oklch(0.25 0.08 240); /* Navy Blue #153D68 */
+  
+  /* ===================================
+   * CARD COLORS
+   * =================================== */
+  --card: oklch(1 0 0); /* White */
+  --card-foreground: oklch(0.25 0.08 240); /* Navy Blue */
+  
+  /* ===================================
+   * POPOVER COLORS
+   * =================================== */
+  --popover: oklch(1 0 0); /* White */
+  --popover-foreground: oklch(0.25 0.08 240); /* Navy Blue */
+  
+  /* ===================================
+   * PRIMARY COLORS (60% - Navy Blue #153D68)
+   * =================================== */
+  --primary: oklch(0.25 0.08 240); /* Navy Blue #153D68 */
+  --primary-foreground: oklch(0.99 0 0); /* White for text on primary */
+  
+  /* ===================================
+   * SECONDARY COLORS (30% - Teal #00838F)
+   * =================================== */
+  --secondary: oklch(0.45 0.12 195); /* Teal #00838F */
+  --secondary-foreground: oklch(0.99 0 0); /* White for text on secondary */
+  
+  /* ===================================
+   * MUTED COLORS
+   * =================================== */
+  --muted: oklch(0.96 0.005 240); /* Light gray with slight blue tint */
+  --muted-foreground: oklch(0.45 0.02 240); /* Dark gray-blue */
+  
+  /* ===================================
+   * ACCENT COLORS (10% - Gold #DAA520)
+   * =================================== */
+  --accent: oklch(0.72 0.15 85); /* Gold #DAA520 */
+  --accent-foreground: oklch(0.25 0.08 240); /* Navy Blue for text on accent */
+  
+  /* ===================================
+   * DESTRUCTIVE COLORS
+   * =================================== */
+  --destructive: oklch(0.55 0.22 25); /* Red for errors */
+  --destructive-foreground: oklch(0.99 0 0); /* White */
+  
+  /* ===================================
+   * BORDER & INPUT COLORS
+   * =================================== */
+  --border: oklch(0.90 0.01 240); /* Light border */
+  --input: oklch(0.90 0.01 240); /* Input border */
+  --ring: oklch(0.45 0.12 195); /* Focus ring - Teal */
+  
+  /* ===================================
+   * CHART COLORS
+   * =================================== */
+  --chart-1: oklch(0.72 0.15 85); /* Gold */
+  --chart-2: oklch(0.45 0.12 195); /* Teal */
+  --chart-3: oklch(0.25 0.08 240); /* Navy Blue */
+  --chart-4: oklch(0.65 0.12 160); /* Green-teal */
+  --chart-5: oklch(0.55 0.15 50); /* Orange-gold */
+  
+  /* ===================================
+   * BORDER RADIUS
+   * =================================== */
+  --radius: 0.75rem; /* 12px - matches Vi Vu design system */
+  
+  /* ===================================
+   * SIDEBAR COLORS (if used)
+   * =================================== */
+  --sidebar: oklch(0.98 0.005 240); /* Very light blue-gray */
+  --sidebar-foreground: oklch(0.25 0.08 240); /* Navy Blue */
+  --sidebar-primary: oklch(0.25 0.08 240); /* Navy Blue */
+  --sidebar-primary-foreground: oklch(0.99 0 0); /* White */
+  --sidebar-accent: oklch(0.96 0.01 240); /* Light accent */
+  --sidebar-accent-foreground: oklch(0.25 0.08 240); /* Navy Blue */
+  --sidebar-border: oklch(0.90 0.01 240); /* Light border */
+  --sidebar-ring: oklch(0.70 0.01 240); /* Ring color */
+}
+
+.dark {
+  /* ===================================
+   * DARK MODE COLORS
+   * =================================== */
+  --background: oklch(0.15 0.02 240); /* Dark navy background */
+  --foreground: oklch(0.95 0.005 240); /* Light text */
+  
+  --card: oklch(0.20 0.03 240); /* Dark card */
+  --card-foreground: oklch(0.95 0.005 240); /* Light text */
+  
+  --popover: oklch(0.20 0.03 240); /* Dark popover */
+  --popover-foreground: oklch(0.95 0.005 240); /* Light text */
+  
+  --primary: oklch(0.35 0.10 240); /* Lighter navy for dark mode */
+  --primary-foreground: oklch(0.95 0.005 240); /* Light text */
+  
+  --secondary: oklch(0.50 0.14 195); /* Brighter teal for dark mode */
+  --secondary-foreground: oklch(0.95 0.005 240); /* Light text */
+  
+  --muted: oklch(0.25 0.02 240); /* Dark muted */
+  --muted-foreground: oklch(0.70 0.01 240); /* Light muted text */
+  
+  --accent: oklch(0.75 0.16 85); /* Brighter gold for dark mode */
+  --accent-foreground: oklch(0.15 0.02 240); /* Dark text on accent */
+  
+  --destructive: oklch(0.60 0.25 25); /* Brighter red */
+  --destructive-foreground: oklch(0.95 0.005 240); /* Light text */
+  
+  --border: oklch(0.30 0.02 240); /* Dark border */
+  --input: oklch(0.30 0.02 240); /* Dark input */
+  --ring: oklch(0.50 0.14 195); /* Teal ring */
+  
+  --chart-1: oklch(0.75 0.16 85); /* Gold */
+  --chart-2: oklch(0.50 0.14 195); /* Teal */
+  --chart-3: oklch(0.35 0.10 240); /* Navy */
+  --chart-4: oklch(0.65 0.14 160); /* Green-teal */
+  --chart-5: oklch(0.60 0.16 50); /* Orange-gold */
+  
+  --sidebar: oklch(0.18 0.02 240); /* Dark sidebar */
+  --sidebar-foreground: oklch(0.95 0.005 240); /* Light text */
+  --sidebar-primary: oklch(0.35 0.10 240); /* Navy */
+  --sidebar-primary-foreground: oklch(0.95 0.005 240); /* Light text */
+  --sidebar-accent: oklch(0.25 0.02 240); /* Dark accent */
+  --sidebar-accent-foreground: oklch(0.95 0.005 240); /* Light text */
+  --sidebar-border: oklch(0.30 0.02 240); /* Dark border */
+  --sidebar-ring: oklch(0.50 0.14 195); /* Teal ring */
+}
+
+@theme inline {
+  /* ===================================
+   * TYPOGRAPHY - Vi Vu Fonts
+   * =================================== */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+  --font-mono: "Fira Code", "Courier New", monospace;
+  
+  /* Note: Poppins is used for headings via CSS class, not in theme inline */
+  
+  /* ===================================
+   * COLOR MAPPINGS
+   * =================================== */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  
+  /* ===================================
+   * BORDER RADIUS VARIATIONS
+   * =================================== */
+  --radius-sm: calc(var(--radius) - 4px); /* 8px */
+  --radius-md: calc(var(--radius) - 2px); /* 10px */
+  --radius-lg: var(--radius); /* 12px */
+  --radius-xl: calc(var(--radius) + 4px); /* 16px */
+  
+  /* ===================================
+   * SIDEBAR COLOR MAPPINGS
+   * =================================== */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+  }
+  
+  /* Apply Poppins to headings */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Poppins", var(--font-sans);
+    font-weight: 600;
+  }
+}
+
+/* ===================================
+ * VI VU COMPONENT STYLES
+ * Compatible with existing Vi Vu CSS
+ * =================================== */
+
+/* Navbar - 60% Primary Navy Background */
+.navbar {
+  background: var(--primary);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  transition: var(--transition-base);
+  border: none;
+  border-bottom: none;
+  overflow: visible;
+  box-shadow: 0 2px 12px oklch(0.25 0.08 240 / 0.15);
+}
+
+.navbar.scrolled {
+  background: oklch(0.25 0.08 240 / 0.98);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 24px oklch(0 0 0 / 0.25);
+}
+
+.nav-link-signup {
+  background: var(--accent);
+  color: var(--primary);
+  font-weight: 700;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px oklch(0.72 0.15 85 / 0.25);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.nav-link-signup:hover {
+  background: oklch(0.75 0.16 85); /* accent-light */
+  color: var(--primary);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px oklch(0.72 0.15 85 / 0.4);
+}
+
+.feature-card {
+  background: oklch(1 0 0 / 0.05);
+  backdrop-filter: blur(10px);
+  padding: 2.5rem;
+  border-radius: 20px;
+  text-align: center;
+  transition: var(--transition-base);
+  border: 2px solid transparent;
+  box-shadow: 0 8px 32px oklch(0 0 0 / 0.1);
+}
+
+.feature-card:hover {
+  transform: translateY(-8px);
+  border-color: oklch(0.50 0.14 195); /* secondary-light */
+  background: oklch(1 0 0 / 0.1);
+  box-shadow: 0 16px 48px oklch(0.45 0.12 195 / 0.25);
+}
+
+.place-bar {
+  background: var(--card);
+  border-radius: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  min-width: 420px;
+  width: 420px;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px oklch(0 0 0 / 0.12);
+  cursor: pointer;
+  color: var(--foreground);
+  border: none;
+  flex-direction: column;
+  height: auto;
+  min-height: 380px;
+}
+
+.place-bar:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 28px oklch(0 0 0 / 0.18);
+}
+
+.place-bar.selected {
+  border: 2px solid var(--secondary);
+  box-shadow: 0 8px 32px oklch(0.45 0.12 195 / 0.35);
+  transform: translateY(-4px);
+}
+
+.place-bar-add-btn {
+  background: var(--accent);
+  color: var(--primary);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-size: 0.95rem;
+  box-shadow: 0 4px 12px oklch(0.72 0.15 85 / 0.2);
+}
+
+.place-bar-add-btn:hover {
+  background: oklch(0.75 0.16 85); /* accent-light */
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px oklch(0.72 0.15 85 / 0.35);
+}
+
+.place-bar-info-btn {
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-size: 0.85rem;
+  box-shadow: 0 2px 8px oklch(0.45 0.12 195 / 0.15);
+}
+
+.place-bar-info-btn:hover {
+  background: oklch(0.50 0.14 195); /* secondary-light */
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px oklch(0.45 0.12 195 / 0.25);
+}
+
+.logout-modal {
+  background: var(--card);
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 450px;
+  width: 90%;
+  box-shadow: 0 25px 50px oklch(0 0 0 / 0.35);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+.place-info-modal {
+  background: var(--card);
+  border-radius: 20px;
+  max-width: 800px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 25px 50px oklch(0 0 0 / 0.35);
+  animation: modalSlideIn 0.3s ease;
+}
+
+.search-dropdown-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.5rem;
+  border-radius: 8px;
+  color: var(--foreground);
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-size: 0.8rem;
+  white-space: nowrap;
+  border: 1px solid var(--border);
+  background: var(--card);
+  text-align: center;
+  min-height: 70px;
+  box-shadow: 0 1px 3px oklch(0 0 0 / 0.05);
+}
+
+.search-dropdown-item:hover {
+  background: var(--muted);
+  color: var(--primary);
+  transform: translateY(-2px);
+  border-color: var(--secondary);
+  box-shadow: 0 4px 8px oklch(0 0 0 / 0.12);
+}
+
+.btn-create {
+  background: var(--accent);
+  color: var(--primary);
+  padding: 1.25rem 3.5rem;
+  border: none;
+  border-radius: 50px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 6px 20px oklch(0.72 0.15 85 / 0.35);
+  width: auto;
+  min-width: 320px;
+  display: inline-block;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.btn-create:hover {
+  background: oklch(0.75 0.16 85); /* accent-light */
+  color: var(--primary);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px oklch(0.72 0.15 85 / 0.45);
+}
+
+.btn-create:active {
+  background: var(--accent);
+  color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px oklch(0.72 0.15 85 / 0.3);
+}
+
+.feature-highlights {
+  padding: 5rem 2rem;
+  background: var(--primary);
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.5rem;
+  margin-top: 3rem;
+}
+
+.nearby-place-detail {
+  background: transparent;
+  padding: 3rem 2rem;
+  border-left: 3px solid var(--accent);
+  padding-left: 2.5rem;
+  color: var(--primary-foreground);
+  min-height: 500px;
+}
+
+.nearby-place-detail h3 {
+  color: var(--primary-foreground);
+  font-size: 2.2rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 3px solid var(--accent);
+  padding-bottom: 0.75rem;
+  font-weight: 800;
+  font-family: "Poppins", var(--font-sans);
+}
+
+.nearby-place-detail-section h4 {
+  color: var(--accent);
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: "Poppins", var(--font-sans);
+}
+
+.place-bar-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin: 0;
+  line-height: 1.3;
+  font-family: "Poppins", var(--font-sans);
+}
+
+.rating-stars {
+  color: var(--accent);
+  font-size: 1rem;
+}
+
+.rating-score {
+  font-weight: 700;
+  color: var(--foreground);
+  font-size: 1rem;
+}
+
+/* ===================================
+ * ANIMATIONS
+ * =================================== */
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===================================
+ * RESPONSIVE DESIGN
+ * =================================== */
+@media (max-width: 768px) {
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .place-bar {
+    min-width: 100%;
+    width: 100%;
+  }
+  
+  .btn-create {
+    min-width: 100%;
+    padding: 1rem 2rem;
+  }
+}
+

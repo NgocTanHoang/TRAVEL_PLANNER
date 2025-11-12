@@ -1,0 +1,158 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký | Vi Vu</title>
+    <link rel="icon" type="image/png" href="{% static 'img/logo_crop-Photoroom.png' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        :root{--color-primary:#153D68;--color-primary-dark:#0d2842;--color-secondary:#00838F;--color-accent:#DAA520}
+        body{position:relative;background:var(--color-primary);background-size:cover;min-height:100vh;font-family:'Inter',sans-serif;overflow:auto;margin:0;display:flex;flex-direction:column}
+        .content-wrap{flex:1;display:flex;justify-content:center;align-items:flex-start;padding:2.5rem 1rem 3.5rem}
+        body::before{content:'';position:absolute;inset:0;background-color:#f5f6fa;opacity:.1}
+        .navbar{background:var(--color-primary);position:sticky;top:0;z-index:1000;border-bottom:2px solid rgba(0,131,143,.2);transition:all .3s cubic-bezier(.4,0,.2,1)}
+        .navbar.scrolled{background:rgba(21,61,104,.7);backdrop-filter:blur(20px);box-shadow:0 10px 15px -3px rgba(0,0,0,.1)}
+        .nav-container{max-width:1280px;margin:0 auto;padding:0.5rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1.5rem}
+        .logo{display:flex;align-items:center;gap:0.75rem;text-decoration:none}
+        .logo img{height:46px;width:46px;border-radius:50%;background:#fff;padding:3px;border:2px solid transparent;box-shadow:0 4px 12px rgba(0,0,0,.25);object-fit:contain;transition:.3s;transform:scale(1.0)}
+        .logo:hover img{border-color:var(--color-accent);box-shadow:0 6px 20px rgba(218,165,32,.4)}
+        .logo h1{color:#fff;font-weight:800;letter-spacing:.5px;font-size:1.4rem;margin:0}
+        .nav-menu{display:flex;gap:2rem;list-style:none;margin:0;padding:0}
+        .nav-menu a{color:#fff;text-decoration:none;font-weight:600;opacity:.95;padding:.5rem 1rem;border-radius:.5rem;position:relative}
+        .nav-menu a::before{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:0;height:2px;background:var(--color-accent);transition:.3s}
+        .nav-menu a:hover{color:var(--color-accent);background:rgba(218,165,32,.1)}
+        .nav-menu a:hover::before{width:80%}
+        footer{background:var(--color-primary-dark);color:#fff;padding:3rem 2rem 1.5rem;margin-top:auto}
+        footer .footer-container{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:2rem;margin-bottom:2rem}
+        footer .footer-section h4{font-size:1.2rem;margin-bottom:1rem;color:var(--color-accent)}
+        footer .footer-section ul{list-style:none}
+        footer .footer-section ul li{margin-bottom:.5rem}
+        footer .footer-section a{color:#fff;text-decoration:none;opacity:.9;transition:all .3s}
+        footer .footer-section a:hover{color:var(--color-accent);opacity:1}
+        footer .footer-bottom{text-align:center;padding-top:2rem;border-top:1px solid rgba(255,255,255,.1);opacity:.8}
+        footer .social-links{display:flex;gap:1rem;margin-top:1rem}
+        footer .social-link{display:flex;align-items:center;justify-content:center;width:45px;height:45px;border-radius:50%;background:rgba(255,255,255,.1);transition:all .3s;color:#fff}
+        footer .social-link:hover{background:var(--color-accent);transform:translateY(-3px)}
+        .container{position:relative;margin:0 auto;width:850px;background:#fff;border-radius:15px;display:flex;box-shadow:0 25px 60px rgba(0,0,0,.35);border:2px solid rgba(0,131,143,.15)}
+        .form-content{width:400px}
+        figure{margin:10px;display:flex;align-items:center;justify-content:center}
+        .form-image{width:auto;margin:auto 20px}
+        .form-content h1{text-align:center;padding-top:20px;margin:0;font-weight:800;color:var(--color-primary)}
+        .form-content form{padding:0 40px}
+        .form-control{position:relative;border-bottom:2px solid #adadad;margin:40px 0}
+        .form-control label{display:none}
+        .form-control input{width:100%;height:40px;font-size:16px;border:none;background:none;outline:none;padding-right:35px}
+        .hint{display:block;font-size:.85rem;color:#6b7280;margin-top:.35rem}
+        .form-control span::before{content:'';position:absolute;top:42px;left:0;width:0;height:2px;background:var(--color-accent);transition:.3s}
+        .form-control input:focus~span::before{width:100%}
+        .password-toggle{position:absolute;right:5px;top:50%;transform:translateY(-50%);background:none!important;border:none!important;cursor:pointer;color:#999;font-size:0.95rem;padding:3px 6px;transition:all .2s;z-index:10;height:auto!important;width:auto!important;margin:0!important;visibility:visible!important;opacity:0.7}
+        .password-toggle:hover{color:var(--color-secondary);opacity:1}
+        .password-toggle i{display:block;visibility:visible;font-weight:400}
+        .form-buttons{display:flex;justify-content:space-between}
+        .form-buttons input[type='submit'],.form-buttons button[type='button']{margin-top:10px;margin-bottom:20px;width:48%;height:50px;border:1px solid var(--color-secondary);background:var(--color-secondary);border-radius:25px;font-size:18px;color:#e9f4fb;font-weight:700;cursor:pointer;outline:none;transition:.25s;text-align:center;display:inline-block}
+        .form-buttons input[type='submit']:hover,.form-buttons button[type='button']:hover{background-color:#00a5b5;box-shadow:0 10px 20px rgba(0,131,143,.35)}
+        .signup_link{margin:20px 0;text-align:center;font-size:16px;color:#666}
+        .signup_link a{color:#2691d9;text-decoration:none}
+        .signup_link a:hover{text-decoration:underline}
+        @media(max-width:920px){.content-wrap{padding:2rem 1rem 2.5rem}.container{width:95%;max-width:850px}.form-image{display:none}.form-content{width:100%;margin-left:0}.logo img{height:40px;width:40px;padding:3px;object-fit:contain;transform:scale(1.0)}.logo h1{font-size:1.2rem}}
+    </style>
+</head>
+<body>
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+        <div class="nav-container">
+            <a href="/" class="logo" aria-label="Vi Vu Home">
+                <img src="{% static 'img/logo_crop-Photoroom.png' %}" alt="Vi Vu Logo">
+                <h1>Vi Vu</h1>
+            </a>
+            <ul class="nav-menu">
+                <li><a href="/">Trang chủ</a></li>
+            </ul>
+        </div>
+    </nav>
+    <div class="content-wrap">
+      <div class="container">
+        <figure>
+            <img class="form-image" src="{% static 'img/signup-image.jpg' %}" alt="signup-image" onerror="this.onerror=null;this.src='{% static 'img/logo_crop-Photoroom.png' %}';this.style.maxWidth='160px'"/>
+        </figure>
+        <div class="form-content" style="margin-left:auto">
+            <h1>Đăng ký</h1>
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-control">
+                    {{ form.username }}
+                    <span></span>
+                </div>
+                <div class="form-control">
+                    {{ form.email }}
+                    <span></span>
+                </div>
+                <div class="form-control">
+                    {{ form.password1 }}
+                    <span></span>
+                    <button type="button" class="password-toggle" onclick="togglePassword('id_password1', 'toggle-icon-password1')">
+                        <i class="fa-solid fa-eye-slash" id="toggle-icon-password1"></i>
+                    </button>
+                </div>
+                <div class="form-control">
+                    {{ form.password2 }}
+                    <span></span>
+                    <button type="button" class="password-toggle" onclick="togglePassword('id_password2', 'toggle-icon-password2')">
+                        <i class="fa-solid fa-eye-slash" id="toggle-icon-password2"></i>
+                    </button>
+                </div>
+                {% if form.errors %}
+                <div style="color: red; text-align: center; margin-bottom: 10px;">
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <div class="form-buttons">
+                    <button type="button" onclick="location.href='/'">Quay lại</button>
+                    <input type="submit" value="Đăng ký"/>
+                </div>
+            </form>
+            <div class="signup_link">Đã có tài khoản? <a href="{% url 'login' %}">Đăng nhập</a></div>
+            <div class="signup_link" style="opacity:.8;margin-top:-10px">Đăng ký để lưu lịch trình và đồng bộ đa thiết bị.</div>
+        </div>
+      </div>
+    </div>
+    
+    {% include 'includes/footer.html' %}
+    <script>
+    // Navbar scroll effect - transparency on scroll
+    const navbar = document.querySelector('.navbar');
+    if(navbar){
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
+            if(currentScroll > 50){
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+    }
+    
+    // Toggle password visibility
+    function togglePassword(fieldId, iconId){
+        const passwordInput = document.getElementById(fieldId);
+        const toggleIcon = document.getElementById(iconId);
+        if(passwordInput && toggleIcon){
+            if(passwordInput.type === 'password'){
+                passwordInput.type = 'text';
+                toggleIcon.className = 'fa-solid fa-eye';
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.className = 'fa-solid fa-eye-slash';
+            }
+        }
+    }
+    </script>
+</body>
+</html>
+
