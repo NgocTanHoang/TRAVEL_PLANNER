@@ -34,6 +34,14 @@ redis>=5.0.0,<8.0.0
 django-redis>=5.4.0,<7.0.0  # Django Redis cache backend (supports version 6.0.0+)
 
 # ============================================================================
+# FastAPI Microservice (for standalone orchestrator)
+# ============================================================================
+
+fastapi>=0.115.0,<1.0.0
+uvicorn[standard]>=0.30.0,<1.0.0
+pydantic>=2.7.0,<3.0.0
+
+# ============================================================================
 # AI & LLM (for Multi-Agent System)
 # ============================================================================
 
@@ -48,6 +56,9 @@ tavily-python>=0.7.0,<1.0.0  # Tavily API client for web search
 
 # OpenAI
 openai>=1.0.0,<3.0.0
+
+# Groq (for fast LLM inference)
+langchain-groq>=1.0.0,<2.0.0
 
 # Google Gemini
 google-generativeai>=0.3.0
@@ -92,6 +103,9 @@ duckduckgo-search>=6.0.0,<7.0.0  # Free search API - no API key needed
 
 # SerpAPI - Google Search Results
 google-search-results>=2.4.2,<3.0.0
+
+# Amadeus API - Travel booking (Flights, Hotels, etc.)
+amadeus>=12.0.0,<13.0.0
 
 # Excel file handling (for data import scripts)
 openpyxl>=3.1.0,<4.0.0

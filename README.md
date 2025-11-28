@@ -10,40 +10,96 @@ Vi Vu là nền tảng lập kế hoạch du lịch thế hệ mới được h�
 
 ## ✨ Tính năng chính
 
-### 🤖 Multi-Agent System
-- **7 Specialized Agents** hoạt động theo workflow có điều phối:
-  - **Transport Agent**: Tính toán khoảng cách và đề xuất phương tiện di chuyển
-  - **Flight Agent**: Tìm kiếm chuyến bay với tích hợp sân bay gần nhất
-  - **Accommodation Agent**: Tìm khách sạn, resort phù hợp với ngân sách
-  - **Activities Agent**: Gợi ý địa điểm tham quan và nhà hàng
-  - **Budget Agent**: Tính toán và tối ưu ngân sách
-  - **Planning Agent**: Tạo lịch trình chi tiết theo ngày
-  - **Orchestrator Agent**: Điều phối toàn bộ workflow
+### 🤖 Multi-Agent System với 7 Specialized Agents
+
+Hệ thống sử dụng **7 agents chuyên biệt** hoạt động theo workflow có điều phối:
+
+1. **Orchestrator Agent** - Điều phối toàn bộ workflow, quản lý state và điều hướng giữa các agents
+2. **Transport Agent** - Tính toán khoảng cách, thời gian di chuyển và đề xuất phương tiện (máy bay, tàu, xe khách, xe máy)
+3. **Flight Agent** - Tìm kiếm chuyến bay với tích hợp sân bay gần nhất, so sánh giá vé từ nhiều nguồn
+4. **Accommodation Agent** - Tìm khách sạn, resort phù hợp với ngân sách và phong cách du lịch
+5. **Activities Agent** - Gợi ý địa điểm tham quan và nhà hàng, ưu tiên database, sau đó tools, cuối cùng vector DB
+6. **Budget Agent** - Tính toán và tối ưu ngân sách theo từng hạng mục (vận chuyển, lưu trú, hoạt động, ăn uống)
+7. **Planning Agent** - Tạo lịch trình chi tiết theo ngày với timeline, phân bổ hoạt động hợp lý
+
+### 🔄 Workflow Execution Flow
+
+```
+User Input (Origin, Destination, Dates, Travelers, Style)
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│   Orchestrator Agent                    │
+│   - Khởi tạo state                      │
+│   - Điều phối workflow                  │
+└──────────────┬──────────────────────────┘
+               │
+               ├─► Step 1: Transport Agent
+               │   - Tính khoảng cách
+               │   - Đề xuất phương tiện
+               │
+               ├─► Step 2: Flight Agent (conditional)
+               │   - Nếu cần máy bay
+               │   - Tìm sân bay gần nhất
+               │   - So sánh giá vé
+               │
+               ├─► Step 3: Accommodation Agent
+               │   - Tìm khách sạn
+               │   - Tính chi phí lưu trú
+               │
+               ├─► Step 4: Activities Agent
+               │   - Tìm địa điểm tham quan
+               │   - Tìm nhà hàng
+               │   - Tính chi phí hoạt động & ăn uống
+               │
+               ├─► Step 5: Budget Agent
+               │   - Tổng hợp chi phí
+               │   - Tính toán ngân sách
+               │
+               └─► Step 6: Planning Agent
+                   - Tạo lịch trình chi tiết
+                   - Phân bổ hoạt động theo ngày
+                   - Tạo timeline với thời gian cụ thể
+                   - Generate mô tả bằng LLM
+```
 
 ### 🧠 RAG-Powered Recommendations
 - **Vector Database**: ChromaDB với embeddings từ OpenAI
 - **Intelligent Search**: Tìm kiếm địa điểm dựa trên semantic similarity
 - **50K+ Địa điểm Việt Nam**: Database phong phú với thông tin chi tiết
+- **Priority-based Search**: Database → Tools → Vector DB (fallback)
 
 ### 📊 Smart Analytics
 - Phân tích chi phí theo từng hạng mục
 - Tối ưu hoạt động theo thời gian và ngân sách
 - Dự đoán giá vé và chi phí
+- So sánh các phương án di chuyển
 
 ### 💬 AI Chat Assistant
 - Chat với AI để nhận tư vấn du lịch
 - Hỏi đáp về địa điểm, lịch trình, ngân sách
+- RAG-powered với vector database
 
 ### 🗺️ Auto-Generated Itineraries
-- Tạo lịch trình tự động theo ngày
-- Tối ưu route và thời gian
+- Tạo lịch trình tự động theo ngày với timeline chi tiết
+- Tối ưu route và thời gian di chuyển
 - Bao gồm cả thông tin chi tiết về từng địa điểm
+- **LLM-Generated Descriptions**: Tự động tạo mô tả lịch trình bằng ngôn ngữ tự nhiên với Groq/OpenAI
+- Phân bổ hoạt động hợp lý (sáng, chiều, tối)
+- Tính toán thời gian di chuyển giữa các địa điểm
 
 ### 🌐 Web Search Integration
 - **DuckDuckGo**: Tìm kiếm miễn phí, không cần API key
 - **Wikipedia**: Lấy thông tin từ Wikipedia tiếng Việt
 - **SerpAPI**: Google Search results (có free tier)
 - **Tavily**: Web search và data enrichment (optional)
+
+### 🗺️ Geocoding & Routing
+- **VietMap**: Geocoding và routing cho Việt Nam (khuyến nghị)
+- **OpenRouteService**: Routing fallback
+- **OSRM**: Open Source Routing Machine (fallback)
+- **Haversine**: Tính khoảng cách nhanh (free)
+- **Smart Caching**: Cache routes để giảm API calls
 
 ---
 
@@ -64,24 +120,51 @@ Vi Vu là nền tảng lập kế hoạch du lịch thế hệ mới được h�
 └────────────────────────────┼─────────────────────────────────┘
                              │
 ┌────────────────────────────▼─────────────────────────────────┐
-│              LANGGRAPH WORKFLOW ORCHESTRATOR                 │
+│              ORCHESTRATOR AGENT (7 Agents)                  │
 │                                                              │
-│  Entry Point: Transport Agent                                │
-│      │                                                       │
-│      ├─► Flight Agent (conditional)                          │
-│      │                                                       │
-│      ├─► Accommodation Agent                                 │
-│      │                                                       │
-│      ├─► Activities Agent                                    │
-│      │                                                       │
-│      ├─► Budget Agent                                        │
-│      │                                                       │
-│      └─► Planning Agent                                      │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  1. Transport Agent                                   │  │
+│  │     - Tính khoảng cách & thời gian                   │  │
+│  │     - Đề xuất phương tiện                            │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                          │                                   │
+│  ┌───────────────────────▼──────────────────────────────┐  │
+│  │  2. Flight Agent (conditional)                        │  │
+│  │     - Tìm sân bay gần nhất                           │  │
+│  │     - So sánh giá vé                                 │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                          │                                   │
+│  ┌───────────────────────▼──────────────────────────────┐  │
+│  │  3. Accommodation Agent                               │  │
+│  │     - Tìm khách sạn                                  │  │
+│  │     - Tính chi phí lưu trú                           │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                          │                                   │
+│  ┌───────────────────────▼──────────────────────────────┐  │
+│  │  4. Activities Agent                                  │  │
+│  │     - Tìm địa điểm tham quan (DB → Tools → Vector)  │  │
+│  │     - Tìm nhà hàng                                   │  │
+│  │     - Tính chi phí hoạt động & ăn uống              │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                          │                                   │
+│  ┌───────────────────────▼──────────────────────────────┐  │
+│  │  5. Budget Agent                                      │  │
+│  │     - Tổng hợp chi phí                               │  │
+│  │     - Tính toán ngân sách                            │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                          │                                   │
+│  ┌───────────────────────▼──────────────────────────────┐  │
+│  │  6. Planning Agent                                    │  │
+│  │     - Tạo lịch trình chi tiết                        │  │
+│  │     - Phân bổ hoạt động theo ngày                    │  │
+│  │     - Generate mô tả bằng LLM                        │  │
+│  └──────────────────────────────────────────────────────┘  │
 │                                                              │
 │  All agents integrated with:                                 │
-│  • LangChain LLM (GPT-4)                                     │
+│  • LangChain LLM (GPT-4, Groq)                              │
 │  • LangSmith Tracing & Monitoring                            │
 │  • Retry Logic & Error Handling                              │
+│  • State Management (TravelPlanningState)                    │
 └────────────────────────────┬─────────────────────────────────┘
                              │
 ┌────────────────────────────▼───────────────────────────────┐
@@ -102,15 +185,20 @@ Vi Vu là nền tảng lập kế hoạch du lịch thế hệ mới được h�
 - **Python**: 3.10+ (khuyến nghị 3.11 hoặc 3.12)
 - **Database**: SQLite (mặc định) hoặc PostgreSQL (production)
 - **API Keys**: OpenAI, LangSmith (xem phần Environment Variables)
+- **Redis** (tùy chọn): Cho caching
 
-### Bước 1: Tạo và kích hoạt Virtual Environment
+### Bước 1: Clone Repository
+
+```bash
+git clone <repository-url>
+cd TRAVEL_PLANNER
+```
+
+### Bước 2: Tạo và kích hoạt Virtual Environment
 
 **Quan trọng**: Virtual environment phải được tạo tại thư mục gốc của project.
 
 ```bash
-# Di chuyển đến thư mục project
-cd "D:\KLTN\MAS (1)\MAS\TRAVEL_PLANNER"
-
 # Tạo virtual environment
 python -m venv venv
 
@@ -127,7 +215,7 @@ source venv/bin/activate
 
 Sau khi kích hoạt, bạn sẽ thấy `(venv)` ở đầu dòng command prompt.
 
-### Bước 2: Cài đặt Dependencies
+### Bước 3: Cài đặt Dependencies
 
 ```bash
 # Đảm bảo đang ở thư mục gốc TRAVEL_PLANNER
@@ -139,7 +227,7 @@ pip install -r requirements.txt
 
 **Lưu ý**: Quá trình cài đặt có thể mất vài phút tùy thuộc vào tốc độ internet.
 
-### Bước 3: Cấu hình Environment Variables
+### Bước 4: Cấu hình Environment Variables
 
 Tạo file `.env` trong thư mục gốc `TRAVEL_PLANNER`:
 
@@ -166,6 +254,14 @@ LANGCHAIN_API_KEY=lsv2_pt_...
 LANGCHAIN_TRACING_V2=true
 LANGCHAIN_PROJECT=vi-vu-travel-planner
 
+# Groq (Tùy chọn - cho LLM nhanh, ưu tiên cho itinerary descriptions)
+GROQ_API_KEY=gsk-...
+GROQ_MODEL=llama-3.3-70b-versatile  # Hoặc openai/gpt-oss-120b
+
+# LLM Fallback Configuration
+FALLBACK_MODEL=openai/gpt-oss-120b  # Model dự phòng
+OPENAI_BASE_URL=  # Để trống hoặc URL custom cho OpenRouter
+
 # Tavily (Tùy chọn - cho web search)
 TAVILY_API_KEY=tvly-...
 
@@ -175,11 +271,21 @@ SERPAPI_API_KEY=...
 # OpenRouteService (Tùy chọn - cho routing)
 OPENROUTE_API_KEY=...
 
-# VietMap (Tùy chọn - cho geocoding Việt Nam)
+# VietMap (Khuyến nghị - cho geocoding Việt Nam)
 VIETMAP_API_KEY=...
+
+# Amadeus (Tùy chọn - cho flight search)
+AMADEUS_API_KEY=...
+AMADEUS_API_SECRET=...
+
+# FlightAPI (Tùy chọn - cho flight search)
+FLIGHTAPI_API_KEY=...
+
+# Redis (Tùy chọn - cho caching)
+REDIS_URL=redis://localhost:6379/0
 ```
 
-### Bước 4: Setup Database
+### Bước 5: Setup Database
 
 **Quan trọng**: Phải di chuyển vào thư mục `vivu_backend` trước khi chạy các lệnh Django.
 
@@ -199,7 +305,7 @@ Khi tạo superuser, bạn sẽ được yêu cầu nhập:
 - Email (tùy chọn)
 - Password (sẽ không hiển thị khi gõ)
 
-### Bước 5: Chạy Development Server
+### Bước 6: Chạy Development Server
 
 **Quan trọng**: Server chỉ có thể chạy từ thư mục `vivu_backend`.
 
@@ -244,75 +350,63 @@ TRAVEL_PLANNER/
 │   │   ├── analytics/              # Analytics & insights
 │   │   └── api/                    # REST API endpoints
 │   │       ├── views.py            # API views
-│   │       ├── serializers.py      # DRF serializers
-│   │       ├── urls.py             # API routing
-│   │       └── place_info_searcher.py  # Web search integration
+│   │       ├── travel_plan_step_views.py  # 4-step workflow views
+│   │       └── urls.py             # API routing
+│   │
+│   ├── agents/                     # Multi-Agent System
+│   │   ├── base_agent.py           # Base agent class
+│   │   ├── state.py                # Shared state definition
+│   │   ├── langgraph_workflow.py   # LangGraph workflow
+│   │   └── travel_agents/          # 7 specialized agents
+│   │       ├── orchestrator_agent.py   # Main orchestrator
+│   │       ├── transport_agent.py      # Transport planning
+│   │       ├── flight_agent.py         # Flight search
+│   │       ├── accommodation_agent.py   # Hotel search
+│   │       ├── activities_agent.py     # Activities & dining
+│   │       ├── budget_agent.py         # Budget calculation
+│   │       ├── planning_agent.py       # Itinerary planning
+│   │       ├── rag.py                  # RAG implementation
+│   │       └── vector_db.py            # Vector DB connector
+│   │
+│   ├── tools/                      # Agent tools
+│   │   ├── geo_tools.py            # Geocoding & location
+│   │   ├── flight_tools.py         # Flight search
+│   │   ├── accommodation_tools.py   # Hotel search
+│   │   ├── activities_tools.py     # Place search
+│   │   ├── transport_tools.py      # Transport planning
+│   │   ├── budget_tools.py         # Budget calculation
+│   │   ├── planning_tools.py       # Itinerary tools
+│   │   ├── serpapi_tools.py        # SerpAPI integration
+│   │   ├── vietmap_tools.py        # VietMap geocoding
+│   │   └── travel_styles.py        # Travel style profiles
+│   │
+│   ├── utils/                      # Utilities
+│   │   ├── cache.py                # Caching utilities
+│   │   ├── error_handling.py       # Error classification
+│   │   ├── retry.py                # Retry decorators
+│   │   ├── itinerary_formatter.py  # Itinerary JSON formatting & LLM description
+│   │   └── semantic_place_classifier.py  # Place classification
 │   │
 │   ├── templates/                  # HTML templates
 │   │   ├── index.html              # Landing page
-│   │   ├── travel_plan.html        # Travel plan page
+│   │   ├── travel_plan.html        # Travel plan page (4-step workflow)
 │   │   └── places/                 # Place templates
 │   │
-│   └── static/                     # Static files
-│       ├── css/
-│       │   ├── index.css           # Main styles
-│       │   ├── vivu-colors.css     # Color system
-│       │   └── vivu-design-system.css
-│       └── js/
-│           ├── index.js            # Main JavaScript
-│           └── travel_plan_workflow.js
-│
-├── agents/                         # Multi-Agent System
-│   ├── base_agent.py               # Base agent class
-│   ├── state.py                    # Shared state definition
-│   ├── langgraph_workflow.py       # LangGraph workflow
-│   ├── interactive_workflow.py     # Interactive workflow
-│   ├── orchestrator.py             # High-level orchestrator
+│   ├── static/                     # Static files
+│   │   ├── css/
+│   │   │   ├── index.css           # Main styles
+│   │   │   └── global.css          # Global styles
+│   │   └── js/
+│   │       ├── index.js            # Main JavaScript
+│   │       └── travel_plan_workflow.js  # 4-step workflow JS
 │   │
-│   └── travel_agents/              # 7 specialized agents
-│       ├── orchestrator_agent.py   # Main orchestrator
-│       ├── transport_agent.py      # Transport planning
-│       ├── flight_agent.py         # Flight search
-│       ├── accommodation_agent.py   # Hotel search
-│       ├── activities_agent.py     # Activities & dining
-│       ├── budget_agent.py          # Budget calculation
-│       ├── planning_agent.py       # Itinerary planning
-│       ├── rag.py                  # RAG implementation
-│       └── vector_db.py            # Vector DB connector
-│
-├── tools/                          # Agent tools
-│   ├── geo_tools.py                # Geocoding & location
-│   ├── flight_tools.py             # Flight search
-│   ├── accommodation_tools.py      # Hotel search
-│   ├── activities_tools.py         # Place search
-│   ├── transport_tools.py          # Transport planning
-│   ├── budget_tools.py             # Budget calculation
-│   ├── planning_tools.py           # Itinerary tools
-│   ├── serpapi_tools.py            # SerpAPI integration
-│   ├── vietmap_tools.py            # VietMap geocoding
-│   └── travel_styles.py            # Travel style profiles
-│
-├── config/                         # Configuration
-│   └── langsmith_config.py         # LangSmith centralized config
-│
-├── utils/                          # Utilities
-│   ├── cache.py                    # Caching utilities
-│   ├── error_handling.py           # Error classification
-│   ├── retry.py                    # Retry decorators
-│   └── standardization.py          # Data standardization
-│
-├── vector_db/                      # ChromaDB vector store
-│   ├── connectors/                 # Vector DB connectors
-│   └── chroma.sqlite3              # ChromaDB database
-│
-├── data/                           # Data files
-│   ├── exports/                    # Data exports
-│   └── tourism_qa_dataset.json     # Tourism Q&A dataset
+│   └── vector_db/                  # ChromaDB vector store
+│       └── chroma.sqlite3          # ChromaDB database
 │
 ├── scripts/                        # Utility scripts
-│   ├── add_*.py                    # Image management scripts
-│   ├── export_diadiem.py          # Data export
-│   └── fix_and_enrich_places.py    # Data enrichment
+│   ├── test_create_itinerary.py   # Test itinerary creation
+│   ├── find_provinces_without_places.py  # Analyze data coverage
+│   └── ...
 │
 ├── requirements.txt                # Python dependencies
 ├── .env                            # Environment variables (tạo file này)
@@ -329,12 +423,14 @@ TRAVEL_PLANNER/
 - **Django REST Framework 3.14.0** - REST API
 - **SQLite** - Development database
 - **PostgreSQL** - Production-ready (optional)
+- **Redis** - Caching (optional)
 
 ### AI/ML & Multi-Agent
 - **LangChain 1.x** - LLM framework
 - **LangGraph 1.x** - Stateful agent workflows
 - **LangSmith** - Agent monitoring & tracing
-- **OpenAI GPT-4** - LLM & embeddings
+- **OpenAI GPT-4/GPT-4o-mini** - Primary LLM & embeddings
+- **Groq** - Fast LLM inference (GPT-OSS-120B, Llama models)
 - **ChromaDB** - Vector database for RAG
 
 ### External APIs
@@ -342,9 +438,11 @@ TRAVEL_PLANNER/
 - **Wikipedia** - Free information source
 - **Tavily** - Web search and enrichment (optional)
 - **SerpAPI** - Google search results (optional, free tier available)
-- **VietMap** - Vietnam geocoding (optional)
-- **OpenRouteService** - Route planning (optional)
-- **OpenSky Network** - Flight data (optional)
+- **VietMap** - Vietnam geocoding (primary, recommended)
+- **OpenRouteService** - Route planning (fallback, based on OSM)
+- **OSRM** - Open Source Routing Machine (fallback routing)
+- **Amadeus** - Flight search (optional)
+- **FlightAPI** - Flight search (optional)
 
 ### Frontend
 - **HTML5 + CSS3** - Modern responsive design
@@ -416,61 +514,51 @@ TRAVEL_PLANNER/
 - `dienThoai`, `website`
 - `danhGiaTrungBinh`, `soLuotDanhGia`, `soLuotXem`
 - `dacDiem`, `tienNghi` (JSON fields)
-- **Total**: 50+ places
-
-**HINHANHDIADIEM** (Place Images)
-- Links images to places
-- Supports multiple images per place
+- **Total**: 50K+ places
 
 **LICHTRINH** (Itineraries)
 - User travel plans
 - Linked to user accounts
+- Stores full itinerary JSON
+
+**LICHTRINHDIADIEM** (Itinerary Places)
+- Links itineraries to places
+- Includes visit dates and times
 
 ---
 
 ## 🔌 API Endpoints
 
-### Authentication
+### Travel Planning (4-Step Workflow)
+
 ```
-POST   /api/v1/auth/register/        # User registration
-POST   /api/v1/auth/login/           # User login
-POST   /api/v1/auth/logout/          # User logout
+POST   /api/v1/travel-plans/step1/        # Step 1: Location selection
+POST   /api/v1/travel-plans/step2/        # Step 2: Transport options
+POST   /api/v1/travel-plans/step3/        # Step 3: Budget & Hotels
+POST   /api/v1/travel-plans/step4/        # Step 4: Confirm & Create plan
+POST   /api/v1/travel-plans/step4/save/   # Save itinerary to database
 ```
 
 ### Places
 ```
-GET    /api/v1/places/               # List places (paginated)
-GET    /api/v1/places/{id}/          # Place details
-GET    /api/v1/places/{id}/enriched/ # Place details with web search
-GET    /api/v1/places/search/?q=...  # Search places
-```
-
-### Travel Planning
-```
-POST   /api/v1/travel-plans/         # Create travel plan (AI-powered)
-POST   /api/v1/travel-plans/preview/ # Preview travel plan
-GET    /api/v1/travel-plans/{id}/    # Get plan details
-```
-
-### Travel Styles
-```
-GET    /api/v1/travel-styles/        # List all travel styles
-GET    /api/v1/travel-styles/{style}/ # Get style details
-POST   /api/v1/travel-styles/combine/ # Combine multiple styles
+GET    /api/v1/places/                    # List places (paginated)
+GET    /api/v1/places/{id}/               # Place details
+GET    /api/v1/places/search/?q=...       # Search places
 ```
 
 ### Itineraries (Authenticated)
 ```
-GET    /api/v1/itineraries/          # User's itineraries
-POST   /api/v1/itineraries/          # Create itinerary
-GET    /api/v1/itineraries/{id}/     # Get itinerary
-PUT    /api/v1/itineraries/{id}/     # Update itinerary
-DELETE /api/v1/itineraries/{id}/     # Delete itinerary
+GET    /api/v1/itineraries/               # User's itineraries
+GET    /api/v1/itineraries/recent/        # Recent itineraries
+POST   /api/v1/itineraries/               # Create itinerary
+GET    /api/v1/itineraries/{id}/          # Get itinerary
 ```
 
-### API Documentation
-- **Swagger UI**: http://127.0.0.1:8000/api/docs/
-- **ReDoc**: http://127.0.0.1:8000/api/redoc/
+### Travel Styles
+```
+GET    /api/v1/travel-styles/             # List all travel styles
+GET    /api/v1/travel-styles/{style}/     # Get style details
+```
 
 ---
 
@@ -480,7 +568,7 @@ DELETE /api/v1/itineraries/{id}/     # Delete itinerary
 
 ```bash
 # Di chuyển vào thư mục vivu_backend
-cd "D:\KLTN\MAS (1)\MAS\TRAVEL_PLANNER\vivu_backend"
+cd vivu_backend
 
 # Chạy server
 python manage.py runserver
@@ -504,136 +592,71 @@ cd vivu_backend
 python manage.py createsuperuser
 ```
 
-### Collect Static Files
+### Test Itinerary Creation
 
 ```bash
 cd vivu_backend
-python manage.py collectstatic
+python scripts/test_create_itinerary.py
 ```
 
-### Shell (Django Shell)
+### Analyze Data Coverage
 
 ```bash
 cd vivu_backend
-python manage.py shell
+python scripts/find_provinces_without_places.py
 ```
 
 ---
 
-## 📝 Environment Variables
+## 🆕 Tính năng mới (2025)
 
-Tạo file `.env` trong thư mục gốc `TRAVEL_PLANNER`:
+### Multi-Agent System Improvements
+- ✅ **7 Specialized Agents**: Orchestrator, Transport, Flight, Accommodation, Activities, Budget, Planning
+- ✅ **State Management**: Centralized state với TravelPlanningState
+- ✅ **Error Handling**: Retry logic và error classification
+- ✅ **LangSmith Integration**: Full tracing và monitoring
 
-```env
-# Django
-DJANGO_SECRET_KEY=your-secret-key-here
-DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1
+### Data Quality Improvements
+- ✅ **Location Normalization**: Xử lý các biến thể tên địa điểm
+- ✅ **Activity Filtering**: Loại bỏ activities có tên giống destination
+- ✅ **Priority-based Search**: Database → Tools → Vector DB
+- ✅ **Cost Calculation**: Fallback estimates khi không có giá
 
-# OpenAI (Bắt buộc)
-OPENAI_API_KEY=sk-...
+### Geocoding & Routing
+- ✅ **Multi-Provider Routing**: VietMap → OpenRouteService → OSRM → Haversine
+- ✅ **Smart Caching**: Cache routes để giảm API calls
+- ✅ **Coordinate Normalization**: Đảm bảo cache consistency
 
-# LangSmith (Bắt buộc cho tracing)
-LANGCHAIN_API_KEY=lsv2_pt_...
-LANGCHAIN_TRACING_V2=true
-LANGCHAIN_PROJECT=vi-vu-travel-planner
+### Itinerary Generation
+- ✅ **Daily Timeline**: Timeline chi tiết với thời gian cụ thể
+- ✅ **Activity Distribution**: Phân bổ hoạt động hợp lý
+- ✅ **Travel Time Calculation**: Tính thời gian di chuyển giữa các địa điểm
+- ✅ **LLM-Generated Descriptions**: Mô tả lịch trình bằng ngôn ngữ tự nhiên
 
-# Tavily (Tùy chọn - cho web search)
-TAVILY_API_KEY=tvly-...
-
-# SerpAPI (Tùy chọn - cho Google search)
-SERPAPI_API_KEY=...
-
-# OpenRouteService (Tùy chọn - cho routing)
-OPENROUTE_API_KEY=...
-
-# VietMap (Tùy chọn - cho geocoding Việt Nam)
-VIETMAP_API_KEY=...
-```
-
-**Lưu ý**: 
-- DuckDuckGo và Wikipedia không cần API key (hoàn toàn miễn phí)
-- Chỉ cần `OPENAI_API_KEY` và `LANGCHAIN_API_KEY` để chạy cơ bản
-- Các API khác là tùy chọn để có thêm tính năng
-
----
-
-## 🆘 Troubleshooting
-
-### Server không chạy được
-
-```bash
-# Kiểm tra Python version
-python --version  # Cần >= 3.10
-
-# Kiểm tra virtual environment đã được kích hoạt chưa
-# Bạn sẽ thấy (venv) ở đầu dòng command prompt
-
-# Kiểm tra đang ở đúng thư mục
-# Phải ở trong: D:\KLTN\MAS (1)\MAS\TRAVEL_PLANNER\vivu_backend
-
-# Cài lại dependencies
-pip install -r requirements.txt
-
-# Kiểm tra port 8000
-netstat -ano | findstr :8000  # Windows
-```
-
-### Module not found
-
-```bash
-# Đảm bảo virtual environment đã được kích hoạt
-# Đảm bảo đang ở đúng directory
-cd "D:\KLTN\MAS (1)\MAS\TRAVEL_PLANNER\vivu_backend"
-
-# Cài lại dependencies
-pip install -r requirements.txt
-```
-
-### Database errors
-
-```bash
-cd vivu_backend
-python manage.py migrate
-python manage.py migrate --run-syncdb
-```
-
-### Import errors khi chạy từ thư mục sai
-
-**Quan trọng**: 
-- Tạo venv tại: `D:\KLTN\MAS (1)\MAS\TRAVEL_PLANNER`
-- Chạy server từ: `D:\KLTN\MAS (1)\MAS\TRAVEL_PLANNER\vivu_backend`
-
-Nếu gặp lỗi import, đảm bảo:
-1. Virtual environment đã được kích hoạt
-2. Đang ở đúng thư mục khi chạy lệnh
-3. Đã cài đặt đầy đủ requirements.txt
-
-### API keys không hoạt động
-
-```bash
-# Kiểm tra file .env
-type .env  # Windows
-cat .env   # Linux/Mac
-
-# Đảm bảo file .env ở thư mục gốc TRAVEL_PLANNER
-# Không phải trong vivu_backend
-```
+### Frontend Improvements
+- ✅ **4-Step Workflow**: Step-by-step travel plan creation
+- ✅ **Transport Selection**: User chọn phương tiện trước khi tiếp tục
+- ✅ **Hotel Selection**: User chọn khách sạn
+- ✅ **Itinerary Display**: Hiển thị lịch trình chi tiết với timeline
 
 ---
 
 ## 📈 Roadmap
 
 - [x] Django REST API backend
-- [x] Multi-Agent System với LangGraph
-- [x] 7 specialized agents với retry logic
+- [x] Multi-Agent System với 7 specialized agents
+- [x] 4-step travel planning workflow
 - [x] RAG với ChromaDB
 - [x] LangSmith tracing & monitoring
-- [x] Web search integration (DuckDuckGo, Wikipedia)
+- [x] Web search integration
 - [x] Travel styles expansion (14+ styles)
-- [x] Database schema fixes
-- [x] Hero banner với image support
+- [x] Database schema với 50K+ places
 - [x] Comprehensive documentation
+- [x] Groq API integration
+- [x] LLM-generated itinerary descriptions
+- [x] Multi-provider routing
+- [x] Location name normalization
+- [x] Activity filtering & cost calculation
 - [ ] Booking integration (flights, hotels)
 - [ ] User reviews & trip sharing
 - [ ] Mobile app (React Native)
@@ -678,4 +701,3 @@ Developed as part of a thesis project on **Multi-Agent Systems for Intelligent T
 ---
 
 **Vi Vu** - Because planning should be as fun as the trip itself! 🦢✈️🌏
-

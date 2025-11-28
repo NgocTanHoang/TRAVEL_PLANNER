@@ -218,7 +218,18 @@ class BudgetAgent(BaseAgent):
                 f"days: {days}, travelers: {travelers}, style: {travel_style}"
             )
             
+            # Kiểm tra xem accommodation_cost có phải là giá thực tế từ khách sạn không
+            # Có 2 trường hợp:
+            # 1. Có selected_hotel (đã chọn) -> giá thực tế
+            # 2. Có accommodation_cost_from_actual_hotel=True (từ hotel trong danh sách đề xuất) -> giá thực tế từ API
+            # Nếu không có cả 2 -> giá ước tính (từ _estimate_accommodation_cost) -> cần nhân multiplier
+            has_actual_hotel_price = (
+                state.get('selected_hotel') is not None or 
+                state.get('accommodation_cost_from_actual_hotel', False)
+            )
+            
             # Tính tổng ngân sách (synchronous call)
+            # Truyền thêm flag để budget_tools biết có nên áp dụng multiplier không
             budget_result = self.budget_tools.calculate_total_budget(
                 transport_cost=transport_cost,
                 accommodation_cost=accommodation_cost,
@@ -226,7 +237,8 @@ class BudgetAgent(BaseAgent):
                 activities_cost=activities_cost,
                 days=days,
                 travelers=travelers,
-                travel_style=travel_style
+                travel_style=travel_style,
+                is_actual_accommodation_price=has_actual_hotel_price  # Flag mới
             )
             
             # Validate response từ budget_tools

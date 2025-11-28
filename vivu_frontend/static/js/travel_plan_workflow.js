@@ -846,15 +846,45 @@ function displayStep3Result(data) {
         hotelsHTML = `
             <div style="margin-top: 2rem;">
                 <h4 style="margin-bottom: 1rem; color: var(--color-primary-dark);">🏨 Chọn khách sạn</h4>
-                <div class="hotels-grid">
-                    ${hotels.map((hotel, index) => `
+                <div class="hotels-list">
+                    ${hotels.map((hotel, index) => {
+                        // Lấy ảnh đầu tiên nếu có
+                        let imageUrl = '';
+                        if (hotel.images && hotel.images.length > 0) {
+                            imageUrl = hotel.images[0];
+                        } else if (hotel.image_url) {
+                            imageUrl = hotel.image_url;
+                        } else if (hotel.thumbnail) {
+                            imageUrl = hotel.thumbnail;
+                        }
+                        
+                        return `
                         <div class="hotel-card" onclick="selectHotel(${index})" data-hotel-index="${index}">
-                            <div class="hotel-name">${hotel.name || 'N/A'}</div>
-                            ${hotel.stars ? `<div class="hotel-rating">${'⭐'.repeat(hotel.stars)} ${hotel.rating || ''}/5</div>` : ''}
-                            ${hotel.price_per_night ? `<div class="hotel-price">${formatCurrency(hotel.price_per_night)} VNĐ/đêm</div>` : ''}
-                            ${hotel.source ? `<div style="font-size: 0.85rem; color: var(--color-gray-600); margin-top: 0.5rem;">Nguồn: ${hotel.source}</div>` : ''}
+                            <div style="display: flex; gap: 1.5rem; align-items: flex-start;">
+                                ${imageUrl ? `
+                                <div style="flex-shrink: 0; width: 150px; height: 120px; border-radius: 8px; overflow: hidden;">
+                                    <img src="${imageUrl}" alt="${hotel.name || 'Hotel'}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'">
+                                </div>
+                                ` : ''}
+                                <div style="flex: 1; min-width: 0;">
+                                    <div class="hotel-name">${hotel.name || 'N/A'}</div>
+                                    ${hotel.stars ? `<div class="hotel-rating">${'⭐'.repeat(hotel.stars)} ${hotel.rating || ''}/5 ${hotel.reviews ? `(${hotel.reviews} đánh giá)` : ''}</div>` : ''}
+                                    ${hotel.hotel_class ? `<div style="font-size: 0.9rem; color: var(--color-gray-600); margin-top: 0.25rem;">${hotel.hotel_class} sao</div>` : ''}
+                                    ${hotel.address ? `<div style="font-size: 0.9rem; color: var(--color-gray-600); margin-top: 0.5rem;">📍 ${hotel.address}</div>` : ''}
+                                    ${hotel.phone ? `<div style="font-size: 0.9rem; color: var(--color-gray-600); margin-top: 0.25rem;">📞 ${hotel.phone}</div>` : ''}
+                                    ${hotel.email ? `<div style="font-size: 0.9rem; color: var(--color-gray-600); margin-top: 0.25rem;">✉️ ${hotel.email}</div>` : ''}
+                                    ${hotel.website ? `<div style="font-size: 0.9rem; color: var(--color-secondary); margin-top: 0.25rem;"><a href="${hotel.website}" target="_blank" onclick="event.stopPropagation();" style="color: var(--color-secondary); text-decoration: none;">🌐 Website</a></div>` : ''}
+                                    ${hotel.description ? `<div style="font-size: 0.85rem; color: var(--color-gray-600); margin-top: 0.5rem; line-height: 1.4;">${hotel.description.substring(0, 150)}${hotel.description.length > 150 ? '...' : ''}</div>` : ''}
+                                    ${hotel.amenities && hotel.amenities.length > 0 ? `<div style="font-size: 0.85rem; color: var(--color-gray-600); margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">${hotel.amenities.slice(0, 5).map(a => `<span style="background: var(--color-gray-100); padding: 0.25rem 0.5rem; border-radius: 4px;">${a}</span>`).join('')}</div>` : ''}
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.75rem;">
+                                        ${hotel.price_per_night ? `<div class="hotel-price">${formatCurrency(hotel.price_per_night)} VNĐ/đêm</div>` : ''}
+                                        ${hotel.source ? `<div style="font-size: 0.85rem; color: var(--color-gray-600);">Nguồn: ${hotel.source}</div>` : ''}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    `).join('')}
+                        `;
+                    }).join('')}
                 </div>
             </div>
         `;
@@ -938,13 +968,16 @@ function displayStep4Result(data) {
     const dailyPlans = itinerary.daily_plans || itinerary.itinerary || [];
     
     // Get destination from workflow state
-    const destination = workflowState.step1Data?.destination?.name || plan.destination || 'Điểm đến';
+    const destination = workflowState.step1Data?.destination?.name || plan.destination || itinerary.destination || 'Điểm đến';
+    
+    // Get total days - prioritize from itinerary, then dailyPlans length, then workflow state
+    const totalDays = itinerary.total_days || dailyPlans.length || workflowState.step1Data?.days || 0;
     
     // Destination header
     let destinationHTML = `
         <div style="margin-bottom: 2rem; padding: 1.5rem; background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%); border-radius: 12px; color: white;">
             <h3 style="color: white; margin: 0; font-size: 1.5rem; font-weight: 600;">📍 ${destination}</h3>
-            <p style="color: rgba(255,255,255,0.9); margin-top: 0.5rem; margin: 0;">Lịch trình ${dailyPlans.length} ngày</p>
+            <p style="color: rgba(255,255,255,0.9); margin-top: 0.5rem; margin: 0;">Lịch trình ${totalDays} ngày</p>
         </div>
     `;
     
@@ -1286,4 +1319,5 @@ window.goToStep = goToStep;
 window.selectHotel = selectHotel;
 window.createFinalPlan = createFinalPlan;
 window.toggleDay = toggleDay;
+
 

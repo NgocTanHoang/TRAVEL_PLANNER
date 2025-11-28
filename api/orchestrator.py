@@ -19,7 +19,7 @@ import logging
 import asyncio
 
 # Import 7 agents
-from agents.travel_agents.orchestrator_agent import OrchestratorAgent
+from vivu_backend.agents.travel_agents.orchestrator_agent import OrchestratorAgent
 
 logger = logging.getLogger(__name__)
 
@@ -191,8 +191,8 @@ async def preview_travel_plan(
         }
         
         # Chỉ chạy Transport và Budget Agent
-        from agents.travel_agents.transport_agent import TransportAgent
-        from agents.travel_agents.budget_agent import BudgetAgent
+        from vivu_backend.agents.travel_agents.transport_agent import TransportAgent
+        from vivu_backend.agents.travel_agents.budget_agent import BudgetAgent
         
         transport_agent = TransportAgent()
         budget_agent = BudgetAgent()

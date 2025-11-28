@@ -117,7 +117,7 @@ WSGI_APPLICATION = 'vivu_core.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': BASE_DIR / 'vivudb.sqlite3',
     }
 }
 
@@ -234,8 +234,11 @@ LOGGING = {
 
 # AI/ML Integration (Optional - for future use)
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')
+GROQ_API_KEY = os.getenv('GROQ_API_KEY', '')
+GROQ_MODEL = os.getenv('GROQ_MODEL', 'openai/gpt-oss-120b')  # Default to openai/gpt-oss-120b for Groq (with prefix)
+# OpenAI default model
+MODEL = os.getenv('MODEL', 'gpt-4o-mini')  # Default to gpt-4o-mini for OpenAI
 LANGCHAIN_API_KEY = os.getenv('LANGCHAIN_API_KEY', '')
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
 
 # OpenRouteService API - For geocoding and routing
 OPENROUTE_API_KEY = os.getenv('OPENROUTE_API_KEY', '')
@@ -394,4 +397,3 @@ REST_FRAMEWORK = {
     },
     'SEARCH_PARAM': 'q',
 }
-

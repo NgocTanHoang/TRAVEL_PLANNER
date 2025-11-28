@@ -33,17 +33,17 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'vivu_core.settings')
 django.setup()
 
 import asyncio
-from tools.geo_tools import get_geo_tools
-from tools.transport_tools import get_transport_tools
-from tools.flight_tools import get_flight_tools
-from tools.accommodation_tools import get_accommodation_tools
-from tools.activities_tools import get_activities_tools
-from tools.budget_tools import get_budget_tools
-from agents.travel_agents.transport_agent import TransportAgent
-from agents.travel_agents.accommodation_agent import AccommodationAgent
-from agents.travel_agents.activities_agent import ActivitiesAgent
-from agents.travel_agents.budget_agent import BudgetAgent
-from agents.travel_agents.orchestrator_agent import OrchestratorAgent
+from vivu_backend.tools.geo_tools import get_geo_tools
+from vivu_backend.tools.transport_tools import get_transport_tools
+from vivu_backend.tools.flight_tools import get_flight_tools
+from vivu_backend.tools.accommodation_tools import get_accommodation_tools
+from vivu_backend.tools.activities_tools import get_activities_tools
+from vivu_backend.tools.budget_tools import get_budget_tools
+from vivu_backend.agents.travel_agents.transport_agent import TransportAgent
+from vivu_backend.agents.travel_agents.accommodation_agent import AccommodationAgent
+from vivu_backend.agents.travel_agents.activities_agent import ActivitiesAgent
+from vivu_backend.agents.travel_agents.budget_agent import BudgetAgent
+from vivu_backend.agents.travel_agents.orchestrator_agent import OrchestratorAgent
 from datetime import datetime, timedelta
 
 def print_section(title):

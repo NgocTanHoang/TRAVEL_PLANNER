@@ -35,6 +35,8 @@ class TransportTools:
         'grab': 12000,            # Grab: 12k/km
         'gojek': 12000,           # Gojek: 12k/km
         'be': 11000,              # Be: 11k/km
+        'greencar': 14000,        # VinFast GreenCar 4 chỗ: giá trung bình (sẽ tính chi tiết theo km)
+        'luxurycar': 21000,       # VinFast LuxuryCar 5 chỗ: 21k/km (cố định)
         
         # Tự lái
         'motorbike': 2000,        # Xe máy: 2k/km (xăng + hao mòn)
@@ -49,10 +51,12 @@ class TransportTools:
     FIXED_FEES = {
         'taxi': 20000,            # Phí mở cửa taxi
         'grab': 15000,            # Phí mở cửa Grab
+        'greencar': 20000,        # Phí mở cửa GreenCar (VF 5 Plus hoặc VF e34)
+        'luxurycar': 21000,       # Phí mở cửa LuxuryCar (VF 8)
         'gojek': 15000,           # Phí mở cửa Gojek
         'be': 15000,              # Phí mở cửa Be
         'city_bus': 0,            # Không có phí cố định
-        'long_distance_bus': 0,  # Giá vé đã bao gồm
+        'long_distance_bus': 0,   # Giá vé đã bao gồm
         'train': 0,               # Giá vé đã bao gồm
         'motorbike': 0,           # Không có phí cố định
         'car': 0,                 # Không có phí cố định
@@ -68,6 +72,8 @@ class TransportTools:
         'grab': 40,               # 40 km/h
         'gojek': 40,              # 40 km/h
         'be': 40,                 # 40 km/h
+        'greencar': 40,           # 40 km/h (trong thành phố)
+        'luxurycar': 40,          # 40 km/h (trong thành phố)
         'motorbike': 45,          # 45 km/h (trong thành phố)
         'car': 50,                # 50 km/h (trong thành phố)
         'train': 80,              # 80 km/h
@@ -92,6 +98,53 @@ class TransportTools:
         # Cache để tránh tìm kiếm lại nhiều lần
         self._train_station_cache = {}  # {location: bool}
         self._airport_cache = {}  # {location: airport_info or None}
+    
+    def _estimate_distance_haversine(self, origin: str, destination: str) -> float:
+        """
+        Estimate distance using haversine formula as last resort fallback
+        when both VietMap and OpenRouteService fail
+        
+        Args:
+            origin: Điểm xuất phát
+            destination: Điểm đến
+            
+        Returns:
+            Distance in km (0 if geocoding fails)
+        """
+        from math import radians, cos, sin, asin, sqrt
+        
+        try:
+            # Geocode both locations
+            origin_coords = self.geo_tools.geocode(origin)
+            dest_coords = self.geo_tools.geocode(destination)
+            
+            if not origin_coords or not dest_coords:
+                logger.error(f"Cannot geocode for haversine: {origin} or {destination}")
+                return 0
+            
+            lat1, lon1 = origin_coords['lat'], origin_coords['lon']
+            lat2, lon2 = dest_coords['lat'], dest_coords['lon']
+            
+            # Haversine formula
+            lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
+            dlat = lat2 - lat1
+            dlon = lon2 - lon1
+            a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+            c = 2 * asin(sqrt(a))
+            r = 6371  # Earth radius in km
+            
+            distance = c * r
+            
+            # Apply road distance multiplier (roads are ~1.6x longer than straight line)
+            road_distance = distance * 1.6
+            
+            logger.info(f"Haversine estimate {origin} -> {destination}: {distance:.2f} km (straight), {road_distance:.2f} km (road estimate)")
+            return road_distance
+            
+        except Exception as e:
+            logger.error(f"Haversine calculation failed: {e}")
+            return 0
+
     
     def _check_train_station_exists(self, location: str) -> bool:
         """
@@ -291,14 +344,29 @@ class TransportTools:
         Returns:
             Dict với 'method', 'distance_km', 'duration_minutes', 'estimated_cost', 'all_options'
         """
-        if distance_km is None:
+        # CRITICAL FIX: Validate and calculate distance with fallback
+        if distance_km is None or distance_km <= 0:
+            logger.info(f"Calculating distance for {origin} -> {destination}")
             route_info = self.geo_tools.calculate_distance_time(origin, destination)
-            if not route_info:
-                return {
-                    'method': 'unknown',
-                    'error': 'Cannot calculate distance'
-                }
-            distance_km = route_info['distance_km']
+            
+            if route_info and route_info.get('distance_km', 0) > 0:
+                distance_km = route_info['distance_km']
+                logger.info(f"Distance from routing API: {distance_km} km")
+            else:
+                # Fallback to haversine estimate
+                logger.warning(f"Routing API failed or returned 0, using haversine fallback")
+                distance_km = self._estimate_distance_haversine(origin, destination)
+                
+                if distance_km <= 0:
+                    logger.error(f"All distance calculation methods failed for {origin} -> {destination}")
+                    return {
+                        'method': 'unknown',
+                        'error': 'Cannot calculate distance - all methods failed',
+                        'origin': origin,
+                        'destination': destination
+                    }
+                else:
+                    logger.info(f"Using haversine estimate: {distance_km} km")
         
         # Xác định xem có phải trong cùng thành phố không (để phân biệt city_bus vs long_distance_bus)
         is_same_city = self._is_same_city(origin, destination)
@@ -331,12 +399,6 @@ class TransportTools:
         else:
             potential_methods.append('flight')
         
-        # Tính khoảng cách nếu chưa có (để kiểm tra flight)
-        if distance_km is None:
-            route_info = self.geo_tools.calculate_distance_time(origin, destination)
-            if route_info:
-                distance_km = route_info['distance_km']
-        
         # Kiểm tra tính khả dụng và chọn phương tiện đầu tiên khả dụng
         method = None
         for potential_method in potential_methods:
@@ -361,7 +423,7 @@ class TransportTools:
         # Lấy tất cả các phương tiện có thể (để so sánh)
         all_options = self.compare_all_transport_options(origin, destination, travelers, distance_km)
         
-        return {
+        result = {
             'method': method,
             'method_name': cost_info.get('method_name', method),
             'distance_km': round(distance_km, 2),
@@ -376,6 +438,8 @@ class TransportTools:
             'cheapest_option': all_options.get('cheapest'),
             'fastest_option': all_options.get('fastest')
         }
+        print(f"DEBUG: suggest_transport returning distance={result['distance_km']}")
+        return result
     
     def _is_same_city(self, origin: str, destination: str) -> bool:
         """
@@ -470,6 +534,42 @@ class TransportTools:
             else:
                 cost_per_person = 800000  # 800k
             total_cost = cost_per_person * travelers
+        elif method == 'greencar':
+            # VinFast GreenCar 4 chỗ: cấu trúc giá đặc biệt
+            # Giá mở cửa: 20.000 VNĐ
+            # 24km tiếp theo (km 1-25): 14.000 VNĐ/km (VF 5 Plus) hoặc 15.500 VNĐ/km (VF e34)
+            # Từ km thứ 26 trở đi: 12.000 VNĐ/km (VF 5 Plus) hoặc 12.500 VNĐ/km (VF e34)
+            # Sử dụng giá trung bình VF 5 Plus (rẻ hơn)
+            opening_fee = 20000
+            if distance_km <= 0:
+                base_cost = opening_fee
+            elif distance_km <= 25:
+                # 24km tiếp theo (từ km 1-25)
+                km_after_opening = distance_km
+                base_cost = opening_fee + (km_after_opening * 14000)
+            else:
+                # Từ km thứ 26 trở đi
+                base_cost = opening_fee + (25 * 14000) + ((distance_km - 25) * 12000)
+            # GreenCar 4 chỗ có thể chở tối đa 4 người
+            if travelers > 4:
+                vehicles_needed = (travelers + 3) // 4  # Làm tròn lên
+                total_cost = base_cost * vehicles_needed
+            else:
+                total_cost = base_cost
+        elif method == 'luxurycar':
+            # VinFast LuxuryCar 5 chỗ: giá cố định 21.000 VNĐ/km
+            # Giá mở cửa: 21.000 VNĐ
+            opening_fee = 21000
+            if distance_km <= 0:
+                base_cost = opening_fee
+            else:
+                base_cost = opening_fee + (distance_km * 21000)
+            # LuxuryCar 5 chỗ có thể chở tối đa 5 người
+            if travelers > 5:
+                vehicles_needed = (travelers + 4) // 5  # Làm tròn lên
+                total_cost = base_cost * vehicles_needed
+            else:
+                total_cost = base_cost
         elif method in ['motorbike', 'car']:
             # Xe máy/ô tô tự lái: chỉ tính xăng + hao mòn (không nhân số người)
             base_cost = distance_km * rate
@@ -494,6 +594,8 @@ class TransportTools:
             'city_bus': 'Xe bus thành phố',
             'taxi': 'Taxi',
             'grab': 'Grab',
+            'greencar': 'VinFast GreenCar',
+            'luxurycar': 'VinFast LuxuryCar',
             'gojek': 'Gojek',
             'be': 'Be',
             'motorbike': 'Xe máy tự lái',

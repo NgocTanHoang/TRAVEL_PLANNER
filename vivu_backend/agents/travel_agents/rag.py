@@ -46,24 +46,58 @@ class RAGAgent(BaseAgent):
         # Vector Database
         self.vector_db = get_vector_db_agent()
         
-        # OpenAI
+        # LLM với fallback: Groq -> GPT OSS 120B -> OpenAI
+        self.llm = None
         try:
-            OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-            MODEL = os.getenv('MODEL', 'gpt-4o-mini')
+            # Priority 1: Try Groq
+            GROQ_API_KEY = os.getenv('GROQ_API_KEY')
+            if GROQ_API_KEY:
+                try:
+                    from langchain_groq import ChatGroq
+                    groq_model = os.getenv('GROQ_MODEL', 'llama-3.1-70b-versatile')
+                    self.llm = ChatGroq(
+                        model=groq_model,
+                        temperature=0.7,
+                        groq_api_key=GROQ_API_KEY
+                    )
+                    logger.info(f"RAG Agent initialized with Groq: {groq_model}")
+                except ImportError:
+                    logger.debug("langchain-groq not available, trying fallback")
+                except Exception as e:
+                    logger.warning(f"Groq initialization failed: {e}, trying fallback")
             
-            if OPENAI_API_KEY:
-                from langchain_openai import ChatOpenAI
-                self.llm = ChatOpenAI(
-                    model=MODEL,
-                    temperature=0.7,
-                    api_key=OPENAI_API_KEY
-                )
-            else:
-                self.llm = None
-                logger.warning("OPENAI_API_KEY not found, LLM disabled")
-            logger.info("RAG Agent initialized with OpenAI")
+            # Priority 2: Try GPT OSS 120B (fallback model)
+            if not self.llm:
+                FALLBACK_MODEL = os.getenv('FALLBACK_MODEL', 'gpt-oss-120b')
+                OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+                if OPENAI_API_KEY and FALLBACK_MODEL:
+                    try:
+                        from langchain_openai import ChatOpenAI
+                        self.llm = ChatOpenAI(
+                            model=FALLBACK_MODEL,
+                            temperature=0.7,
+                            api_key=OPENAI_API_KEY
+                        )
+                        logger.info(f"RAG Agent initialized with Fallback LLM: {FALLBACK_MODEL}")
+                    except Exception as e:
+                        logger.warning(f"Fallback LLM initialization failed: {e}, trying OpenAI")
+            
+            # Priority 3: Fallback to OpenAI
+            if not self.llm:
+                OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+                MODEL = os.getenv('MODEL', 'gpt-4o-mini')
+                if OPENAI_API_KEY:
+                    from langchain_openai import ChatOpenAI
+                    self.llm = ChatOpenAI(
+                        model=MODEL,
+                        temperature=0.7,
+                        api_key=OPENAI_API_KEY
+                    )
+                    logger.info(f"RAG Agent initialized with OpenAI: {MODEL}")
+                else:
+                    logger.warning("No LLM API keys found, LLM disabled")
         except Exception as e:
-            logger.warning(f"OpenAI initialization warning: {e}")
+            logger.warning(f"LLM initialization warning: {e}")
             self.llm = None
         
         # Tavily (optional)
@@ -180,6 +214,32 @@ class RAGAgent(BaseAgent):
             requests.exceptions.HTTPError,
         )
         return isinstance(e, retryable_exceptions) or "rate limit" in str(e).lower()
+    
+    def generate(
+        self,
+        query: str,
+        context_docs: List[Doc] = None,
+        conversation_history: List[Dict] = None
+    ) -> str:
+        """
+        Generate response from query and context documents.
+        This method is compatible with chat_views.py interface.
+        
+        Args:
+            query: User query
+            context_docs: List of Doc objects (optional, will retrieve if not provided)
+            conversation_history: List of conversation history (optional, not used currently)
+        
+        Returns:
+            Response text string
+        """
+        # If context_docs not provided, retrieve them
+        if context_docs is None:
+            context_docs = self.retrieve(query, top_k=5)
+        
+        # Use answer() method to generate response
+        result = self.answer(query, context_docs)
+        return result.get('answer', 'Xin lỗi, tôi không thể tạo câu trả lời.')
     
     def answer(self, query: str, context_docs: List[Doc]) -> dict:
         """

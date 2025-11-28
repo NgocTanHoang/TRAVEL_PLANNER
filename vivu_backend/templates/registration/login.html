@@ -72,7 +72,21 @@
     </style>
      <script>
          // Autofocus + placeholders (VI)
-         window.addEventListener('DOMContentLoaded',()=>{const u=document.getElementById('id_username');const p=document.getElementById('id_password');if(u){u.placeholder='Tên đăng nhập hoặc Email';u.focus();} if(p){p.placeholder='Mật khẩu';}});
+         window.addEventListener('DOMContentLoaded',()=>{
+            const u=document.getElementById('id_username');
+            const p=document.getElementById('id_password');
+            if(u){u.placeholder='Tên đăng nhập hoặc Email';u.focus();}
+            if(p){p.placeholder='Mật khẩu';}
+
+            const fallbackImg=document.querySelector('.form-image');
+            if(fallbackImg){
+                fallbackImg.addEventListener('error',function(){
+                    this.onerror=null;
+                    this.src="{% static 'img/logo_crop-Photoroom.png' %}";
+                    this.style.maxWidth='160px';
+                });
+            }
+        });
      </script>
     </head>
 <body>
@@ -90,7 +104,7 @@
      <div class="content-wrap">
       <div class="container">
          <figure>
-            <img class="form-image" src="{% static 'img/signin-image.jpg' %}" alt="signin-image" onerror="this.onerror=null;this.src='{% static 'img/logo_crop-Photoroom.png' %}';this.style.maxWidth='160px'"/>
+            <img class="form-image" src="{% static 'img/signin-image.jpg' %}" alt="signin-image"/>
          </figure>
          <div class="form-content">
             <h1>Đăng nhập</h1>
@@ -109,7 +123,7 @@
                </div>
                {% if form.errors %}
                <div style="color: red; text-align: center; margin-bottom: 10px;">
-                   Tên đăng nhập hoặc mật khẩu không đúng.
+                   Bạn đã quên mật khẩu? <a href="/accounts/change-password/" style="color: inherit; text-decoration: underline;">Đổi mật khẩu</a>
                </div>
                {% endif %}
                <input type="submit" value="Đăng nhập"/>
@@ -119,7 +133,21 @@
         </div>
       </div>
      </div>
-     
+
+    <!-- Modal: Gợi ý đổi mật khẩu sau 3 lần đăng nhập thất bại -->
+    <div id="password-modal" class="password-modal" role="dialog" aria-modal="true" aria-labelledby="password-modal-title" aria-hidden="true">
+        <div class="password-modal__content">
+            <h2 id="password-modal-title">Bạn có muốn đổi mật khẩu?</h2>
+            <p>
+                Có vẻ bạn đã nhập sai thông tin đăng nhập nhiều lần. Nếu quên mật khẩu, hãy chuyển tới trang đổi mật khẩu để đặt mật khẩu mới.
+            </p>
+            <div class="password-modal__actions">
+                <button type="button" class="password-modal__btn password-modal__btn--primary" id="password-modal-confirm">Đổi mật khẩu</button>
+                <button type="button" class="password-modal__btn" id="password-modal-cancel">Để sau</button>
+            </div>
+        </div>
+    </div>
+
      <footer>
         <div class="footer-container">
             <div class="footer-section">
@@ -230,7 +258,134 @@
                 }
             }
         }
+
+        // Theo dõi số lần đăng nhập thất bại và gợi ý đổi mật khẩu sau 3 lần
+        (function handleFailedAttempts(){
+            const LOGIN_FAIL_KEY = 'vivu_login_fail_attempts';
+            const MODAL_SHOWN_KEY = 'vivu_login_fail_modal_shown';
+            const hadError = '{{ form.errors|yesno:"yes,no" }}' === 'yes';
+            if(typeof window.sessionStorage === 'undefined'){
+                return;
+            }
+
+            let attempts = parseInt(sessionStorage.getItem(LOGIN_FAIL_KEY) || '0', 10);
+            if(hadError){
+                attempts += 1;
+                sessionStorage.setItem(LOGIN_FAIL_KEY, attempts.toString());
+            } else {
+                sessionStorage.removeItem(LOGIN_FAIL_KEY);
+                sessionStorage.removeItem(MODAL_SHOWN_KEY);
+                return;
+            }
+
+            if(attempts >= 3 && !sessionStorage.getItem(MODAL_SHOWN_KEY)){
+                const modal = document.getElementById('password-modal');
+                const confirmBtn = document.getElementById('password-modal-confirm');
+                const cancelBtn = document.getElementById('password-modal-cancel');
+                if(!modal || !confirmBtn || !cancelBtn){
+                    return;
+                }
+
+                modal.setAttribute('aria-hidden', 'false');
+                modal.classList.add('is-visible');
+                sessionStorage.setItem(MODAL_SHOWN_KEY, '1');
+
+                const closeModal = () => {
+                    modal.classList.remove('is-visible');
+                    modal.setAttribute('aria-hidden', 'true');
+                };
+
+                confirmBtn.addEventListener('click', () => {
+                    window.location.href = '/accounts/change-password/';
+                });
+
+                cancelBtn.addEventListener('click', () => {
+                    closeModal();
+                });
+
+                modal.addEventListener('click', (event) => {
+                    if(event.target === modal){
+                        closeModal();
+                    }
+                });
+            }
+        })();
     </script>
+    <style>
+        .password-modal{
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0,0,0,0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .25s ease;
+            z-index: 2000;
+        }
+        .password-modal.is-visible{
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .password-modal__content{
+            max-width: 420px;
+            width: 100%;
+            background: #fff;
+            border-radius: 16px;
+            padding: 1.75rem;
+            box-shadow: 0 20px 45px rgba(0,0,0,0.35);
+            text-align: left;
+        }
+        .password-modal__content h2{
+            margin-top: 0;
+            margin-bottom: .75rem;
+            color: var(--color-primary);
+            font-size: 1.4rem;
+        }
+        .password-modal__content p{
+            color: #4B5563;
+            line-height: 1.55;
+            margin-bottom: 1.5rem;
+        }
+        .password-modal__actions{
+            display: flex;
+            flex-wrap: wrap;
+            gap: .75rem;
+            justify-content: flex-end;
+        }
+        .password-modal__btn{
+            border: 1px solid rgba(21,61,104,0.2);
+            background: #fff;
+            color: var(--color-primary);
+            padding: .55rem 1.25rem;
+            border-radius: 999px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s ease;
+        }
+        .password-modal__btn:hover{
+            border-color: var(--color-secondary);
+            color: var(--color-secondary);
+        }
+        .password-modal__btn--primary{
+            background: var(--color-secondary);
+            color: #fff;
+            border-color: var(--color-secondary);
+        }
+        .password-modal__btn--primary:hover{
+            background: #00a5b5;
+            border-color: #00a5b5;
+        }
+        @media(max-width:480px){
+            .password-modal__content{padding:1.4rem;}
+            .password-modal__actions{
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
 </body>
 </html>
 

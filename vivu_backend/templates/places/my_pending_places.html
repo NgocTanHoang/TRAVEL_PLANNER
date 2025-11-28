@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block extra_css %}
+<style>
+    .place-card {
+        transition: all 0.3s ease;
+        border-left: 4px solid var(--color-primary);
+        margin-bottom: 1.5rem;
+    }
+    .place-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .status-pending {
+        color: #ffc107;
+    }
+    .status-approved {
+        color: #28a745;
+    }
+    .status-rejected {
+        color: #dc3545;
+    }
+    .place-image {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+    .no-places {
+        text-align: center;
+        padding: 3rem 0;
+    }
+    .no-places i {
+        font-size: 4rem;
+        color: #dee2e6;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">{% trans 'Địa điểm đã gửi' %}</h1>
+        <a href="{% url 'submit_place' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i> {% trans 'Gửi địa điểm mới' %}
+        </a>
+    </div>
+    
+    {% if pending_places %}
+        <div class="row">
+            {% for place in pending_places %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card place-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title mb-0">{{ place.tenDiaDiem }}</h5>
+                            <span class="status-{{ place.trangThai }}">
+                                <i class="fas {% if place.trangThai == 'approved' %}fa-check-circle{% elif place.trangThai == 'rejected' %}fa-times-circle{% else %}fa-clock{% endif %}"></i>
+                                {{ place.get_trangThai_display }}
+                            </span>
+                        </div>
+                        
+                        <div class="text-muted small mb-2">
+                            <i class="far fa-calendar-alt me-1"></i>
+                            {{ place.ngayTao|date:"d/m/Y H:i" }}
+                        </div>
+                        
+                        {% if place.hinh_anhs.first %}
+                            <img src="{{ place.hinh_anhs.first.image.url }}" 
+                                 alt="{{ place.tenDiaDiem }}" 
+                                 class="place-image mb-3">
+                        {% endif %}
+                        
+                        <p class="card-text text-muted small">
+                            <i class="fas fa-map-marker-alt me-1"></i>
+                            {{ place.maTinhThanh.tenTinhThanh }}
+                        </p>
+                        
+                        {% if place.trangThai == 'rejected' and place.lyDoTuChoi %}
+                            <div class="alert alert-danger p-2 small mb-0 mt-2">
+                                <strong>{% trans 'Lý do từ chối:' %}</strong>
+                                {{ place.lyDoTuChoi }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer bg-transparent
+                        {% if place.trangThai == 'approved' %}border-success
+                        {% elif place.trangThai == 'rejected' %}border-danger
+                        {% else %}border-warning{% endif %}">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% if place.trangThai == 'approved' %}{% url 'place_detail' place.pk %}{% else %}#{% endif %}" 
+                               class="btn btn-sm {% if place.trangThai == 'approved' %}btn-outline-success{% else %}btn-outline-secondary{% endif %}"
+                               {% if place.trangThai != 'approved' %}disabled{% endif %}>
+                                <i class="far fa-eye"></i> {% trans 'Xem' %}
+                            </a>
+                            {% if place.trangThai == 'rejected' %}
+                                <a href="{% url 'submit_place' %}?edit={{ place.pk }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i> {% trans 'Chỉnh sửa' %}
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="no-places">
+            <i class="fas fa-inbox"></i>
+            <h5 class="text-muted">{% trans 'Bạn chưa gửi địa điểm nào' %}</h5>
+            <p class="text-muted">{% trans 'Nhấn nút "Gửi địa điểm mới" để bắt đầu.' %}</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

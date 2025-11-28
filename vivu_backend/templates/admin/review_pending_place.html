@@ -1,0 +1,239 @@
+{% extends 'admin/base_site.html' %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    .place-details {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    .place-detail-item {
+        margin-bottom: 0.75rem;
+    }
+    .place-detail-label {
+        font-weight: 600;
+        color: #495057;
+        min-width: 150px;
+        display: inline-block;
+    }
+    .image-gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+        margin: 1.5rem 0;
+    }
+    .gallery-img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 4px;
+        transition: transform 0.3s ease;
+    }
+    .gallery-img:hover {
+        transform: scale(1.05);
+    }
+    .main-image {
+        border: 3px solid var(--color-primary);
+    }
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #dee2e6;
+    }
+    .reject-form {
+        margin-top: 1.5rem;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content_title %}
+<h1>{% trans 'Xem xét địa điểm' %}</h1>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">{{ place.tenDiaDiem }}</h2>
+                    <div class="mt-2">
+                        <span class="badge {% if place.trangThai == 'pending' %}bg-warning{% elif place.trangThai == 'approved' %}bg-success{% else %}bg-danger{% endif %}">
+                            {{ place.get_trangThai_display }}
+                        </span>
+                        <span class="text-muted ms-2">
+                            <i class="far fa-user"></i> {{ place.nguoiDang.username }} • 
+                            <i class="far fa-clock"></i> {{ place.ngayTao|timesince }} {% trans 'trước' %}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8
+                            <div class="place-details">
+                                <h4><i class="fas fa-info-circle text-primary me-2"></i>{% trans 'Thông tin chi tiết' %}</h4>
+                                <hr>
+                                
+                                <div class="place-detail-item">
+                                    <span class="place-detail-label">{% trans 'Tỉnh/Thành phố' %}:</span>
+                                    {{ place.maTinhThanh.tenTinhThanh|default:'Chưa cập nhật' }}
+                                </div>
+                                
+                                <div class="place-detail-item">
+                                    <span class="place-detail-label">{% trans 'Địa chỉ' %}:</span>
+                                    {{ place.diaChi|default:'Chưa cập nhật' }}
+                                </div>
+                                
+                                <div class="place-detail-item">
+                                    <span class="place-detail-label">{% trans 'Tọa độ' %}:</span>
+                                    {% if place.viDo and place.kinhDo %}
+                                        <a href="https://www.google.com/maps?q={{ place.viDo }},{{ place.kinhDo }}" target="_blank">
+                                            {{ place.viDo }}, {{ place.kinhDo }}
+                                            <i class="fas fa-external-link-alt fa-xs"></i>
+                                        </a>
+                                    {% else %}
+                                        Chưa cập nhật
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="place-detail-item">
+                                    <span class="place-detail-label">{% trans 'Mô tả' %}:</span>
+                                    <div class="mt-2">
+                                        {{ place.moTa|linebreaks|default:'Chưa có mô tả' }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-images text-primary me-2"></i>
+                                        {% trans 'Hình ảnh' %}
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if place.hinh_anhs.all %}
+                                        <div class="image-gallery">
+                                            {% for image in place.hinh_anhs.all %}
+                                                <div>
+                                                    <img src="{{ image.image.url }}" 
+                                                         alt="{{ image.moTa|default:place.tenDiaDiem }}" 
+                                                         class="gallery-img {% if image.laChinh %}main-image{% endif %}"
+                                                         data-bs-toggle="tooltip" 
+                                                         title="{{ image.moTa|default:'Không có mô tả' }}">
+                                                    {% if image.laChinh %}
+                                                        <div class="text-center mt-1">
+                                                            <span class="badge bg-primary">Ảnh đại diện</span>
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <div class="text-center text-muted py-4">
+                                            <i class="fas fa-image fa-3x mb-3"></i>
+                                            <p>{% trans 'Không có hình ảnh' %}</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if place.trangThai == 'pending' %}
+                        <div class="action-buttons">
+                            <form method="post" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="approve">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-check"></i> {% trans 'Phê duyệt' %}
+                                </button>
+                            </form>
+                            
+                            <button type="button" class="btn btn-outline-danger" id="reject-btn">
+                                <i class="fas fa-times"></i> {% trans 'Từ chối' %}
+                            </button>
+                            
+                            <form method="post" id="reject-form" class="reject-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="reject">
+                                <div class="mb-2">
+                                    <label for="reject-reason" class="form-label">
+                                        {% trans 'Lý do từ chối' %}
+                                    </label>
+                                    <textarea name="reason" id="reject-reason" class="form-control" rows="3" 
+                                              placeholder="{% trans 'Vui lòng nhập lý do từ chối...' %}" required></textarea>
+                                </div>
+                                <div>
+                                    <button type="submit" class="btn btn-danger">
+                                        <i class="fas fa-paper-plane"></i> {% trans 'Gửi' %}
+                                    </button>
+                                    <button type="button" id="cancel-reject" class="btn btn-outline-secondary ms-2">
+                                        {% trans 'Hủy' %}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    {% endif %}
+                    
+                    {% if place.trangThai == 'rejected' and place.lyDoTuChoi %}
+                        <div class="alert alert-warning mt-3">
+                            <h5><i class="fas fa-exclamation-triangle"></i> {% trans 'Lý do từ chối' %}</h5>
+                            <p class="mb-0">{{ place.lyDoTuChoi }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="card-footer">
+                    <a href="{% url 'admin_pending_places' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> {% trans 'Quay lại danh sách' %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle reject form
+    const rejectBtn = document.getElementById('reject-btn');
+    const rejectForm = document.getElementById('reject-form');
+    const cancelReject = document.getElementById('cancel-reject');
+    
+    if (rejectBtn) {
+        rejectBtn.addEventListener('click', function() {
+            rejectForm.style.display = 'block';
+            this.style.display = 'none';
+        });
+    }
+    
+    if (cancelReject) {
+        cancelReject.addEventListener('click', function() {
+            rejectForm.style.display = 'none';
+            if (rejectBtn) rejectBtn.style.display = 'inline-block';
+        });
+    }
+    
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

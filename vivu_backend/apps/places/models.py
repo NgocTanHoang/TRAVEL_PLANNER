@@ -6,6 +6,14 @@ from django.db import models
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils import timezone
+from django.core.exceptions import ValidationError
+
+def validate_image_size(image):
+    # 5MB limit
+    limit = 5 * 1024 * 1024
+    if image.size > limit:
+        raise ValidationError('Kích thước ảnh quá lớn. Kích thước tối đa là 5MB.')
 
 
 class TinhThanh(models.Model):
@@ -86,7 +94,7 @@ class DiaDiem(models.Model):
     )
     maTinhThanh = models.ForeignKey(
         TinhThanh,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name='dia_diems',
         db_column='maTinhThanh',
         verbose_name=_('tỉnh thành')
@@ -296,18 +304,12 @@ class DiaDiemYeuThich(models.Model):
     
     class Meta:
         db_table = 'DIADIEM_YEUTHICH'
-        verbose_name = _('Địa điểm yêu thích')
-        verbose_name_plural = _('Địa điểm yêu thích')
-        unique_together = [['maNguoiDung', 'maDiaDiem']]
-        ordering = ['-ngayThem']
-    
-    maNguoiDung = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='dia_diems_yeu_thich',
-        db_column='maNguoiDung',
-        verbose_name=_('người dùng')
-    )
+        verbose_name = _('địa điểm yêu thích')
+        verbose_name_plural = _('địa điểm yêu thích')
+        unique_together = ('maDiaDiem', 'maNguoiDung')
+        indexes = [
+            models.Index(fields=['maNguoiDung', 'maDiaDiem']),
+        ]
     maDiaDiem = models.ForeignKey(
         DiaDiem,
         on_delete=models.CASCADE,
@@ -315,9 +317,150 @@ class DiaDiemYeuThich(models.Model):
         db_column='maDiaDiem',
         verbose_name=_('địa điểm')
     )
+    maNguoiDung = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='yeu_thich',
+        db_column='maNguoiDung',
+        verbose_name=_('người dùng')
+    )
     ngayThem = models.DateTimeField(_('ngày thêm'), auto_now_add=True, db_column='ngayThem')
     ghiChu = models.TextField(_('ghi chú'), blank=True, db_column='ghiChu')
     
     def __str__(self) -> str:
         return f"{self.maNguoiDung.tenDangNhap} likes {self.maDiaDiem.tenDiaDiem}"
+
+
+class PendingPlace(models.Model):
+    """Model for places submitted by users, pending admin approval."""
+    
+    class TrangThaiChoices(models.TextChoices):
+        PENDING = 'pending', _('Chờ duyệt')
+        APPROVED = 'approved', _('Đã duyệt')
+        REJECTED = 'rejected', _('Từ chối')
+    
+    class Meta:
+        db_table = 'PENDING_PLACES'
+        verbose_name = _('địa điểm chờ duyệt')
+        verbose_name_plural = _('địa điểm chờ duyệt')
+        ordering = ['-ngayTao']
+    
+    # Basic information
+    tenDiaDiem = models.CharField(_('tên địa điểm'), max_length=255)
+    maTinhThanh = models.ForeignKey(
+        TinhThanh,
+        on_delete=models.CASCADE,
+        related_name='pending_places',
+        verbose_name=_('tỉnh thành')
+    )
+    diaChi = models.TextField(_('địa chỉ chi tiết'))
+    moTa = models.TextField(_('mô tả'), blank=True)
+    
+    # Contact information
+    soDienThoai = models.CharField(_('số điện thoại'), max_length=20, blank=True)
+    website = models.URLField(_('website'), blank=True)
+    
+    # Location
+    viDo = models.FloatField(_('vĩ độ'), null=True, blank=True)
+    kinhDo = models.FloatField(_('kinh độ'), null=True, blank=True)
+    
+    # Status and tracking
+    trangThai = models.CharField(
+        _('trạng thái'),
+        max_length=20,
+        choices=TrangThaiChoices.choices,
+        default=TrangThaiChoices.PENDING
+    )
+    lyDoTuChoi = models.TextField(_('lý do từ chối'), blank=True)
+    
+    # User who submitted this place
+    nguoiTao = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='submitted_places',
+        verbose_name=_('người tạo')
+    )
+    
+    # Timestamps
+    ngayTao = models.DateTimeField(_('ngày tạo'), auto_now_add=True)
+    ngayCapNhat = models.DateTimeField(_('ngày cập nhật'), auto_now=True)
+    
+    def __str__(self):
+        return f"{self.tenDiaDiem} ({self.get_trangThai_display()})"
+    
+    def approve(self):
+        """Approve this pending place and create a new DiaDiem."""
+        if self.trangThai == self.TrangThaiChoices.APPROVED:
+            return None
+            
+        # Create new DiaDiem
+        dia_diem = DiaDiem.objects.create(
+            tenDiaDiem=self.tenDiaDiem,
+            maTinhThanh=self.maTinhThanh,
+            diaChi=self.diaChi,
+            moTa=self.moTa,
+            soDienThoai=self.soDienThoai,
+            website=self.website,
+            viDo=self.viDo,
+            kinhDo=self.kinhDo,
+            trangThai='active',
+            maNguoiTao=self.nguoiTao
+        )
+        
+        # Update status
+        self.trangThai = self.TrangThaiChoices.APPROVED
+        self.save()
+        
+        # Move images to the new place
+        self.images.update(diaDiem=dia_diem)
+        
+        return dia_diem
+    
+    def reject(self, reason):
+        """Reject this pending place with a reason."""
+        self.trangThai = self.TrangThaiChoices.REJECTED
+        self.lyDoTuChoi = reason
+        self.save()
+
+
+class PendingPlaceImage(models.Model):
+    """Images for pending places."""
+    
+    class Meta:
+        db_table = 'PENDING_PLACE_IMAGES'
+        verbose_name = _('hình ảnh địa điểm chờ duyệt')
+        verbose_name_plural = _('hình ảnh địa điểm chờ duyệt')
+    
+    pending_place = models.ForeignKey(
+        PendingPlace,
+        on_delete=models.CASCADE,
+        related_name='images',
+        verbose_name=_('địa điểm chờ duyệt')
+    )
+    diaDiem = models.ForeignKey(
+        DiaDiem,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='pending_images',
+        verbose_name=_('địa điểm')
+    )
+    image = models.ImageField(
+        _('hình ảnh'),
+        upload_to='pending_places/%Y/%m/%d/',
+        validators=[validate_image_size]
+    )
+    moTa = models.CharField(_('mô tả'), max_length=255, blank=True)
+    laChinh = models.BooleanField(_('là ảnh chính'), default=False)
+    ngayTao = models.DateTimeField(_('ngày tạo'), auto_now_add=True)
+    
+    def __str__(self):
+        return f"Image for {self.pending_place.tenDiaDiem}"
+    
+    def save(self, *args, **kwargs):
+        # If this is the first image, make it the main image
+        if not self.pk and not self.pending_place.images.exists():
+            self.laChinh = True
+        super().save(*args, **kwargs)
+
 

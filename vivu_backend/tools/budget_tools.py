@@ -203,7 +203,8 @@ class BudgetTools:
         activities_cost: Optional[float] = None,
         days: int = 1,
         travelers: int = 1,
-        travel_style: Union[str, List[str]] = 'standard'
+        travel_style: Union[str, List[str]] = 'standard',
+        is_actual_accommodation_price: bool = False
     ) -> Dict[str, Any]:
         """
         Tính tổng ngân sách với style-aware cost calculation
@@ -216,6 +217,7 @@ class BudgetTools:
             days: Số ngày
             travelers: Số người
             travel_style: String hoặc list các phong cách ('budget', 'gastronomy', ['romantic', 'luxury'], ...)
+            is_actual_accommodation_price: True nếu accommodation_cost là giá thực tế từ khách sạn, False nếu là ước tính
             
         Returns:
             Dict với breakdown chi tiết
@@ -261,8 +263,34 @@ class BudgetTools:
                 activities_cost = (transport_cost + accommodation_cost) * 0.10
         
         # Áp dụng multiplier cho accommodation và dining
-        accommodation_cost *= multiplier
+        # Lưu ý: Chỉ áp dụng multiplier cho accommodation_cost nếu nó là giá ước tính
+        # Nếu accommodation_cost đã được tính từ giá thực tế của khách sạn, KHÔNG nhân multiplier
+        # Vì giá thực tế đã phản ánh đúng mức giá của khách sạn rồi
+        
+        # Phân biệt giá thực tế vs ước tính:
+        # - Giá thực tế: từ selected_hotel hoặc hotels[0] với price_per_night > 0
+        # - Giá ước tính: từ _estimate_accommodation_cost hoặc suggest_budget
+        # 
+        # Hiện tại không có flag để phân biệt, nên ta sẽ:
+        # - KHÔNG nhân multiplier cho accommodation_cost nếu nó > 0 (giả định là giá thực tế)
+        # - Chỉ nhân multiplier khi accommodation_cost = 0 (sẽ được tính từ suggest_budget sau)
+        # 
+        # Tuy nhiên, vì accommodation_cost đã được tính từ AccommodationAgent trước khi vào BudgetAgent,
+        # nên nếu > 0 thì đó là giá thực tế, không nên nhân multiplier.
+        
+        # Dining cost luôn được nhân multiplier vì thường là ước tính
         dining_cost *= multiplier
+        
+        # Accommodation cost: 
+        # - Nếu là giá thực tế từ khách sạn (is_actual_accommodation_price=True): KHÔNG nhân multiplier
+        #   Vì giá thực tế đã phản ánh đúng mức giá của khách sạn rồi
+        # - Nếu là giá ước tính (is_actual_accommodation_price=False): nhân multiplier
+        #   Để điều chỉnh theo travel_style
+        if not is_actual_accommodation_price:
+            accommodation_cost *= multiplier
+            logger.debug(f"Applied multiplier {multiplier} to estimated accommodation cost")
+        else:
+            logger.debug(f"Skipped multiplier for actual hotel price: {accommodation_cost:,.0f} VNĐ")
         
         # Chi phí khác (5% tổng)
         misc_cost = (transport_cost + accommodation_cost + dining_cost + activities_cost) * 0.05
@@ -332,7 +360,8 @@ class BudgetTools:
             activities_cost=activities_cost,
             days=days,
             travelers=travelers,
-            travel_style=travel_style
+            travel_style=travel_style,
+            is_actual_accommodation_price=False  # suggest_budget luôn là ước tính
         )
     
     def analyze_budget_allocation(

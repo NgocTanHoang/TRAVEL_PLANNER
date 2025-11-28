@@ -15,6 +15,9 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     
+    <!-- Tailwind CSS -->
+    <link rel="stylesheet" href="{% static 'css/tailwind.output.css' %}">
+    
     <!-- Animations CSS -->
     <link rel="stylesheet" href="{% static 'css/animations.css' %}">
     
@@ -88,6 +91,18 @@
             box-shadow: var(--shadow-lg);
         }
 
+        /* Ensure logo tagline is always white on all pages */
+        .logo-tagline {
+            color: rgba(255, 255, 255, 1) !important;
+            opacity: 1 !important;
+        }
+
+        .logo:hover .logo-tagline,
+        .logo-tagline:hover {
+            color: rgba(255, 255, 255, 1) !important;
+            opacity: 1 !important;
+        }
+
         .nav-container {
             max-width: 1280px;
             margin: 0 auto;
@@ -129,6 +144,12 @@
             image-rendering: auto;
         }
 
+        .logo-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.1rem;
+        }
+
         .logo-brand {
             font-family: var(--font-family-heading);
             font-size: 1.4rem;
@@ -139,50 +160,69 @@
             line-height: 1;
         }
 
+        .logo-tagline {
+            font-family: var(--font-family-base);
+            font-size: 0.7rem;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 1) !important;
+            opacity: 1 !important;
+            margin: 0;
+            line-height: 1.2;
+            letter-spacing: 0.01em;
+        }
+
         .nav-menu {
             display: flex;
             align-items: center;
-            gap: 2.5rem;
+            gap: 1.8rem;
             list-style: none;
             margin: 0;
             padding: 0;
+            flex-wrap: nowrap;
         }
 
         .nav-menu li {
             margin: 0;
         }
 
-        .nav-link {
+        .nav-menu a {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.45rem 1.15rem;
+            font-size: 0.9rem;
+            font-weight: 600;
             color: var(--color-text-light);
             text-decoration: none;
-            font-weight: 500;
-            font-size: 0.95rem;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            position: relative;
+            border-radius: 999px;
             transition: var(--transition-fast);
-            display: inline-block;
+            white-space: nowrap;
         }
 
         .nav-link::before {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 2px;
-            background: var(--color-accent);
-            transition: width 0.3s;
+            display: none !important;
         }
 
-        .nav-link:hover {
+        .nav-menu a {
+            transition: transform 0.2s ease !important;
+            animation: none !important;
+        }
+
+        .nav-menu a:hover {
             color: var(--color-accent);
-            background: rgba(218, 165, 32, 0.1);
+            background: rgba(218, 165, 32, .1);
+            transform: scale(0.95) !important;
+            animation: none !important;
+        }
+
+        .nav-menu a:active {
+            transform: scale(0.92) !important;
+            animation: none !important;
         }
 
         .nav-link:hover::before {
-            width: 80%;
+            display: none !important;
         }
 
         .nav-link.active {
@@ -575,13 +615,16 @@
                 <div class="logo-badge">
                     <img src="{% static 'img/logo_crop-Photoroom.png' %}" alt="Vi Vu Logo">
                 </div>
-                <h1 class="logo-brand">Vi Vu</h1>
+                <div class="logo-content">
+                    <h1 class="logo-brand">Vi Vu</h1>
+                    <p class="logo-tagline">Plan in Minutes, Vibe for Months.</p>
+                </div>
             </a>
             
             <ul class="nav-menu" role="menubar">
                 {% block nav_items %}
                     <li role="none">
-                        <a href="/" class="nav-link" role="menuitem">Trang chủ</a>
+                        <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}" role="menuitem">Trang chủ</a>
                     </li>
                     <li role="none" class="search-dropdown">
                         <a href="#" class="nav-link search-toggle" role="menuitem" onclick="event.preventDefault(); return false;">🔍 Tìm kiếm</a>
@@ -692,7 +735,10 @@
                         </div>
                     </li>
                     <li role="none">
-                        <a href="/ai-chat/" class="nav-link" role="menuitem">🤖 AI Chat Assistant</a>
+                        <a href="/travel-plan/" class="nav-link {% if request.path == '/travel-plan/' %}active{% endif %}" role="menuitem">✈️ Tạo lịch trình</a>
+                    </li>
+                    <li role="none">
+                        <a href="/ai-chat/" class="nav-link {% if request.path == '/ai-chat/' %}active{% endif %}" role="menuitem">🤖 AI Chat Assistant</a>
                     </li>
                 {% endblock %}
                 
@@ -746,6 +792,11 @@
                                     Lịch trình đã tạo
                                 </a>
                             </li>
+                            <li role="none">
+                                <a href="{% url 'submit_place' %}" class="dropdown-item" role="menuitem">
+                                    <i class="fas fa-plus mr-2"></i> Thêm địa điểm
+                                </a>
+                            </li>
                             <li role="separator" class="dropdown-divider"></li>
                             <li role="none">
                                 <a href="#" id="dropdown-logout-link" class="dropdown-item dropdown-item-danger" role="menuitem">
@@ -764,7 +815,7 @@
                         <a href="/accounts/login/" class="nav-link" role="menuitem">Đăng nhập</a>
                     </li>
                     <li role="none">
-                        <a href="/accounts/signup/" class="nav-link" role="menuitem">Đăng ký</a>
+                        <a href="/accounts/register/" class="nav-link" role="menuitem" style="border: 1px solid rgba(255,255,255,0.2); padding: 0.4rem 1rem;">Đăng ký</a>
                     </li>
                 {% endif %}
             </ul>
@@ -785,16 +836,28 @@
 
     <!-- LOGOUT MODAL -->
     {% if user.is_authenticated %}
-    <div class="modal-overlay" id="logout-modal" role="dialog" aria-modal="true" aria-labelledby="logout-title" style="display:none;">
-        <div class="modal-card">
-            <h4 class="modal-title" id="logout-title">Đăng xuất</h4>
-            <p class="modal-text">Bạn có chắc chắn muốn đăng xuất khỏi Vi Vu?</p>
-            <div class="modal-actions">
-                <button class="btn-outline" id="logout-cancel">Không</button>
-                <form id="logout-form" method="post" action="/accounts/logout/" style="margin:0;">
-                    {% csrf_token %}
-                    <button class="btn-solid" type="submit">Có, đăng xuất</button>
-                </form>
+    <!-- Logout Confirmation Modal -->
+    <div id="logout-modal" class="logout-modal" style="display: none;">
+        <div class="logout-modal-content">
+            <div class="logout-modal-header">
+                <h3 class="logout-modal-title">Xác nhận đăng xuất</h3>
+                <button type="button" class="logout-modal-close" id="logout-modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="logout-modal-body">
+                <div class="logout-modal-icon">
+                    <i class="fas fa-sign-out-alt"></i>
+                </div>
+                <p class="logout-modal-message">Bạn có chắc chắn muốn đăng xuất khỏi tài khoản của mình không?</p>
+            </div>
+            <div class="logout-modal-footer">
+                <button type="button" class="btn btn-outline-secondary" id="logout-cancel">
+                    <i class="fas fa-times"></i> Hủy bỏ
+                </button>
+                <a href="{% url 'logout' %}?next=/" class="btn btn-primary">
+                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                </a>
             </div>
         </div>
     </div>
@@ -870,7 +933,8 @@
         const userAvatarBtn = document.getElementById('user-avatar-btn');
         const userDropdownMenu = document.getElementById('user-dropdown-menu');
         
-        if (userAvatarBtn && userDropdownMenu) {
+        if (userAvatarBtn && userDropdownMenu && !userAvatarBtn.dataset.dropdownBound) {
+            userAvatarBtn.dataset.dropdownBound = 'true';
             userAvatarBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
                 const isExpanded = userDropdownMenu.classList.contains('show');
@@ -909,29 +973,75 @@
         const dropdownLogoutLink = document.getElementById('dropdown-logout-link');
         const logoutModal = document.getElementById('logout-modal');
         const logoutCancel = document.getElementById('logout-cancel');
+        const logoutModalClose = document.getElementById('logout-modal-close');
         
-        if (logoutLink && logoutModal && logoutCancel) {
-            logoutLink.addEventListener('click', function(e){ 
-                e.preventDefault(); 
-                logoutModal.style.display = 'flex'; 
-            });
-            logoutCancel.addEventListener('click', function(){ 
-                logoutModal.style.display = 'none'; 
-            });
-            logoutModal.addEventListener('click', function(e){ 
-                if (e.target === logoutModal) logoutModal.style.display = 'none'; 
+        // Function to show modal with animation
+        function showLogoutModal() {
+            if (logoutModal) {
+                logoutModal.style.display = 'flex';
+                // Trigger reflow
+                void logoutModal.offsetWidth;
+                logoutModal.classList.add('show');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+        
+        // Function to hide modal with animation
+        function hideLogoutModal() {
+            if (logoutModal) {
+                logoutModal.classList.remove('show');
+                // Wait for animation to complete before hiding
+                setTimeout(() => {
+                    if (logoutModal.classList.contains('show') === false) {
+                        logoutModal.style.display = 'none';
+                    }
+                }, 300);
+                document.body.style.overflow = '';
+            }
+        }
+        
+        // Set up event listeners
+        if (logoutLink) {
+            logoutLink.addEventListener('click', function(e) { 
+                e.preventDefault();
+                showLogoutModal();
             });
         }
         
-        if (dropdownLogoutLink && logoutModal && logoutCancel) {
-            dropdownLogoutLink.addEventListener('click', function(e){ 
-                e.preventDefault(); 
-                logoutModal.style.display = 'flex';
+        if (dropdownLogoutLink) {
+            dropdownLogoutLink.addEventListener('click', function(e) { 
+                e.preventDefault();
+                showLogoutModal();
+                // Close user dropdown if open
                 if (userDropdownMenu) {
                     userDropdownMenu.classList.remove('show');
                 }
                 if (userAvatarBtn) {
                     userAvatarBtn.setAttribute('aria-expanded', 'false');
+                }
+            });
+        }
+        
+        // Close modal when clicking cancel, close button, or outside modal
+        if (logoutCancel) {
+            logoutCancel.addEventListener('click', hideLogoutModal);
+        }
+        
+        if (logoutModalClose) {
+            logoutModalClose.addEventListener('click', hideLogoutModal);
+        }
+        
+        if (logoutModal) {
+            logoutModal.addEventListener('click', function(e) { 
+                if (e.target === logoutModal) {
+                    hideLogoutModal();
+                }
+            });
+            
+            // Close with Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && logoutModal.style.display === 'flex') {
+                    hideLogoutModal();
                 }
             });
         }
@@ -948,4 +1058,3 @@
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>
-

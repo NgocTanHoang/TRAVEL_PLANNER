@@ -88,6 +88,8 @@ class AccommodationAgent(BaseAgent):
                 )
                 state['accommodation_total_cost'] = total_cost
                 state['accommodation_cost'] = total_cost
+                # Đánh dấu rằng giá này đến từ hotel đã chọn (giá thực tế)
+                state['accommodation_cost_from_actual_hotel'] = True
             elif hotels and check_in and check_out:
                 # Tính chi phí ước tính từ hotels phù hợp với travel_style
                 from datetime import datetime
@@ -123,6 +125,9 @@ class AccommodationAgent(BaseAgent):
                         )
                         state['accommodation_cost'] = total_cost
                         state['suggested_hotel'] = suitable_hotel  # Đề xuất hotel này
+                        # Đánh dấu rằng giá này đến từ hotel thực tế (từ API), không phải ước tính
+                        # Nên KHÔNG nên nhân multiplier trong BudgetAgent
+                        state['accommodation_cost_from_actual_hotel'] = True
                     else:
                         # Fallback: Ước tính giá theo travel_style và địa điểm
                         state['accommodation_cost'] = self._estimate_accommodation_cost(

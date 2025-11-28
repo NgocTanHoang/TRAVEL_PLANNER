@@ -4,18 +4,8 @@ Ingestion Agents Module
 Các agent nặng chỉ chạy nền (offline jobs), không chạy trong luồng tương tác.
 """
 
-# Import các agent nặng
-from .api_collector import APICollectorAgent
-from .web_scraper import WebScraperAgent
-from .data_validator import DataValidatorAgent
-from .data_processor import DataProcessorAgent
-from .place_classifier import PlaceClassifierAgent
+# Các agent ingestion cũ đã bị loại bỏ khỏi codebase hiện tại.
+# Giữ module tồn tại để tương thích import nhưng không expose agent nào.
 
-__all__ = [
-    'APICollectorAgent',
-    'WebScraperAgent',
-    'DataValidatorAgent',
-    'DataProcessorAgent',
-    'PlaceClassifierAgent'
-]
+__all__: list[str] = []
 

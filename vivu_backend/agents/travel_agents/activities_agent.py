@@ -6,13 +6,113 @@ Chịu trách nhiệm:
 - Tính chi phí hoạt động
 - Đề xuất nhà hàng (sử dụng Vector Database)
 - Tính chi phí ăn uống
+- Hiểu ngữ nghĩa và phân loại địa điểm thông minh
 """
 import logging
+import unicodedata
+import re
 from typing import Dict, Any, Optional, List
 from ..base_agent import BaseAgent
 from tools.activities_tools import get_activities_tools
+from utils.semantic_place_classifier import (
+    understand_place_semantics,
+    is_suitable_for_travel_style,
+    classify_place_by_semantics
+)
 
 logger = logging.getLogger(__name__)
+
+
+# Helper functions for robust location normalization/matching
+_LOCATION_STOPWORDS = {"thanh", "pho", "thanhpho", "tp", "tinh"}
+
+
+def _normalize_location_name(name: str) -> str:
+    """Normalize Vietnamese location names for comparison.
+
+    Removes diacritics, lowercases, and strips non-alphanumeric characters.
+    Example: "Thành phố Đà Nẵng" -> "thanh pho da nang".
+    """
+    if not name:
+        return ""
+    # Remove diacritics
+    name = unicodedata.normalize("NFKD", str(name))
+    name = "".join(c for c in name if not unicodedata.combining(c))
+    # Lowercase and keep only letters/digits as space-separated tokens
+    name = name.lower()
+    name = re.sub(r"[^a-z0-9]+", " ", name)
+    return name.strip()
+
+
+def _tokenize_normalized_name(norm: str) -> set:
+    """Tokenize a normalized location string, removing generic stopwords.
+
+    Example: "thanh pho da nang" -> {"da", "nang"}.
+    """
+    if not norm:
+        return set()
+    tokens = []
+    for token in norm.split():
+        if not token:
+            continue
+        if token in _LOCATION_STOPWORDS:
+            continue
+        tokens.append(token)
+    return set(tokens)
+
+
+def _normalize_destination_name_for_display(dest: str) -> str:
+    """
+    Normalize destination name để loại bỏ duplicate và format sai cho display
+    
+    Args:
+        dest: Tên địa điểm có thể bị duplicate hoặc format sai
+        
+    Returns:
+        Tên địa điểm đã được normalize
+    """
+    if not dest:
+        return ""
+    
+    import re
+    
+    # Loại bỏ các ký tự đặc biệt và normalize khoảng trắng
+    dest = re.sub(r'\s+', ' ', dest.strip())
+    
+    # Tách các phần bằng dấu phẩy hoặc các ký tự đặc biệt
+    parts = re.split(r'[,;|]', dest)
+    
+    # Lấy phần đầu tiên (thường là tên chính)
+    if parts:
+        main_part = parts[0].strip()
+        
+        # Loại bỏ các từ khóa lặp lại
+        # Ví dụ: "Xã Kim Trung Huyện Hưng Hà Tỉnh Thái Bình Xã Kim Chung" 
+        # -> "Xã Kim Chung, Huyện Hưng Hà, Tỉnh Thái Bình"
+        words = main_part.split()
+        seen_words = set()
+        cleaned_words = []
+        
+        for word in words:
+            word_lower = word.lower()
+            # Bỏ qua các từ đã xuất hiện (tránh duplicate), nhưng giữ lại các từ địa danh
+            if word_lower not in seen_words or word_lower in ['xã', 'huyện', 'tỉnh', 'thành', 'phố', 'quận', 'phường']:
+                cleaned_words.append(word)
+                seen_words.add(word_lower)
+        
+        result = ' '.join(cleaned_words)
+        
+        # Nếu có các phần khác, thêm vào (nhưng đã được format)
+        if len(parts) > 1:
+            # Lấy phần cuối cùng (thường là địa chỉ đầy đủ)
+            last_part = parts[-1].strip()
+            if last_part and last_part != result:
+                # Chỉ thêm nếu khác với phần chính
+                result = f"{result}, {last_part}"
+        
+        return result
+    
+    return dest.strip()
 
 
 class ActivitiesAgent(BaseAgent):
@@ -68,12 +168,93 @@ class ActivitiesAgent(BaseAgent):
                 state['activities_error'] = 'Missing destination'
                 return state
             
-            # Tìm kiếm hoạt động - Ưu tiên Vector DB, fallback to database và tools
+            # Normalize destination name để loại bỏ duplicate và format sai
+            destination_normalized = _normalize_destination_name_for_display(destination)
+            if destination_normalized != destination:
+                logger.info(f"Normalized destination: '{destination}' -> '{destination_normalized}'")
+                destination = destination_normalized
+                state['destination'] = destination  # Update state với normalized destination
+            
+            # Tìm kiếm hoạt động - Ưu tiên Database, sau đó Tools, cuối cùng Vector DB (nếu cần)
             activities = []
             
-            if self.vector_db and self.vector_db.collection:
+            # Normalize destination để so sánh
+            dest_normalized = _normalize_location_name(destination)
+            dest_tokens = _tokenize_normalized_name(dest_normalized)
+            
+            # Bước 1: Query từ database (ưu tiên cao nhất)
+            db_activities = await self._query_fallback_activities_from_db(destination)
+            if db_activities:
+                # Filter activities: loại bỏ những activity có tên giống destination
+                filtered_db_activities = []
+                for act in db_activities:
+                    act_name = act.get('name', '')
+                    if not act_name:
+                        continue
+                    
+                    # Bỏ qua nếu tên quá dài (có thể là địa chỉ đầy đủ)
+                    if len(act_name) > 100:
+                        continue
+                    
+                    # Bỏ qua nếu tên giống destination
+                    act_normalized = _normalize_location_name(act_name)
+                    act_tokens = _tokenize_normalized_name(act_normalized)
+                    
+                    # Kiểm tra xem activity name có giống destination không
+                    if act_tokens and dest_tokens:
+                        # Nếu activity name chứa quá nhiều tokens giống destination, bỏ qua
+                        common_tokens = act_tokens & dest_tokens
+                        if len(common_tokens) >= min(3, len(dest_tokens)) and len(act_tokens) <= len(dest_tokens) + 2:
+                            logger.debug(f"Filtered out activity '{act_name}' - too similar to destination")
+                            continue
+                    
+                    # Bỏ qua nếu tên chính xác giống destination (case-insensitive)
+                    if act_name.lower().strip() == destination.lower().strip():
+                        logger.debug(f"Filtered out activity '{act_name}' - exact match with destination")
+                        continue
+                    
+                    filtered_db_activities.append(act)
+                
+                activities = filtered_db_activities
+                logger.info(f"Found {len(activities)} activities from database for {destination} (filtered from {len(db_activities)})")
+            
+            # Bước 2: Bổ sung từ tools nếu chưa đủ
+            if len(activities) < 10:
+                tools_activities = self.activities_tools.search_activities(
+                    destination=destination,
+                    activity_type=activity_type,
+                    travel_style=travel_style
+                )
+                if tools_activities:
+                    existing_names = {a.get('name', '').lower() for a in activities}
+                    for act in tools_activities:
+                        act_name = act.get('name', '')
+                        if not act_name or act_name.lower() in existing_names:
+                            continue
+                        
+                        # Filter: bỏ qua nếu tên quá dài hoặc giống destination
+                        if len(act_name) > 100:
+                            continue
+                        
+                        act_normalized = _normalize_location_name(act_name)
+                        act_tokens = _tokenize_normalized_name(act_normalized)
+                        
+                        if act_tokens and dest_tokens:
+                            common_tokens = act_tokens & dest_tokens
+                            if len(common_tokens) >= min(3, len(dest_tokens)) and len(act_tokens) <= len(dest_tokens) + 2:
+                                continue
+                        
+                        if act_name.lower().strip() == destination.lower().strip():
+                            continue
+                        
+                        act['source'] = 'tools'
+                        activities.append(act)
+                    logger.info(f"Added {len([a for a in activities if a.get('source') == 'tools'])} activities from tools")
+            
+            # Bước 3: Vector DB chỉ dùng làm fallback cuối cùng (nếu vẫn chưa đủ và vector DB available)
+            if len(activities) < 5 and self.vector_db and self.vector_db.collection:
                 try:
-                    # Tìm địa điểm tham quan từ vector DB
+                    # Tìm địa điểm tham quan từ vector DB (fallback cuối)
                     query = f"Điểm tham quan du lịch tại {destination}. Hoạt động thú vị phù hợp phong cách {travel_style}"
                     if activity_type:
                         query += f". Loại: {activity_type}"
@@ -81,170 +262,109 @@ class ActivitiesAgent(BaseAgent):
                     # Sử dụng async method để tránh blocking và panic
                     vector_results = await self.vector_db.semantic_search_async(
                         query=query,
-                        n_results=15,
+                        n_results=10,
                         city_filter=destination
                     )
                     
                     # Chuyển đổi format từ vector DB sang format của activities
-                    vector_activities = []
+                    existing_names = {a.get('name', '').lower() for a in activities}
                     for result in vector_results:
+                        name = result.get('name', '')
+                        if not name or name.lower() in existing_names:
+                            continue
+                        
+                        # Filter: bỏ qua nếu tên quá dài hoặc giống destination
+                        if len(name) > 100:
+                            continue
+                        
+                        name_normalized = _normalize_location_name(name)
+                        name_tokens = _tokenize_normalized_name(name_normalized)
+                        
+                        if name_tokens and dest_tokens:
+                            common_tokens = name_tokens & dest_tokens
+                            if len(common_tokens) >= min(3, len(dest_tokens)) and len(name_tokens) <= len(dest_tokens) + 2:
+                                continue
+                        
+                        if name.lower().strip() == destination.lower().strip():
+                            continue
+                        
+                        description = result.get('description', '')
+                        category = result.get('category', '')
+                        type_hint = result.get('type', '')
+                        
+                        # Sử dụng semantic classifier để hiểu địa điểm
+                        semantics = understand_place_semantics(
+                            name=name,
+                            description=description,
+                            type_hint=type_hint,
+                            category=category
+                        )
+                        
+                        loai_dia_diem = semantics['loaiDiaDiem']
+                        features = semantics['features']
+                        
                         # Chỉ lấy địa điểm tham quan, không phải khách sạn/nhà hàng
-                        category = result.get('category', '').lower()
-                        if 'khách sạn' not in category and 'nhà hàng' not in category and 'restaurant' not in category and 'hotel' not in category:
-                            vector_activities.append({
-                                'name': result.get('name', ''),
-                                'description': result.get('description', ''),
-                                'category': result.get('category', ''),
+                        if loai_dia_diem not in ['khach_san', 'nha_hang']:
+                            # Kiểm tra phù hợp với travel_style
+                            if travel_style and not is_suitable_for_travel_style(features, travel_style):
+                                continue  # Bỏ qua nếu không phù hợp
+                            
+                            # Lấy giá từ result, nếu không có thì từ database
+                            price = result.get('price', 0)
+                            if price == 0 and result.get('name'):
+                                # Thử tìm trong database để lấy giá thực tế
+                                try:
+                                    from asgiref.sync import sync_to_async
+                                    from apps.places.models import DiaDiem
+                                    
+                                    async def get_price_from_db(place_name: str):
+                                        def _get_price_sync():
+                                            dia_diem = DiaDiem.objects.filter(
+                                                tenDiaDiem__icontains=place_name,
+                                                trangThai='active'
+                                            ).first()
+                                            return float(dia_diem.giaVe) if dia_diem and dia_diem.giaVe else 0
+                                        
+                                        return await sync_to_async(_get_price_sync)()
+                                    
+                                    price = await get_price_from_db(name)
+                                except Exception as e:
+                                    logger.debug(f"Could not get price from DB for {name}: {e}")
+                            
+                            activities.append({
+                                'name': name,
+                                'description': description,
+                                'category': loai_dia_diem,
+                                'original_category': category,
                                 'rating': result.get('rating', 0),
-                                'price': result.get('price', 0),
-                                'price_per_person': result.get('price', 0),
+                                'price': price,
+                                'price_per_person': price,
                                 'address': result.get('address', ''),
                                 'latitude': result.get('latitude'),
                                 'longitude': result.get('longitude'),
                                 'image_url': result.get('image_url', ''),
                                 'source': 'vector_db',
-                                'similarity_score': result.get('similarity_score', 0)
+                                'similarity_score': result.get('similarity_score', 0),
+                                'semantic_features': features,
+                                'semantic_confidence': semantics['confidence'],
+                                'suitable_for': features.get('suitable_for', []),
+                                'best_time': features.get('best_time', ['anytime']),
+                                'duration_hours': features.get('duration_hours', 2.0),
+                                'tags': features.get('tags', [])
                             })
+                            existing_names.add(name.lower())
                     
-                    activities = vector_activities
-                    logger.info(f"Found {len(activities)} activities from vector DB")
-                    
-                    # Nếu không đủ, bổ sung từ database và tools
-                    if len(activities) < 5:
-                        # Query từ database (sync_to_async)
-                        db_activities = await self._query_fallback_activities_from_db(destination)
-                        if db_activities:
-                            existing_names = {a.get('name', '').lower() for a in activities}
-                            for act in db_activities:
-                                if act.get('name', '').lower() not in existing_names:
-                                    activities.append(act)
-                        
-                        # Nếu vẫn không đủ, bổ sung từ tools
-                        if len(activities) < 5:
-                            tools_activities = self.activities_tools.search_activities(
-                                destination=destination,
-                                activity_type=activity_type,
-                                travel_style=travel_style
-                            )
-                            # Merge, tránh duplicate
-                            existing_names = {a.get('name', '').lower() for a in activities}
-                            for act in tools_activities:
-                                if act.get('name', '').lower() not in existing_names:
-                                    act['source'] = 'tools'
-                                    activities.append(act)
+                    if activities:
+                        vector_count = len([a for a in activities if a.get('source') == 'vector_db'])
+                        if vector_count > 0:
+                            logger.info(f"Added {vector_count} activities from vector DB (fallback)")
                         
                 except Exception as e:
-                    logger.warning(f"Vector DB search failed, using database and tools fallback: {e}")
-                    # Query từ database trước
-                    db_activities = await self._query_fallback_activities_from_db(destination)
-                    activities = db_activities if db_activities else []
-                    
-                    # Bổ sung từ tools
-                    tools_activities = self.activities_tools.search_activities(
-                        destination=destination,
-                        activity_type=activity_type,
-                        travel_style=travel_style
-                    )
-                    existing_names = {a.get('name', '').lower() for a in activities}
-                    for act in tools_activities:
-                        if act.get('name', '').lower() not in existing_names:
-                            activities.append(act)
-            else:
-                # Fallback to database và tools
-                db_activities = await self._query_fallback_activities_from_db(destination)
-                activities = db_activities if db_activities else []
-                
-                # Nếu vẫn không có, thử tools
-                if len(activities) < 3:
-                    tools_activities = self.activities_tools.search_activities(
-                        destination=destination,
-                        activity_type=activity_type,
-                        travel_style=travel_style
-                    )
-                    existing_names = {a.get('name', '').lower() for a in activities}
-                    for act in tools_activities:
-                        if act.get('name', '').lower() not in existing_names:
-                            activities.append(act)
-                
-                # Nếu vẫn không có activities, đảm bảo có ít nhất generic fallback
-                if len(activities) == 0:
-                    logger.warning(f"No activities found for {destination}, ensuring generic fallback")
-                    # Query lại database để lấy generic fallback
-                    db_activities = await self._query_fallback_activities_from_db(destination)
-                    if db_activities:
-                        activities = db_activities
+                    logger.warning(f"Vector DB search failed (fallback): {e}")
             
-            # Đảm bảo có ít nhất 2 activities (generic fallback)
-            # Đây là safety net cuối cùng - luôn có activities
+            # Nếu vẫn không có activities, log warning
             if len(activities) == 0:
-                logger.error(f"CRITICAL: No activities at all for {destination}, creating emergency fallback")
-                # Emergency fallback - tạo generic activities (không hardcode tên địa điểm)
-                # Check travel_style để include wellness/spa activities nếu cần
-                travel_style = state.get('travel_style', 'standard')
-                travel_style_lower = str(travel_style).lower()
-                has_wellness = 'wellness' in travel_style_lower or 'spa' in travel_style_lower
-                has_romantic = 'romantic' in travel_style_lower
-                
-                activities = []
-                
-                # Add wellness/spa activity if needed
-                if has_wellness:
-                    activities.append({
-                        'name': f'Spa & Wellness tại {destination}',
-                        'description': f'Thư giãn và chăm sóc sức khỏe tại spa và trung tâm wellness tại {destination}',
-                        'category': 'spa',
-                        'type': 'wellness',
-                        'price_per_person': 500000,  # Premium spa experience
-                        'duration_hours': 2.0,
-                        'rating': 4.5,
-                        'address': destination,
-                        'source': 'emergency_fallback',
-                        'tags': ['spa', 'wellness', 'massage', 'relaxation']
-                    })
-                
-                # Add romantic activity if needed
-                if has_romantic:
-                    activities.append({
-                        'name': f'Trải nghiệm lãng mạn tại {destination}',
-                        'description': f'Khám phá các điểm lãng mạn và view đẹp tại {destination}',
-                        'category': 'romantic',
-                        'type': 'sightseeing',
-                        'price_per_person': 200000,
-                        'duration_hours': 3.0,
-                        'rating': 4.5,
-                        'address': destination,
-                        'source': 'emergency_fallback',
-                        'tags': ['romantic', 'scenic', 'viewpoint']
-                    })
-                
-                # Always add generic activities
-                activities.extend([
-                    {
-                        'name': f'Tham quan {destination}',
-                        'description': f'Khám phá các điểm tham quan nổi tiếng tại {destination}',
-                        'category': 'dia_danh',
-                        'type': 'sightseeing',
-                        'price_per_person': 0,
-                        'duration_hours': 2.0,
-                        'rating': 0,
-                        'address': destination,
-                        'source': 'emergency_fallback',
-                        'tags': ['sightseeing', 'exploration']
-                    },
-                    {
-                        'name': f'Bảo tàng/Văn hóa {destination}',
-                        'description': f'Tìm hiểu văn hóa và lịch sử địa phương tại {destination}',
-                        'category': 'dia_danh',
-                        'type': 'museum',
-                        'price_per_person': 50000,
-                        'duration_hours': 1.5,
-                        'rating': 0,
-                        'address': destination,
-                        'source': 'emergency_fallback',
-                        'tags': ['museum', 'cultural']
-                    }
-                ])
-                logger.info(f"Created {len(activities)} emergency fallback activities for {destination}")
+                logger.warning(f"No activities found for {destination} from database, tools, or vector DB. Returning empty list.")
             
             logger.info(f"Final activities count: {len(activities)} for {destination}")
             
@@ -254,59 +374,123 @@ class ActivitiesAgent(BaseAgent):
                 travelers=travelers
             )
             
-            # Tìm kiếm nhà hàng - Ưu tiên Vector DB, fallback to tools
-            if self.vector_db and self.vector_db.collection:
+            # Tìm kiếm nhà hàng - Ưu tiên Tools (SerpAPI), Vector DB chỉ làm fallback
+            restaurants = []
+            
+            # Normalize destination để filter restaurants (reuse từ activities)
+            # dest_normalized và dest_tokens đã được tính ở trên
+            
+            # Bước 1: Tìm từ tools (SerpAPI) - ưu tiên cao nhất
+            tools_restaurants = self.activities_tools.search_restaurants(
+                destination=destination
+            )
+            if tools_restaurants:
+                # Filter restaurants: loại bỏ những restaurant có tên giống destination
+                filtered_restaurants = []
+                for rest in tools_restaurants:
+                    rest_name = rest.get('name', '')
+                    if not rest_name:
+                        continue
+                    
+                    # Bỏ qua nếu tên quá dài (có thể là địa chỉ đầy đủ)
+                    if len(rest_name) > 100:
+                        continue
+                    
+                    # Bỏ qua nếu tên giống destination
+                    rest_normalized = _normalize_location_name(rest_name)
+                    rest_tokens = _tokenize_normalized_name(rest_normalized)
+                    
+                    # Kiểm tra xem restaurant name có giống destination không
+                    if rest_tokens and dest_tokens:
+                        common_tokens = rest_tokens & dest_tokens
+                        if len(common_tokens) >= min(3, len(dest_tokens)) and len(rest_tokens) <= len(dest_tokens) + 2:
+                            logger.debug(f"Filtered out restaurant '{rest_name}' - too similar to destination")
+                            continue
+                    
+                    # Bỏ qua nếu tên chính xác giống destination (case-insensitive)
+                    if rest_name.lower().strip() == destination.lower().strip():
+                        logger.debug(f"Filtered out restaurant '{rest_name}' - exact match with destination")
+                        continue
+                    
+                    filtered_restaurants.append(rest)
+                
+                restaurants = filtered_restaurants
+                logger.info(f"Found {len(restaurants)} restaurants from tools (SerpAPI) for {destination} (filtered from {len(tools_restaurants)})")
+            
+            # Bước 2: Vector DB chỉ dùng làm fallback nếu tools không đủ kết quả
+            if len(restaurants) < 5 and self.vector_db and self.vector_db.collection:
                 try:
-                    # Tìm nhà hàng từ vector DB
+                    # Tìm nhà hàng từ vector DB (fallback)
                     query = f"Nhà hàng quán ăn ẩm thực tại {destination}"
-                    # Sử dụng async method để tránh blocking và panic
                     vector_results = await self.vector_db.semantic_search_async(
                         query=query,
                         n_results=10,
                         city_filter=destination
                     )
                     
-                    restaurants = []
+                    existing_names = {r.get('name', '').lower() for r in restaurants}
                     for result in vector_results:
-                        category = result.get('category', '').lower()
-                        if 'nhà hàng' in category or 'quán ăn' in category or 'ẩm thực' in category:
+                        name = result.get('name', '')
+                        if not name or name.lower() in existing_names:
+                            continue
+                        
+                        # Filter: bỏ qua nếu tên quá dài hoặc giống destination
+                        if len(name) > 100:
+                            continue
+                        
+                        name_normalized = _normalize_location_name(name)
+                        name_tokens = _tokenize_normalized_name(name_normalized)
+                        
+                        if name_tokens and dest_tokens:
+                            common_tokens = name_tokens & dest_tokens
+                            if len(common_tokens) >= min(3, len(dest_tokens)) and len(name_tokens) <= len(dest_tokens) + 2:
+                                continue
+                        
+                        if name.lower().strip() == destination.lower().strip():
+                            continue
+                        
+                        description = result.get('description', '')
+                        category = result.get('category', '')
+                        type_hint = result.get('type', '')
+                        
+                        # Sử dụng semantic classifier để xác nhận đây là nhà hàng
+                        semantics = understand_place_semantics(
+                            name=name,
+                            description=description,
+                            type_hint=type_hint,
+                            category=category
+                        )
+                        
+                        loai_dia_diem = semantics['loaiDiaDiem']
+                        
+                        # Chỉ lấy nhà hàng (đã được phân loại chính xác)
+                        if loai_dia_diem == 'nha_hang':
+                            features = semantics['features']
                             restaurants.append({
-                                'name': result.get('name', ''),
-                                'description': result.get('description', ''),
+                                'name': name,
+                                'description': description,
                                 'rating': result.get('rating', 0),
                                 'price': result.get('price', 0),
-                                'price_level': result.get('price_level', 0),
+                                'price_level': result.get('price_level', features.get('price_level', 'moderate')),
                                 'address': result.get('address', ''),
                                 'latitude': result.get('latitude'),
                                 'longitude': result.get('longitude'),
                                 'image_url': result.get('image_url', ''),
                                 'source': 'vector_db',
-                                'similarity_score': result.get('similarity_score', 0)
+                                'similarity_score': result.get('similarity_score', 0),
+                                'semantic_features': features,
+                                'semantic_confidence': semantics['confidence'],
+                                'tags': features.get('tags', [])
                             })
+                            existing_names.add(name.lower())
                     
-                    logger.info(f"Found {len(restaurants)} restaurants from vector DB")
-                    
-                    # Nếu không đủ, bổ sung từ tools với nhiều kết quả hơn
-                    if len(restaurants) < 10:
-                        tools_restaurants = self.activities_tools.search_restaurants(
-                            destination=destination
-                        )
-                        existing_names = {r.get('name', '') for r in restaurants}
-                        for rest in tools_restaurants:
-                            if rest.get('name', '') not in existing_names:
-                                rest['source'] = 'tools'
-                                restaurants.append(rest)
-                    
+                    if restaurants:
+                        vector_count = len([r for r in restaurants if r.get('source') == 'vector_db'])
+                        if vector_count > 0:
+                            logger.info(f"Added {vector_count} restaurants from vector DB (fallback)")
+                        
                 except Exception as e:
-                    logger.warning(f"Vector DB restaurant search failed, using tools fallback: {e}")
-                    restaurants = self.activities_tools.search_restaurants(
-                        destination=destination
-                    )
-            else:
-                # Fallback to tools
-                restaurants = self.activities_tools.search_restaurants(
-                    destination=destination
-                )
+                    logger.warning(f"Vector DB restaurant search failed (fallback): {e}")
             
             # Tính chi phí ăn uống
             dining_cost = self.activities_tools.calculate_dining_cost(
@@ -342,44 +526,83 @@ class ActivitiesAgent(BaseAgent):
             
             # Sync function để query database
             def _query_sync(dest: str):
-                """Sync function để query database - không hardcode"""
-                dest_lower = dest.lower().strip()
-                
-                # Tìm TinhThanh - query động, không hardcode tên thành phố
-                # Tìm theo nhiều cách: exact, contains, và các từ khóa trong destination
-                # Ví dụ: "Vũng Tàu" có thể match "Bà Rịa – Vũng Tàu"
-                dest_keywords = [kw.strip() for kw in dest.split() if len(kw.strip()) > 2]
-                
-                # Xây dựng Q objects động
-                q_objects = [
-                    Q(tenTinhThanh__iexact=dest),
-                    Q(tenTinhThanh__icontains=dest),
-                    Q(tenTinhThanh__icontains=dest_lower)
-                ]
-                # Thêm Q objects cho từng từ khóa
-                for kw in dest_keywords:
-                    if len(kw) > 2:
-                        q_objects.append(Q(tenTinhThanh__icontains=kw))
-                
-                # Combine với OR
-                from functools import reduce
-                from operator import or_
-                combined_q = reduce(or_, q_objects)
-                
-                tinh_thanh = TinhThanh.objects.filter(combined_q).first()
-                
-                if not tinh_thanh:
-                    logger.debug(f"No TinhThanh found for {dest}, returning empty list")
+                """Sync function để query database - không hardcode.
+
+                Thay vì dựa vào một filter OR đơn giản (dễ match sai thành phố
+                như Hồ Chí Minh khi người dùng chọn Đà Nẵng), hàm này sẽ
+                normalize tên và sử dụng token-based similarity để chọn
+                TinhThanh phù hợp nhất.
+                """
+                dest_norm = _normalize_location_name(dest)
+                if not dest_norm:
+                    logger.debug(f"Empty normalized destination for {dest!r}, returning empty list")
                     return []
+
+                dest_tokens = _tokenize_normalized_name(dest_norm)
+                if not dest_tokens:
+                    logger.debug(f"No meaningful tokens for destination {dest!r}, returning empty list")
+                    return []
+
+                # Lấy toàn bộ TinhThanh và chọn match tốt nhất bằng Jaccard similarity
+                all_tinh_thanhs = list(TinhThanh.objects.all())
+                best_tinh_thanh = None
+                best_score = 0.0
+
+                for tt in all_tinh_thanhs:
+                    tt_norm = _normalize_location_name(tt.tenTinhThanh)
+                    tt_tokens = _tokenize_normalized_name(tt_norm)
+                    if not tt_tokens:
+                        continue
+                    common = dest_tokens & tt_tokens
+                    if not common:
+                        continue
+                    union = dest_tokens | tt_tokens
+                    if not union:
+                        continue
+                    score = len(common) / len(union)
+                    if score > best_score:
+                        best_score = score
+                        best_tinh_thanh = tt
+
+                # Ngưỡng để tránh match sai tỉnh thành
+                if not best_tinh_thanh or best_score < 0.4:
+                    logger.debug(
+                        f"No suitable TinhThanh match for {dest!r} (best_score={best_score:.2f}), returning empty list"
+                    )
+                    return []
+
+                tinh_thanh = best_tinh_thanh
                 
                 # Query fallback activities từ database - động, không hardcode
+                # Loại bỏ tất cả các loại lưu trú, nhà hàng, và các địa điểm không phù hợp du lịch
+                # Lọc các từ khóa không phù hợp: store, shop, cửa hàng, siêu thị, bệnh viện, trường học, ngân hàng
                 fallback_dia_diems = list(
                     DiaDiem.objects.filter(
                         maTinhThanh=tinh_thanh,
                         trangThai='active',
                         loaiDiaDiem__in=['dia_danh', 'giai_tri']
                     )
-                    .exclude(loaiDiaDiem__in=['nha_hang', 'khach_san'])
+                    .exclude(loaiDiaDiem__in=['nha_hang', 'khach_san', 'co_so_luu_tru'])
+                    .exclude(tenDiaDiem__icontains='nhà nghỉ')
+                    .exclude(tenDiaDiem__icontains='khách sạn')
+                    .exclude(tenDiaDiem__icontains='hotel')
+                    .exclude(tenDiaDiem__icontains='resort')
+                    .exclude(tenDiaDiem__icontains='homestay')
+                    # Loại bỏ các địa điểm không phù hợp du lịch
+                    .exclude(tenDiaDiem__icontains='store')
+                    .exclude(tenDiaDiem__icontains='shop')
+                    .exclude(tenDiaDiem__icontains='cửa hàng')
+                    .exclude(tenDiaDiem__icontains='siêu thị')
+                    .exclude(tenDiaDiem__icontains='bệnh viện')
+                    .exclude(tenDiaDiem__icontains='hospital')
+                    .exclude(tenDiaDiem__icontains='trường học')
+                    .exclude(tenDiaDiem__icontains='school')
+                    .exclude(tenDiaDiem__icontains='ngân hàng')
+                    .exclude(tenDiaDiem__icontains='bank')
+                    .exclude(tenDiaDiem__icontains='công ty')
+                    .exclude(tenDiaDiem__icontains='company')
+                    .exclude(tenDiaDiem__icontains='phòng khám')
+                    .exclude(tenDiaDiem__icontains='clinic')
                     .order_by('-danhGiaTrungBinh', '-soLuotDanhGia')[:20]
                 )
                 
@@ -410,60 +633,34 @@ class ActivitiesAgent(BaseAgent):
                             }
                             duration_hours = dac_diem.get('duration_hours', duration_map.get(dia_diem.loaiDiaDiem, 2.0))
                             
+                            # Sử dụng giá thực tế từ database (giaVe)
+                            price_per_person = float(dia_diem.giaVe) if dia_diem.giaVe else 0
+                            
                             fallback_activities.append({
                                 'name': dia_diem.tenDiaDiem or '',
                                 'description': dia_diem.moTa or '',
                                 'category': dia_diem.loaiDiaDiem or 'dia_danh',
                                 'type': activity_type,
-                                'price_per_person': float(dia_diem.giaVe) if dia_diem.giaVe else 0,
+                                'price_per_person': price_per_person,  # Giá thực tế từ database
+                                'price': price_per_person,  # Alias for compatibility
                                 'duration_hours': duration_hours,
                                 'rating': float(dia_diem.danhGiaTrungBinh) if dia_diem.danhGiaTrungBinh else 0,
                                 'address': dia_diem.diaChi or dest,
                                 'latitude': float(dia_diem.viDo) if dia_diem.viDo else None,
                                 'longitude': float(dia_diem.kinhDo) if dia_diem.kinhDo else None,
-                                'source': 'database_fallback' if dac_diem.get('is_fallback') else 'database',
+                                'source': 'database',  # Luôn là database, không phải fallback
+                                'maDiaDiem': dia_diem.maDiaDiem,  # Lưu ID để reference
                                 'tags': dac_diem.get('tags', [])
                             })
                     except (json.JSONDecodeError, AttributeError, ValueError, TypeError) as e:
                         logger.debug(f"Error parsing dia_diem {dia_diem.maDiaDiem}: {e}")
                         continue
                 
-                # Nếu không có địa điểm trong database, tạo generic activities
-                # Đây là fallback cuối cùng, không hardcode tên địa điểm
-                if not fallback_activities and tinh_thanh:
-                    logger.debug(f"No activities in database for {tinh_thanh.tenTinhThanh}, creating generic suggestions")
-                    # Tạo generic activities dựa trên loại địa điểm (có thể mở rộng sau)
-                    # Không hardcode tên, chỉ tạo generic suggestions
-                    fallback_activities = [
-                        {
-                            'name': f'Tham quan {tinh_thanh.tenTinhThanh}',
-                            'description': f'Khám phá các điểm tham quan nổi tiếng tại {tinh_thanh.tenTinhThanh}',
-                            'category': 'dia_danh',
-                            'type': 'sightseeing',
-                            'price_per_person': 0,
-                            'duration_hours': 2.0,
-                            'rating': 0,
-                            'address': tinh_thanh.tenTinhThanh,
-                            'latitude': float(tinh_thanh.viDo) if tinh_thanh.viDo else None,
-                            'longitude': float(tinh_thanh.kinhDo) if tinh_thanh.kinhDo else None,
-                            'source': 'generic_fallback',
-                            'tags': ['sightseeing', 'exploration']
-                        },
-                        {
-                            'name': f'Bảo tàng/Văn hóa {tinh_thanh.tenTinhThanh}',
-                            'description': f'Tìm hiểu văn hóa và lịch sử địa phương tại {tinh_thanh.tenTinhThanh}',
-                            'category': 'dia_danh',
-                            'type': 'museum',
-                            'price_per_person': 50000,
-                            'duration_hours': 1.5,
-                            'rating': 0,
-                            'address': tinh_thanh.tenTinhThanh,
-                            'latitude': float(tinh_thanh.viDo) if tinh_thanh.viDo else None,
-                            'longitude': float(tinh_thanh.kinhDo) if tinh_thanh.kinhDo else None,
-                            'source': 'generic_fallback',
-                            'tags': ['museum', 'cultural']
-                        }
-                    ]
+                # KHÔNG tạo generic activities - chỉ lấy từ database
+                # Nếu không có địa điểm trong database, trả về empty list
+                if not fallback_activities:
+                    logger.warning(f"No activities found in database for {tinh_thanh.tenTinhThanh if tinh_thanh else destination}. Returning empty list to avoid fake data.")
+                    return []
                 
                 return fallback_activities
             

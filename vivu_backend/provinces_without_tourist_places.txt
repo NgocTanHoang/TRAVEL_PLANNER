@@ -1,0 +1,7 @@
+DANH SÁCH CÁC TỈNH KHÔNG CÓ ĐỊA ĐIỂM THAM QUAN
+================================================================================
+
+Tỉnh Hà Nam (ID: 20)
+  - Địa điểm tham quan: 0 (Địa danh: 0, Giải trí: 0)
+  - Tổng địa điểm: 5 (Nhà hàng: 1, Khách sạn: 4)
+

@@ -5,11 +5,21 @@ Chịu trách nhiệm:
 - Tạo lịch trình hàng ngày chi tiết
 - Phân bổ thời gian hợp lý
 - Đề xuất hoạt động theo thời gian
+- Sử dụng semantic understanding để sắp xếp hoạt động hợp lý
+- Tạo mô tả lịch trình bằng LLM từ dữ liệu JSON
 """
 import logging
 from typing import Dict, Any, Optional, List
 from ..base_agent import BaseAgent
 from tools.planning_tools import get_planning_tools
+from utils.semantic_place_classifier import (
+    understand_place_semantics,
+    extract_place_features
+)
+from utils.itinerary_formatter import (
+    format_state_to_json,
+    generate_itinerary_description
+)
 
 logger = logging.getLogger(__name__)
 
@@ -83,18 +93,59 @@ class PlanningAgent(BaseAgent):
                     pass  # Keep as string
             
             selected_hotel = state.get('selected_hotel')
+            
+            # Cải thiện activities với semantic understanding
+            # Thêm thông tin semantic vào activities nếu chưa có
+            enhanced_activities = []
+            for activity in activities:
+                if 'semantic_features' not in activity:
+                    # Nếu chưa có semantic features, tính toán lại
+                    semantics = understand_place_semantics(
+                        name=activity.get('name', ''),
+                        description=activity.get('description', ''),
+                        type_hint=activity.get('type', ''),
+                        category=activity.get('category', '')
+                    )
+                    activity['semantic_features'] = semantics['features']
+                    activity['semantic_confidence'] = semantics['confidence']
+                    # Cập nhật duration_hours nếu chưa có
+                    if 'duration_hours' not in activity:
+                        activity['duration_hours'] = semantics['features'].get('duration_hours', 2.0)
+                    # Cập nhật best_time nếu chưa có
+                    if 'best_time' not in activity:
+                        activity['best_time'] = semantics['features'].get('best_time', ['anytime'])
+            
             itinerary = self.planning_tools.create_full_itinerary(
                 start_date=start_date,
                 days=days,
                 destination=destination,
                 hotels=hotels,
                 restaurants=restaurants,
-                activities=activities,
+                activities=activities,  # Sử dụng activities đã được enhance
                 travel_style=travel_style,
                 selected_hotel=selected_hotel
             )
             
             state['itinerary'] = itinerary
+            
+            # Tạo JSON data từ state để format cho LLM
+            try:
+                # Update state với itinerary data để format_state_to_json có thể sử dụng
+                state_with_itinerary = state.copy()
+                state_with_itinerary['itinerary'] = itinerary
+                
+                json_data = format_state_to_json(state_with_itinerary)
+                state['itinerary_json'] = json_data
+                
+                # Generate description using LLM (force enable LLM for description generation)
+                from tools.planning_tools import get_llm
+                llm = get_llm()
+                description = generate_itinerary_description(json_data, llm=llm, force_llm=True)
+                state['itinerary_description'] = description
+                logger.info("Generated itinerary description using LLM")
+            except Exception as e:
+                logger.warning(f"Failed to generate itinerary description: {e}", exc_info=True)
+                state['itinerary_description'] = None
             
             self.log_output(state)
             return state

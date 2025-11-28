@@ -20,6 +20,7 @@ urlpatterns = [
     # Itineraries
     path('itineraries/', views.ItineraryListView.as_view(), name='itinerary-list'),
     path('itineraries/<int:id>/', views.ItineraryDetailView.as_view(), name='itinerary-detail'),
+    path('itineraries/recent/', views.RecentItinerariesView.as_view(), name='itinerary-recent'),
     
     # Analytics
     path('analytics/', views.AnalyticsView.as_view(), name='analytics'),
@@ -49,10 +50,12 @@ urlpatterns = [
     path('travel-plans/step2/', views.Step2TravelInfoView.as_view(), name='travel-plan-step2'),
     path('travel-plans/step3/', views.Step3BudgetSuggestionView.as_view(), name='travel-plan-step3'),
     path('travel-plans/step4/', views.Step4ConfirmAndPlanView.as_view(), name='travel-plan-step4'),
+    path('travel-plans/step4/save/', views.Step4SaveItineraryView.as_view(), name='travel-plan-step4-save'),
     
     # Travel Styles API
     path('travel-styles/', travel_styles_views.TravelStylesListView.as_view(), name='travel-styles-list'),
     path('travel-styles/<str:style>/', travel_styles_views.TravelStyleDetailView.as_view(), name='travel-style-detail'),
     path('travel-styles/combine/', travel_styles_views.TravelStyleCombineView.as_view(), name='travel-styles-combine'),
 ]
+
 

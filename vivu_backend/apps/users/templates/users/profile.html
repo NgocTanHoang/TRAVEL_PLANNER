@@ -103,6 +103,38 @@
         color: rgba(255, 255, 255, 0.5);
     }
     
+    /* Dropdown/Select styling - cải thiện độ tương phản */
+    select.form-input {
+        background: rgba(255, 255, 255, 0.15);
+        color: var(--color-white);
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23DAA520' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        padding-right: 2.5rem;
+    }
+    
+    select.form-input:focus {
+        background-color: rgba(255, 255, 255, 0.2);
+        border-color: var(--color-accent);
+    }
+    
+    select.form-input option {
+        background: var(--color-primary-dark);
+        color: var(--color-white);
+        padding: 0.75rem 1rem;
+    }
+    
+    select.form-input option:hover {
+        background: var(--color-secondary);
+    }
+    
+    select.form-input option:checked {
+        background: var(--color-secondary);
+        color: var(--color-white);
+    }
+    
     .btn {
         padding: 0.75rem 2rem;
         border: none;

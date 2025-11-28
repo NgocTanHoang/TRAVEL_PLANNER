@@ -43,7 +43,7 @@ _llm_enabled = os.getenv('PLANNING_USE_LLM', 'false').lower() == 'true'  # Tắt
 
 def get_llm():
     """
-    Get OpenAI LLM instance - CHỈ dùng để format text cuối cùng
+    Get LLM instance với fallback: Groq -> GPT OSS 120B -> OpenAI
     
     ⚠️ LƯU Ý: Chỉ dùng khi thực sự cần format/combine thông tin thành văn bản mượt mà.
     KHÔNG dùng để generate content hoặc cung cấp thông tin chính.
@@ -54,18 +54,57 @@ def get_llm():
         return None  # Tắt mặc định
     
     if _llm is None:
+        # Priority 1: Try Groq
+        try:
+            GROQ_API_KEY = os.getenv('GROQ_API_KEY')
+            if GROQ_API_KEY:
+                from langchain_groq import ChatGroq
+                groq_model = os.getenv('GROQ_MODEL', 'llama-3.3-70b-versatile')  # Updated model
+                _llm = ChatGroq(
+                    model=groq_model,
+                    temperature=0.3,
+                    groq_api_key=GROQ_API_KEY
+                )
+                logger.info(f"Groq LLM initialized for planning tools: {groq_model}")
+                return _llm
+        except ImportError:
+            logger.debug("langchain-groq not available, trying fallback")
+        except Exception as e:
+            logger.warning(f"Failed to initialize Groq LLM: {e}, trying fallback")
+        
+        # Priority 2: Try GPT OSS 120B (fallback model)
+        try:
+            FALLBACK_MODEL = os.getenv('FALLBACK_MODEL', 'gpt-oss-120b')
+            # GPT OSS 120B có thể được host qua OpenAI-compatible API
+            # Hoặc có thể là một endpoint khác, tùy vào cấu hình
+            OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+            if OPENAI_API_KEY and FALLBACK_MODEL:
+                from langchain_openai import ChatOpenAI
+                # Nếu GPT OSS 120B được host qua OpenAI-compatible endpoint
+                # Có thể cần cấu hình base_url riêng
+                _llm = ChatOpenAI(
+                    model=FALLBACK_MODEL,
+                    temperature=0.3,
+                    api_key=OPENAI_API_KEY
+                )
+                logger.info(f"Fallback LLM initialized: {FALLBACK_MODEL}")
+                return _llm
+        except Exception as e:
+            logger.warning(f"Failed to initialize fallback LLM: {e}, trying OpenAI")
+        
+        # Priority 3: Fallback to OpenAI
         try:
             OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
             if OPENAI_API_KEY:
                 from langchain_openai import ChatOpenAI
                 _llm = ChatOpenAI(
                     model=os.getenv('MODEL', 'gpt-4o-mini'),
-                    temperature=0.3,  # Lower temperature cho format text
+                    temperature=0.3,
                     api_key=OPENAI_API_KEY
                 )
                 logger.info("OpenAI LLM initialized for planning tools (format only)")
             else:
-                logger.warning("OPENAI_API_KEY not found, LLM disabled")
+                logger.warning("No LLM API keys found, LLM disabled")
         except Exception as e:
             logger.warning(f"Failed to initialize OpenAI LLM: {e}")
     return _llm
@@ -88,6 +127,12 @@ class PlanningTools:
         self._geo_tools = None
         self._activities_tools = None
         self._vector_db = None
+        # In-memory cache for routes within the same request to avoid duplicate API calls
+        self._route_cache = {}
+    
+    def get_llm(self):
+        """Get LLM instance for description generation"""
+        return get_llm()
     
     def _get_geo_tools(self):
         """Lazy load GeoTools"""
@@ -359,24 +404,37 @@ class PlanningTools:
         rest_coords = self._extract_coordinates(restaurant)
         
         if reference_loc and rest_coords:
-            # Use geo_tools if available for more accurate routing
-            if geo_tools:
+            # Use Haversine first (free, fast) - only call API if distance is reasonable
+            dist_km_haversine = self._calculate_distance_km(reference_loc, rest_coords)
+            
+            # Only use geo_tools API if distance is reasonable (< 50km) to avoid unnecessary API calls
+            # For longer distances, Haversine is good enough for scoring
+            if geo_tools and dist_km_haversine < 50:
                 try:
-                    # Try to get route info (cached)
-                    route_info = geo_tools.calculate_distance_time(
-                        f"{reference_loc[0]},{reference_loc[1]}",
-                        f"{rest_coords[0]},{rest_coords[1]}",
-                        profile='driving-car'
-                    )
-                    if route_info:
-                        dist_km = route_info.get('distance_km', float('inf'))
+                    # Check in-memory cache first
+                    route_key = f"{reference_loc[0]:.7f},{reference_loc[1]:.7f}|{rest_coords[0]:.7f},{rest_coords[1]:.7f}"
+                    if route_key in self._route_cache:
+                        route_info = self._route_cache[route_key]
                     else:
-                        dist_km = self._calculate_distance_km(reference_loc, rest_coords)
+                        # Try to get route info (cached in Redis/global cache)
+                        route_info = geo_tools.calculate_distance_time(
+                            f"{reference_loc[0]},{reference_loc[1]}",
+                            f"{rest_coords[0]},{rest_coords[1]}",
+                            profile='driving-car'
+                        )
+                        # Cache in memory for this request
+                        if route_info:
+                            self._route_cache[route_key] = route_info
+                    
+                    if route_info:
+                        dist_km = route_info.get('distance_km', dist_km_haversine)
+                    else:
+                        dist_km = dist_km_haversine
                 except Exception as e:
                     logger.debug(f"Geo routing failed, using haversine: {e}")
-                    dist_km = self._calculate_distance_km(reference_loc, rest_coords)
+                    dist_km = dist_km_haversine
             else:
-                dist_km = self._calculate_distance_km(reference_loc, rest_coords)
+                dist_km = dist_km_haversine
             
             # Gaussian decay: closer = higher score
             if dist_km < max_distance_km:
@@ -797,21 +855,33 @@ class PlanningTools:
                 if act not in selected_activities:
                     act_coords = self._extract_coordinates(act)
                     if act_coords:
-                        # Calculate travel time/distance
-                        if geo_tools:
+                        # Use Haversine first (free, fast)
+                        travel_dist_haversine = self._calculate_distance_km(morning_coords, act_coords)
+                        
+                        # Only call API if distance is reasonable (< 50km) to avoid unnecessary API calls
+                        if geo_tools and travel_dist_haversine < 50:
                             try:
-                                route_info = geo_tools.calculate_distance_time(
-                                    f"{morning_coords[0]},{morning_coords[1]}",
-                                    f"{act_coords[0]},{act_coords[1]}",
-                                    profile='driving-car'
-                                )
+                                # Check in-memory cache first
+                                route_key = f"{morning_coords[0]:.7f},{morning_coords[1]:.7f}|{act_coords[0]:.7f},{act_coords[1]:.7f}"
+                                if route_key in self._route_cache:
+                                    route_info = self._route_cache[route_key]
+                                else:
+                                    route_info = geo_tools.calculate_distance_time(
+                                        f"{morning_coords[0]},{morning_coords[1]}",
+                                        f"{act_coords[0]},{act_coords[1]}",
+                                        profile='driving-car'
+                                    )
+                                    # Cache in memory for this request
+                                    if route_info:
+                                        self._route_cache[route_key] = route_info
+                                
                                 travel_time = route_info.get('duration_minutes', 60) if route_info else 60
-                                travel_dist = route_info.get('distance_km', 10) if route_info else 10
+                                travel_dist = route_info.get('distance_km', travel_dist_haversine) if route_info else travel_dist_haversine
                             except:
-                                travel_time = 60
-                                travel_dist = self._calculate_distance_km(morning_coords, act_coords)
+                                travel_time = travel_dist_haversine * 2  # Rough estimate: 2 min/km
+                                travel_dist = travel_dist_haversine
                         else:
-                            travel_dist = self._calculate_distance_km(morning_coords, act_coords)
+                            travel_dist = travel_dist_haversine
                             travel_time = travel_dist * 2  # Rough estimate: 2 min/km
                         
                         # Combined score: base score + proximity bonus
@@ -857,21 +927,33 @@ class PlanningTools:
                 }
                 
                 # Add travel time info for afternoon activity
+                # Use cached result if available (already calculated above)
                 if slot == 'afternoon' and i > 0 and morning_coords:
                     afternoon_coords = self._extract_coordinates(activity)
                     if afternoon_coords:
-                        if geo_tools:
-                            try:
-                                route_info = geo_tools.calculate_distance_time(
-                                    f"{morning_coords[0]},{morning_coords[1]}",
-                                    f"{afternoon_coords[0]},{afternoon_coords[1]}",
-                                    profile='driving-car'
-                                )
-                                if route_info:
-                                    distributed_item['travel_time_minutes'] = route_info.get('duration_minutes', 30)
-                                    distributed_item['travel_distance_km'] = route_info.get('distance_km', 5)
-                            except:
-                                pass
+                        # Check in-memory cache first (already calculated when selecting afternoon activity)
+                        route_key = f"{morning_coords[0]:.7f},{morning_coords[1]:.7f}|{afternoon_coords[0]:.7f},{afternoon_coords[1]:.7f}"
+                        if route_key in self._route_cache:
+                            route_info = self._route_cache[route_key]
+                            if route_info:
+                                distributed_item['travel_time_minutes'] = route_info.get('duration_minutes', 30)
+                                distributed_item['travel_distance_km'] = route_info.get('distance_km', 5)
+                        elif geo_tools:
+                            # Only call API if not in cache and distance is reasonable
+                            travel_dist_haversine = self._calculate_distance_km(morning_coords, afternoon_coords)
+                            if travel_dist_haversine < 50:
+                                try:
+                                    route_info = geo_tools.calculate_distance_time(
+                                        f"{morning_coords[0]},{morning_coords[1]}",
+                                        f"{afternoon_coords[0]},{afternoon_coords[1]}",
+                                        profile='driving-car'
+                                    )
+                                    if route_info:
+                                        self._route_cache[route_key] = route_info
+                                        distributed_item['travel_time_minutes'] = route_info.get('duration_minutes', 30)
+                                        distributed_item['travel_distance_km'] = route_info.get('distance_km', 5)
+                                except:
+                                    pass
                 
                 distributed.append(distributed_item)
         
@@ -1046,7 +1128,7 @@ class PlanningTools:
                     travel_time = 10
             
             timeline.append({
-                'time': f"{current_time // 60:02d}:{current_time % 60:02d}",
+                'time': f"{int(current_time) // 60:02d}:{int(current_time) % 60:02d}",
                 'label': 'Bữa sáng',
                 'activity': breakfast.get('name', 'Bữa sáng'),
                 'type': 'meal',
@@ -1080,7 +1162,7 @@ class PlanningTools:
             current_time += travel_time
             
             timeline.append({
-                'time': f"{current_time // 60:02d}:{current_time % 60:02d}",
+                'time': f"{int(current_time) // 60:02d}:{int(current_time) % 60:02d}",
                 'label': morning_activity.get('time', 'Sáng'),
                 'activity': activity.get('name', 'Hoạt động'),
                 'type': 'activity',
@@ -1146,7 +1228,7 @@ class PlanningTools:
             current_time += travel_time
             
             timeline.append({
-                'time': f"{current_time // 60:02d}:{current_time % 60:02d}",
+                'time': f"{int(current_time) // 60:02d}:{int(current_time) % 60:02d}",
                 'label': afternoon_activity.get('time', 'Chiều'),
                 'activity': activity.get('name', 'Hoạt động'),
                 'type': 'activity',
@@ -1183,7 +1265,7 @@ class PlanningTools:
             
             dinner_time += travel_time
             timeline.append({
-                'time': f"{dinner_time // 60:02d}:{dinner_time % 60:02d}",
+                'time': f"{int(dinner_time) // 60:02d}:{int(dinner_time) % 60:02d}",
                 'label': 'Bữa tối',
                 'activity': dinner.get('name', 'Bữa tối'),
                 'type': 'meal',
@@ -1208,6 +1290,73 @@ class PlanningTools:
             'type': 'rest',
             'description': 'Kết thúc ngày, nghỉ ngơi để chuẩn bị cho ngày mai'
         })
+        
+        # Thêm tùy chọn thời gian cho hoạt động cá nhân (free time slots)
+        # Thêm 1-2 khoảng thời gian trống để người dùng tự chọn hoạt động
+        free_time_slots = []
+        
+        # Tìm khoảng trống giữa các hoạt động để thêm free time
+        if len(timeline) > 1:
+            for i in range(len(timeline) - 1):
+                current_item = timeline[i]
+                next_item = timeline[i + 1]
+                
+                # Parse thời gian
+                try:
+                    current_time_str = current_item.get('time', '')
+                    next_time_str = next_item.get('time', '')
+                    
+                    if current_time_str and next_time_str and ':' in current_time_str and ':' in next_time_str:
+                        current_hour, current_min = map(int, current_time_str.split(':'))
+                        next_hour, next_min = map(int, next_time_str.split(':'))
+                        
+                        current_minutes = current_hour * 60 + current_min
+                        next_minutes = next_hour * 60 + next_min
+                        
+                        # Nếu có khoảng trống >= 2 giờ, thêm free time slot
+                        gap_minutes = next_minutes - current_minutes
+                        if gap_minutes >= 120:  # 2 giờ
+                            # Tính thời gian bắt đầu free time (sau hoạt động hiện tại + 30 phút)
+                            free_start_minutes = current_minutes + 30
+                            free_start_hour = free_start_minutes // 60
+                            free_start_min = free_start_minutes % 60
+                            
+                            # Thời gian kết thúc free time (trước hoạt động tiếp theo - 30 phút)
+                            free_end_minutes = next_minutes - 30
+                            free_end_hour = free_end_minutes // 60
+                            free_end_min = free_end_minutes % 60
+                            
+                            if free_end_minutes > free_start_minutes:
+                                free_time_slots.append({
+                                    'time': f"{free_start_hour:02d}:{free_start_min:02d}",
+                                    'label': 'Thời gian tự do',
+                                    'activity': 'Hoạt động cá nhân / Tự chọn',
+                                    'type': 'free_time',
+                                    'description': f'Khoảng thời gian tự do từ {free_start_hour:02d}:{free_start_min:02d} đến {free_end_hour:02d}:{free_end_min:02d} để bạn tự chọn hoạt động theo sở thích',
+                                    'end_time': f"{free_end_hour:02d}:{free_end_min:02d}",
+                                    'duration_minutes': free_end_minutes - free_start_minutes
+                                })
+                except:
+                    pass
+        
+        # Chèn free time slots vào timeline (sắp xếp theo thời gian)
+        if free_time_slots:
+            # Chỉ thêm tối đa 2 free time slots mỗi ngày
+            for free_slot in free_time_slots[:2]:
+                timeline.append(free_slot)
+            
+            # Sắp xếp lại timeline theo thời gian
+            def get_time_minutes(item):
+                time_str = item.get('time', '00:00')
+                try:
+                    if ':' in time_str:
+                        hour, minute = map(int, time_str.split(':'))
+                        return hour * 60 + minute
+                except:
+                    pass
+                return 0
+            
+            timeline.sort(key=get_time_minutes)
         
         return timeline
     
@@ -1293,9 +1442,25 @@ class PlanningTools:
             hotel_loc, geo_tools
         )
         
+        # Tính toán start_time và end_time từ timeline
+        start_time = '08:00'  # Default
+        end_time = '22:00'    # Default
+        
+        if timeline:
+            # Lấy thời gian đầu tiên và cuối cùng từ timeline
+            first_item = timeline[0]
+            last_item = timeline[-1]
+            
+            if first_item.get('time'):
+                start_time = first_item['time']
+            if last_item.get('time'):
+                end_time = last_item['time']
+        
         schedule = {
             'day': day,
             'date': date,
+            'start_time': start_time,
+            'end_time': end_time,
             'theme': self._suggest_theme(day, destination, travel_style),
             'accommodation': hotel,
             'meals': {

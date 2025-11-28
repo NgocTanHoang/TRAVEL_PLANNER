@@ -573,6 +573,24 @@
         // Add to itinerary/favorites function
         function addToItinerary(placeId) {
             console.log('Add place to itinerary:', placeId);
+
+            function isUserLoggedIn() {
+                if (typeof window !== 'undefined' && typeof window.IS_AUTHENTICATED !== 'undefined') {
+                    return !!window.IS_AUTHENTICATED;
+                }
+                const loginLink = document.querySelector('a[href="/accounts/login/"], a[href="/accounts/signup/"], a[href="/accounts/register/"]');
+                return !loginLink;
+            }
+
+            if (!isUserLoggedIn()) {
+                const shouldLogin = window.confirm('Bạn cần đăng nhập để lưu địa điểm vào lịch trình cá nhân. Chuyển đến trang đăng nhập?');
+                if (shouldLogin) {
+                    const currentUrl = window.location.pathname + window.location.search + window.location.hash;
+                    window.location.href = '/accounts/login/?next=' + encodeURIComponent(currentUrl);
+                }
+                return;
+            }
+
             alert(`Đã thêm địa điểm vào lịch trình! (Place ID: ${placeId})`);
         }
 
@@ -1370,7 +1388,8 @@
         // User dropdown toggle
         const userAvatarBtn = document.getElementById('user-avatar-btn');
         const userDropdownMenu = document.getElementById('user-dropdown-menu');
-        if (userAvatarBtn && userDropdownMenu) {
+        if (userAvatarBtn && userDropdownMenu && !userAvatarBtn.dataset.dropdownBound) {
+            userAvatarBtn.dataset.dropdownBound = 'true';
             userAvatarBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 userDropdownMenu.classList.toggle('show');

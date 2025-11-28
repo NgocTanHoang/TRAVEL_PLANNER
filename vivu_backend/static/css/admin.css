@@ -1,0 +1,95 @@
+/* Vi Vu Admin - Global CSS Overrides
+ * ----------------------------------
+ * File này chỉ được load trong Django Admin
+ * và được link từ templates/admin/base_site.html.
+ * Không ảnh hưởng đến giao diện frontend.
+ */
+
+:root {
+    /* Có thể dùng lại biến màu đã định nghĩa trong base_site.html */
+    --vivu-primary: #153D68;
+    --vivu-primary-light: #1e4d7f;
+    --vivu-primary-dark: #0d2842;
+    --vivu-secondary: #00838F;
+    --vivu-secondary-light: #00a5b5;
+    --vivu-accent: #DAA520;
+    --vivu-accent-light: #f0c040;
+}
+
+/* Nền tổng thể cho admin */
+body {
+    background-color: #f3f4f6;
+}
+
+/* Khối nội dung chính có cảm giác "thẻ" hơn */
+#content-main .module {
+    background-color: #ffffff;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+
+/* Bảng dữ liệu trông hiện đại hơn một chút */
+.change-list #changelist-form table {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.change-list #changelist-form thead th {
+    background: linear-gradient(135deg, var(--vivu-primary), var(--vivu-secondary));
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.change-list #changelist-form tbody tr:nth-child(even) {
+    background-color: #f9fafb;
+}
+
+/* Input, select, textarea trong admin mềm mại hơn */
+#content form input[type="text"],
+#content form input[type="email"],
+#content form input[type="number"],
+#content form input[type="password"],
+#content form select,
+#content form textarea {
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    padding: 8px 10px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#content form input:focus,
+#content form select:focus,
+#content form textarea:focus {
+    border-color: var(--vivu-secondary);
+    box-shadow: 0 0 0 3px rgba(0, 131, 143, 0.15);
+    outline: none;
+}
+
+/* Tag / badge nhỏ cho trạng thái */
+.vivu-admin-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.vivu-admin-badge--success {
+    background-color: #ecfdf5;
+    color: #047857;
+}
+
+.vivu-admin-badge--warning {
+    background-color: #fffbeb;
+    color: #92400e;
+}
+
+.vivu-admin-badge--danger {
+    background-color: #fef2f2;
+    color: #b91c1c;
+}
+
+/* Một chút spacing cho dashboard */
+.dashboard #content-main {
+    padding-top: 20px;
+}

@@ -436,14 +436,13 @@ class VectorDatabaseAgent(BaseAgent):
                     where=where
                 )
                 
-                # Nếu không có kết quả với city filter, thử lại không có filter
+                # KHÔNG retry không có filter - chỉ trả về kết quả đúng city
+                # Nếu không có kết quả với city filter, log warning và trả về empty
                 if not results or not results.get('metadatas') or len(results['metadatas'][0]) == 0:
                     if where:
-                        logger.debug(f"No results with city filter '{normalized_city}', retrying without filter")
-                        results = self.collection.query(
-                            query_texts=[query],
-                            n_results=n_results
-                        )
+                        logger.warning(f"No results with city filter '{normalized_city}' for query '{query}'. Returning empty results to avoid wrong city matches.")
+                        # Trả về empty thay vì retry không có filter
+                        return []
                 
                 # Format results
                 places = []
@@ -712,11 +711,21 @@ class VectorDatabaseAgent(BaseAgent):
 # Global instance
 vector_db_agent = None
 
-def get_vector_db_agent() -> VectorDatabaseAgent:
-    """Get singleton instance of Vector DB Agent"""
+def get_vector_db_agent() -> Optional[VectorDatabaseAgent]:
+    """Get singleton instance of Vector DB Agent.
+
+    Được harden để nếu ChromaDB hoặc Rust backend bị panic (PanicException)
+    thì không làm crash toàn bộ process. Trong trường hợp lỗi, hàm sẽ log và
+    trả về None để caller có thể gracefully tắt tính năng vector search.
+    """
     global vector_db_agent
     if vector_db_agent is None:
-        vector_db_agent = VectorDatabaseAgent()
+        try:
+            vector_db_agent = VectorDatabaseAgent()
+        except BaseException as e:
+            # Bắt rộng để catch cả PanicException từ chromadb_rust_bindings
+            logger.warning(f"Vector DB agent initialization failed: {type(e).__name__}: {e}")
+            vector_db_agent = None
     return vector_db_agent
 
 

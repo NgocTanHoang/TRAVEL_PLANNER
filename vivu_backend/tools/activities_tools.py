@@ -9,6 +9,7 @@ Activities Tools - Công cụ hoạt động & ăn uống
 import logging
 import os
 from typing import Dict, Any, Optional, List
+from tools.vietmap_tools import get_vietmap_tools
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +83,7 @@ class ActivitiesTools:
         Returns:
             List các hoạt động
         """
-        activities = []
+        activities: List[Dict[str, Any]] = []
         
         # Ưu tiên sử dụng Vector DB để tìm kiếm semantic
         vector_db = None
@@ -165,7 +166,80 @@ class ActivitiesTools:
         # Note: Function này được gọi từ async context, nên không thể query Django ORM trực tiếp
         # Query sẽ được thực hiện trong ActivitiesAgent với sync_to_async
         if len(activities) < 5:
-            logger.debug(f"Insufficient activities ({len(activities)}), but database query must be done in agent with sync_to_async")
+            logger.debug(f"Insufficient activities ({len(activities)}), trying VietMap places API for real locations")
+            try:
+                vietmap = get_vietmap_tools()
+            except Exception as e:
+                logger.warning(f"VietMap tools not available in ActivitiesTools: {e}")
+                vietmap = None
+
+            if vietmap:
+                try:
+                    type_keyword_map = {
+                        'beach': 'bãi biển',
+                        'museum': 'bảo tàng',
+                        'park': 'công viên',
+                        'temple': 'chùa',
+                        'mountain': 'núi',
+                        'amusement_park': 'khu vui chơi',
+                        'tour': 'khu du lịch',
+                    }
+
+                    base_query = 'địa điểm du lịch'
+                    if activity_type:
+                        base_query = type_keyword_map.get(activity_type, activity_type)
+
+                    vietmap_query = f"{base_query} {destination}".strip()
+
+                    vietmap_results = vietmap.search_places(
+                        query=vietmap_query,
+                        location=destination,
+                        radius=10,
+                        limit=15,
+                    )
+
+                    existing_names = {a.get('name', '').lower() for a in activities}
+
+                    for item in vietmap_results:
+                        name = (item.get('name') or item.get('address') or destination).strip()
+                        if not name:
+                            continue
+                        key = name.lower()
+                        if key in existing_names:
+                            continue
+
+                        category_raw = str(item.get('category') or '')
+                        category_lower = category_raw.lower()
+                        if 'restaurant' in category_lower or 'nhà hàng' in category_lower:
+                            continue
+                        if 'hotel' in category_lower or 'khách sạn' in category_lower:
+                            continue
+
+                        activity_type_mapped = self._map_category_to_type(category_raw)
+                        price_per_person = self.ACTIVITY_COSTS.get(activity_type_mapped, 0)
+                        duration_hours = self._estimate_duration(category_raw)
+
+                        activities.append({
+                            'name': name,
+                            'description': item.get('address') or name,
+                            'category': category_raw or 'sightseeing',
+                            'type': activity_type_mapped,
+                            'price_per_person': price_per_person,
+                            'duration_hours': duration_hours,
+                            'rating': item.get('rating') or 0,
+                            'address': item.get('address') or destination,
+                            'latitude': item.get('lat'),
+                            'longitude': item.get('lon'),
+                            'source': 'vietmap',
+                            'similarity_score': 0,
+                        })
+
+                        existing_names.add(key)
+
+                    if vietmap_results:
+                        logger.info(f"Found {len(vietmap_results)} activities from VietMap places API for {destination}")
+                except Exception as e:
+                    logger.warning(f"VietMap activities search failed for {destination}: {e}")
         
         # Lọc theo type và price
         if activity_type:
@@ -299,36 +373,56 @@ class ActivitiesTools:
         """
         total = 0
         for activity in activities:
+            # Ưu tiên price_per_person từ activity (giá thực tế từ database)
             price = activity.get('price_per_person', 0)
             
-            # Nếu không có giá, tính dựa trên loại hoạt động
+            # Nếu không có price_per_person, thử lấy từ 'price'
             if price == 0 or price is None:
+                price = activity.get('price', 0)
+            
+            # Nếu vẫn không có giá từ database, estimate dựa trên category
+            # (chỉ khi không có giá thực tế)
+            source = activity.get('source', '').lower()
+            if (price == 0 or price is None) and 'database' not in source:
+                # Chỉ estimate nếu không phải từ database
                 activity_type = activity.get('type', 'sightseeing')
                 price = self.ACTIVITY_COSTS.get(activity_type, 0)
-            
-            # Nếu vẫn là 0, kiểm tra category để tính giá vé
-            if price == 0:
-                category = activity.get('category', '').lower()
-                name = activity.get('name', '').lower()
                 
-                # Tính giá vé cho các địa điểm có phí
-                if any(keyword in category or keyword in name for keyword in ['bảo tàng', 'museum']):
-                    price = self.ACTIVITY_COSTS['museum']
-                elif any(keyword in category or keyword in name for keyword in ['lăng', 'đền', 'chùa', 'temple']):
-                    price = self.ACTIVITY_COSTS['temple']
-                elif any(keyword in category or keyword in name for keyword in ['vui chơi', 'amusement', 'công viên giải trí']):
-                    price = self.ACTIVITY_COSTS['amusement_park']
-                elif any(keyword in category or keyword in name for keyword in ['sở thú', 'zoo']):
-                    price = self.ACTIVITY_COSTS['zoo']
-                elif any(keyword in category or keyword in name for keyword in ['thủy cung', 'aquarium']):
-                    price = self.ACTIVITY_COSTS['aquarium']
-                elif any(keyword in category or keyword in name for keyword in ['show', 'biểu diễn']):
-                    price = self.ACTIVITY_COSTS['show']
-                elif any(keyword in category or keyword in name for keyword in ['tour', 'du lịch']):
-                    price = self.ACTIVITY_COSTS['tour']
-                # Các địa điểm như công viên, bãi biển, núi thường miễn phí
+                # Nếu vẫn là 0, kiểm tra category để tính giá vé
+                if price == 0:
+                    category = activity.get('category', '').lower()
+                    name = activity.get('name', '').lower()
+                    
+                    # Tính giá vé cho các địa điểm có phí
+                    if any(keyword in category or keyword in name for keyword in ['bảo tàng', 'museum']):
+                        price = self.ACTIVITY_COSTS['museum']
+                    elif any(keyword in category or keyword in name for keyword in ['lăng', 'đền', 'chùa', 'temple']):
+                        price = self.ACTIVITY_COSTS['temple']
+                    elif any(keyword in category or keyword in name for keyword in ['vui chơi', 'amusement', 'công viên giải trí']):
+                        price = self.ACTIVITY_COSTS['amusement_park']
+                    elif any(keyword in category or keyword in name for keyword in ['sở thú', 'zoo']):
+                        price = self.ACTIVITY_COSTS['zoo']
+                    elif any(keyword in category or keyword in name for keyword in ['thủy cung', 'aquarium']):
+                        price = self.ACTIVITY_COSTS['aquarium']
+                    elif any(keyword in category or keyword in name for keyword in ['show', 'biểu diễn']):
+                        price = self.ACTIVITY_COSTS['show']
+                    elif any(keyword in category or keyword in name for keyword in ['tour', 'du lịch']):
+                        price = self.ACTIVITY_COSTS['tour']
+                    # Các địa điểm như công viên, bãi biển, núi thường miễn phí
+            # Nếu từ database mà không có giá, giữ nguyên 0 (miễn phí)
             
+            # Tính tổng chi phí
             total += price * travelers
+        
+        # Đảm bảo có ít nhất một ước tính cơ bản nếu không có giá
+        # Nếu total = 0 và có activities, ước tính tối thiểu
+        if total == 0 and len(activities) > 0:
+            # Ước tính tối thiểu: 50,000 VNĐ/người/activity
+            estimated_per_activity = 50000
+            # Ước tính dựa trên số activities và số ngày (tối đa 2 activities/ngày)
+            num_activities_to_charge = min(len(activities), max(1, len(activities) // 2))
+            total = estimated_per_activity * travelers * num_activities_to_charge
+            logger.debug(f"No activity prices found, using minimum estimate: {total:,} VNĐ for {len(activities)} activities")
         
         return round(total)
     
@@ -356,8 +450,8 @@ class ActivitiesTools:
         # Ưu tiên SerpAPI (Google Search) - tìm nhà hàng thực tế
         if self.serpapi and self.serpapi.api_key:
             try:
-                # Xây dựng query dựa trên meal_type và cuisine
-                query_parts = ['nhà hàng']
+                # Xây dựng query cụ thể hơn để tránh kết quả không liên quan
+                query_parts = ['nhà hàng', 'quán ăn']
                 if cuisine:
                     query_parts.append(cuisine)
                 if meal_type:
@@ -368,7 +462,8 @@ class ActivitiesTools:
                     }
                     query_parts.append(meal_map.get(meal_type, meal_type))
                 
-                query = ' '.join(query_parts) if len(query_parts) > 1 else 'nhà hàng'
+                # Đảm bảo query có từ khóa về ẩm thực
+                query = ' '.join(query_parts) if len(query_parts) > 1 else 'nhà hàng quán ăn ẩm thực'
                 
                 serpapi_result = self.serpapi.search_restaurants(
                     destination, query=query, num_results=20
@@ -395,11 +490,31 @@ class ActivitiesTools:
                             except Exception as e:
                                 logger.debug(f"Tavily enrichment failed for {restaurant_name}: {e}")
                         
+                        # Extract price từ price_level nếu có
+                        price_level = restaurant.get('price_level', 'medium')
+                        price_vnd = 0
+                        
+                        # Nếu price_level là string có chứa giá (ví dụ: "100.000 - 200.000 VNĐ")
+                        if isinstance(price_level, str):
+                            import re
+                            # Tìm số trong price_level
+                            numbers = re.findall(r'\d+', price_level.replace('.', '').replace(',', ''))
+                            if numbers:
+                                try:
+                                    # Lấy số đầu tiên làm giá ước tính
+                                    price_vnd = int(numbers[0])
+                                    # Nếu có 2 số, lấy trung bình
+                                    if len(numbers) >= 2:
+                                        price_vnd = (int(numbers[0]) + int(numbers[1])) // 2
+                                except ValueError:
+                                    pass
+                        
                         restaurants.append({
                             'name': restaurant_name,
                             'description': description,
                             'cuisine': cuisine or 'Vietnamese',
-                            'price_range': restaurant.get('price_level', 'medium'),
+                            'price_range': price_level if isinstance(price_level, str) else 'medium',
+                            'price': price_vnd,  # Thêm giá ước tính
                             'rating': restaurant.get('rating', 0),
                             'reviews': restaurant.get('reviews', 0),
                             'address': restaurant.get('address', destination),

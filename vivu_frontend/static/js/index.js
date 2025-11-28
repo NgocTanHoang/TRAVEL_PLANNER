@@ -565,21 +565,6 @@
             container.addEventListener('wheel', (e) => {
                 if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
                     e.preventDefault();
-                    container.scrollLeft += e.deltaY;
-                }
-            }, { passive: false });
-        }
-
-        // Add to itinerary/favorites function
-        function addToItinerary(placeId) {
-            console.log('Add place to itinerary:', placeId);
-            alert(`Đã thêm địa điểm vào lịch trình! (Place ID: ${placeId})`);
-        }
-
-        // Show nearby place detail in right column (thay vì modal)
-        function showNearbyPlaceDetail(placeId) {
-            const detailPanel = document.getElementById('nearby-place-detail');
-            if (!detailPanel) return;
 
             // Remove selected class from all place bars
             document.querySelectorAll('.place-bar').forEach(bar => {
@@ -1367,79 +1352,8 @@
             return cookieValue;
         }
 
-        // User dropdown toggle
-        const userAvatarBtn = document.getElementById('user-avatar-btn');
-        const userDropdownMenu = document.getElementById('user-dropdown-menu');
-        if (userAvatarBtn && userDropdownMenu) {
-            userAvatarBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                userDropdownMenu.classList.toggle('show');
-                userAvatarBtn.setAttribute('aria-expanded', userDropdownMenu.classList.contains('show'));
-            });
-
-            // Close dropdown when clicking outside
-            document.addEventListener('click', (e) => {
-                if (!userAvatarBtn.contains(e.target) && !userDropdownMenu.contains(e.target)) {
-                    userDropdownMenu.classList.remove('show');
-                    userAvatarBtn.setAttribute('aria-expanded', 'false');
-                }
-            });
-        }
-
-        // Logout Modal Functions
-        function showLogoutModal() {
-            const modal = document.getElementById('logout-modal-overlay');
-            if (modal) {
-                modal.classList.add('show');
-                // Đóng dropdown menu khi mở modal
-                if (userDropdownMenu) {
-                    userDropdownMenu.classList.remove('show');
-                    if (userAvatarBtn) {
-                        userAvatarBtn.setAttribute('aria-expanded', 'false');
-                    }
-                }
-            }
-        }
-
-        function hideLogoutModal() {
-            const modal = document.getElementById('logout-modal-overlay');
-            if (modal) {
-                modal.classList.remove('show');
-            }
-        }
-
-        // Logout Modal Event Listeners
-        const logoutModalOverlay = document.getElementById('logout-modal-overlay');
-        const logoutModalCancel = document.getElementById('logout-modal-cancel');
-        const logoutForm = document.getElementById('logout-form');
-
-        if (logoutModalCancel) {
-            logoutModalCancel.addEventListener('click', hideLogoutModal);
-        }
-
-        // Submit logout form when confirm button is clicked
-        if (logoutForm) {
-            logoutForm.addEventListener('submit', function(e) {
-                // Form will submit naturally with POST method and CSRF token
-                // This ensures proper logout and redirect to homepage
-            });
-        }
-
-        // Close modal when clicking overlay
-        if (logoutModalOverlay) {
-            logoutModalOverlay.addEventListener('click', (e) => {
-                if (e.target === logoutModalOverlay) {
-                    hideLogoutModal();
-                }
-            });
-        }
-
-        // Close modal with ESC key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                hideLogoutModal();
-            }
-        });
+        // User dropdown and logout modal are handled by navbar.js
+        // No need to duplicate the code here
 
         // Load places when page loads
         if (document.readyState === 'loading') {

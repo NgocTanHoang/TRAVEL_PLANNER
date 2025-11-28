@@ -88,6 +88,18 @@
             box-shadow: var(--shadow-lg);
         }
 
+        /* Ensure logo tagline is always white on all pages */
+        .logo-tagline {
+            color: rgba(255, 255, 255, 1) !important;
+            opacity: 1 !important;
+        }
+
+        .logo:hover .logo-tagline,
+        .logo-tagline:hover {
+            color: rgba(255, 255, 255, 1) !important;
+            opacity: 1 !important;
+        }
+
         .nav-container {
             max-width: 1280px;
             margin: 0 auto;
@@ -142,10 +154,11 @@
         .nav-menu {
             display: flex;
             align-items: center;
-            gap: 2.5rem;
+            gap: 1.8rem;
             list-style: none;
             margin: 0;
             padding: 0;
+            flex-wrap: nowrap;
         }
 
         .nav-menu li {
@@ -156,33 +169,40 @@
             color: var(--color-text-light);
             text-decoration: none;
             font-weight: 500;
-            font-size: 0.95rem;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            padding: 0.45rem 1.1rem;
+            border-radius: 999px;
             position: relative;
             transition: var(--transition-fast);
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
         }
 
         .nav-link::before {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 2px;
-            background: var(--color-accent);
-            transition: width 0.3s;
+            display: none !important;
+        }
+
+        .nav-link {
+            transition: transform 0.2s ease !important;
+            animation: none !important;
         }
 
         .nav-link:hover {
             color: var(--color-accent);
             background: rgba(218, 165, 32, 0.1);
+            transform: scale(0.95) !important;
+            animation: none !important;
+        }
+
+        .nav-link:active {
+            transform: scale(0.92) !important;
+            animation: none !important;
         }
 
         .nav-link:hover::before {
-            width: 80%;
+            display: none !important;
         }
 
         .nav-link.active {
@@ -565,217 +585,129 @@
                 font-size: 1.1rem;
             }
         }
+
+        /* ===================================
+         * LOGOUT MODAL STYLES
+         * =================================== */
+        .logout-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(var(--color-primary-rgb), 0.7);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .logout-modal-overlay.show {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .logout-modal {
+            background: var(--color-white);
+            border-radius: 16px;
+            padding: 0;
+            max-width: 450px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(var(--color-primary-rgb), 0.3);
+            animation: slideUp 0.3s ease;
+            overflow: hidden;
+            border: 2px solid var(--color-primary);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logout-modal-header {
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+            color: var(--color-white);
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logout-modal-icon {
+            font-size: 2rem;
+        }
+
+        .logout-modal-header h3 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .logout-modal-body {
+            padding: 1.5rem;
+            color: var(--color-text-dark);
+        }
+
+        .logout-modal-body p {
+            font-size: 1rem;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .logout-modal-actions {
+            padding: 0 1.5rem 1.5rem;
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        .logout-modal-btn {
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .logout-modal-btn-cancel {
+            background: var(--color-gray-200);
+            color: var(--color-text-dark);
+        }
+
+        .logout-modal-btn-cancel:hover {
+            background: var(--color-gray-300);
+        }
+
+        .logout-modal-btn-confirm {
+            background: var(--color-secondary);
+            color: white;
+        }
+
+        .logout-modal-btn-confirm:hover {
+            background: var(--color-secondary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 131, 143, 0.3);
+        }
     </style>
 </head>
 <body>
     <!-- SHARED NAVBAR -->
-    <nav class="navbar" id="navbar" role="navigation" aria-label="Main navigation">
-        <div class="nav-container">
-            <a href="/" class="logo" aria-label="Vi Vu Home">
-                <div class="logo-badge">
-                    <img src="{% static 'img/logo_crop-Photoroom.png' %}" alt="Vi Vu Logo">
-                </div>
-                <h1 class="logo-brand">Vi Vu</h1>
-            </a>
-            
-            <ul class="nav-menu" role="menubar">
-                {% block nav_items %}
-                    <li role="none">
-                        <a href="/" class="nav-link" role="menuitem">Trang chủ</a>
-                    </li>
-                    <li role="none" class="search-dropdown">
-                        <a href="#" class="nav-link search-toggle" role="menuitem" onclick="event.preventDefault(); return false;">🔍 Tìm kiếm</a>
-                        <div class="search-dropdown-menu" role="menu">
-                            <div class="search-dropdown-header">Tìm kiếm du lịch</div>
-                            
-                            <div class="search-dropdown-category">
-                                <div class="search-dropdown-category-title">📍 Địa điểm & Tham quan</div>
-                                <div class="search-dropdown-items">
-                                    <a href="/places/search/" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🗺️</span>
-                                        <span>Tìm kiếm địa điểm</span>
-                                    </a>
-                                    <a href="/places/search/?loai_dia_diem=di_tich_lich_su" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🏛️</span>
-                                        <span>Di tích lịch sử</span>
-                                    </a>
-                                    <a href="/places/search/?loai_dia_diem=thang_canh" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🏞️</span>
-                                        <span>Thắng cảnh</span>
-                                    </a>
-                                    <a href="/places/search/?loai_dia_diem=giai_tri" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🎢</span>
-                                        <span>Khu vui chơi</span>
-                                    </a>
-                                </div>
-                            </div>
-                            
-                            <div class="search-dropdown-category">
-                                <div class="search-dropdown-category-title">🏨 Lưu trú</div>
-                                <div class="search-dropdown-items">
-                                    <a href="/places/search/?loai_dia_diem=khach_san" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🏨</span>
-                                        <span>Tìm khách sạn</span>
-                                    </a>
-                                    <a href="/places/search/?loai_dia_diem=homestay" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🏡</span>
-                                        <span>Homestay</span>
-                                    </a>
-                                    <a href="/places/search/?loai_dia_diem=resort" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🏖️</span>
-                                        <span>Resort</span>
-                                    </a>
-                                </div>
-                            </div>
-                            
-                            <div class="search-dropdown-category">
-                                <div class="search-dropdown-category-title">🍽️ Ăn uống</div>
-                                <div class="search-dropdown-items">
-                                    <a href="/places/search/?loai_dia_diem=nha_hang" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🍜</span>
-                                        <span>Nhà hàng</span>
-                                    </a>
-                                    <a href="/places/search/?loai_dia_diem=cafe" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">☕</span>
-                                        <span>Quán cafe</span>
-                                    </a>
-                                    <a href="/places/search/?loai_dia_diem=bar" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🍻</span>
-                                        <span>Bar & Pub</span>
-                                    </a>
-                                    <a href="/places/search/?loai_dia_diem=dac_san" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🥘</span>
-                                        <span>Đặc sản địa phương</span>
-                                    </a>
-                                </div>
-                            </div>
-                            
-                            <div class="search-dropdown-category">
-                                <div class="search-dropdown-category-title">🛍️ Mua sắm</div>
-                                <div class="search-dropdown-items">
-                                    <a href="/places/search/?loai_dia_diem=trung_tam_thuong_mai" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🏬</span>
-                                        <span>Trung tâm thương mại</span>
-                                    </a>
-                                    <a href="/places/search/?loai_dia_diem=cho" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🛒</span>
-                                        <span>Chợ địa phương</span>
-                                    </a>
-                                    <a href="/places/search/?loai_dia_diem=qua_luu_niem" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🎁</span>
-                                        <span>Quà lưu niệm</span>
-                                    </a>
-                                </div>
-                            </div>
-                            
-                            <div class="search-dropdown-category">
-                                <div class="search-dropdown-category-title">✈️ Di chuyển</div>
-                                <div class="search-dropdown-items">
-                                    <a href="/travel-plan/" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">✈️</span>
-                                        <span>Tìm chuyến bay</span>
-                                    </a>
-                                    <a href="/travel-plan/" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🚂</span>
-                                        <span>Vé tàu hỏa</span>
-                                    </a>
-                                    <a href="/travel-plan/" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🚌</span>
-                                        <span>Vé xe khách</span>
-                                    </a>
-                                    <a href="/travel-plan/" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🚗</span>
-                                        <span>Thuê xe</span>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-                    <li role="none">
-                        <a href="/ai-chat/" class="nav-link" role="menuitem">🤖 AI Chat Assistant</a>
-                    </li>
-                {% endblock %}
-                
-                {% if user.is_authenticated %}
-                    <!-- User Avatar Dropdown -->
-                    <li role="none" class="user-dropdown">
-                        <button class="user-avatar-btn" id="user-avatar-btn" aria-label="User menu" aria-expanded="false">
-                            <span class="user-avatar">
-                                {% if user.anhDaiDien %}
-                                    <img src="{{ user.anhDaiDien }}" alt="{{ user.hoTen|default:user.username }}">
-                                {% else %}
-                                    <span class="avatar-initials">{{ user.username|first|upper }}</span>
-                                {% endif %}
-                            </span>
-                        </button>
-                        <ul class="user-dropdown-menu" id="user-dropdown-menu" role="menu">
-                            <li role="none">
-                                <a href="/accounts/profile/" class="dropdown-item" role="menuitem">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                        <circle cx="12" cy="7" r="4"></circle>
-                                    </svg>
-                                    Thông tin cá nhân
-                                </a>
-                            </li>
-                            <li role="none">
-                                <a href="/accounts/change-password/" class="dropdown-item" role="menuitem">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <circle cx="12" cy="12" r="3"></circle>
-                                    </svg>
-                                    Đổi mật khẩu
-                                </a>
-                            </li>
-                            <li role="none">
-                                <a href="/accounts/search-history/" class="dropdown-item" role="menuitem">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <circle cx="11" cy="11" r="8"></circle>
-                                        <path d="M21 21l-4.35-4.35"></path>
-                                    </svg>
-                                    Lịch sử tìm kiếm
-                                </a>
-                            </li>
-                            <li role="none">
-                                <a href="/accounts/itineraries/" class="dropdown-item" role="menuitem">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                        <line x1="16" y1="2" x2="16" y2="6"></line>
-                                        <line x1="8" y1="2" x2="8" y2="6"></line>
-                                        <line x1="3" y1="10" x2="21" y2="10"></line>
-                                    </svg>
-                                    Lịch trình đã tạo
-                                </a>
-                            </li>
-                            <li role="separator" class="dropdown-divider"></li>
-                            <li role="none">
-                                <a href="#" id="dropdown-logout-link" class="dropdown-item dropdown-item-danger" role="menuitem">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                                        <polyline points="16 17 21 12 16 7"></polyline>
-                                        <line x1="21" y1="12" x2="9" y2="12"></line>
-                                    </svg>
-                                    Đăng xuất
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                {% else %}
-                    <li role="none">
-                        <a href="/accounts/login/" class="nav-link" role="menuitem">Đăng nhập</a>
-                    </li>
-                    <li role="none">
-                        <a href="/accounts/signup/" class="nav-link" role="menuitem">Đăng ký</a>
-                    </li>
-                {% endif %}
-            </ul>
-            
-            <button class="mobile-menu-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-            </button>
-        </div>
-    </nav>
+    {% include 'includes/navbar.html' %}
 
     <!-- PAGE CONTENT -->
     {% block content %}{% endblock %}
@@ -785,15 +717,22 @@
 
     <!-- LOGOUT MODAL -->
     {% if user.is_authenticated %}
-    <div class="modal-overlay" id="logout-modal" role="dialog" aria-modal="true" aria-labelledby="logout-title" style="display:none;">
-        <div class="modal-card">
-            <h4 class="modal-title" id="logout-title">Đăng xuất</h4>
-            <p class="modal-text">Bạn có chắc chắn muốn đăng xuất khỏi Vi Vu?</p>
-            <div class="modal-actions">
-                <button class="btn-outline" id="logout-cancel">Không</button>
-                <form id="logout-form" method="post" action="/accounts/logout/" style="margin:0;">
+    <div class="logout-modal-overlay" id="logout-modal-overlay" style="display:none;">
+        <div class="logout-modal">
+            <div class="logout-modal-header">
+                <div class="logout-modal-icon">
+                    <i class="fas fa-sign-out-alt"></i>
+                </div>
+                <h3>Xác nhận đăng xuất</h3>
+            </div>
+            <div class="logout-modal-body">
+                <p>Bạn có chắc chắn muốn đăng xuất khỏi tài khoản của mình không?</p>
+            </div>
+            <div class="logout-modal-actions">
+                <button class="logout-modal-btn logout-modal-btn-cancel" id="logout-modal-cancel">Không</button>
+                <form id="logout-form" method="post" action="/accounts/logout/" style="display: inline;">
                     {% csrf_token %}
-                    <button class="btn-solid" type="submit">Có, đăng xuất</button>
+                    <button type="submit" class="logout-modal-btn logout-modal-btn-confirm" id="logout-modal-confirm">Đăng xuất</button>
                 </form>
             </div>
         </div>
@@ -801,149 +740,7 @@
     {% endif %}
 
     <!-- SHARED SCRIPTS -->
-    <script>
-        /* ===================================
-         * NAVBAR FUNCTIONALITY
-         * =================================== */
-        
-        // Navbar scroll effect
-        const navbar = document.getElementById('navbar');
-        if (navbar) {
-            window.addEventListener('scroll', () => {
-                const currentScroll = window.pageYOffset;
-                if (currentScroll > 50) {
-                    navbar.classList.add('scrolled');
-                } else {
-                    navbar.classList.remove('scrolled');
-                }
-            });
-        }
-
-        // Mobile menu toggle
-        const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
-        const navMenu = document.querySelector('.nav-menu');
-        
-        if (mobileMenuToggle && navMenu) {
-            mobileMenuToggle.addEventListener('click', () => {
-                navMenu.classList.toggle('mobile-open');
-                const isExpanded = navMenu.classList.contains('mobile-open');
-                mobileMenuToggle.setAttribute('aria-expanded', isExpanded);
-            });
-        }
-
-        // Search Dropdown Toggle (click và hover)
-        const searchDropdown = document.querySelector('.search-dropdown');
-        const searchToggle = document.querySelector('.search-toggle');
-        const searchDropdownMenu = document.querySelector('.search-dropdown-menu');
-        
-        if (searchToggle && searchDropdownMenu) {
-            // Click để toggle dropdown
-            searchToggle.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                searchDropdown.classList.toggle('active');
-            });
-            
-            // Đóng dropdown khi click bên ngoài
-            document.addEventListener('click', function(e) {
-                if (searchDropdown && !searchDropdown.contains(e.target)) {
-                    searchDropdown.classList.remove('active');
-                }
-            });
-            
-            // Hover vào dropdown để giữ mở
-            searchDropdown.addEventListener('mouseenter', function() {
-                searchDropdown.classList.add('active');
-            });
-            
-            searchDropdown.addEventListener('mouseleave', function() {
-                // Chỉ đóng khi không hover (hover tự động được CSS xử lý)
-                setTimeout(() => {
-                    if (!searchDropdown.matches(':hover')) {
-                        searchDropdown.classList.remove('active');
-                    }
-                }, 200);
-            });
-        }
-
-        // User Avatar Dropdown Toggle
-        const userAvatarBtn = document.getElementById('user-avatar-btn');
-        const userDropdownMenu = document.getElementById('user-dropdown-menu');
-        
-        if (userAvatarBtn && userDropdownMenu) {
-            userAvatarBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                const isExpanded = userDropdownMenu.classList.contains('show');
-                
-                if (isExpanded) {
-                    userDropdownMenu.classList.remove('show');
-                    userAvatarBtn.setAttribute('aria-expanded', 'false');
-                } else {
-                    userDropdownMenu.classList.add('show');
-                    userAvatarBtn.setAttribute('aria-expanded', 'true');
-                }
-            });
-            
-            // Close dropdown when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!userAvatarBtn.contains(e.target) && !userDropdownMenu.contains(e.target)) {
-                    userDropdownMenu.classList.remove('show');
-                    userAvatarBtn.setAttribute('aria-expanded', 'false');
-                }
-            });
-            
-            // Close dropdown when clicking on menu items
-            const dropdownItems = userDropdownMenu.querySelectorAll('.dropdown-item');
-            dropdownItems.forEach(item => {
-                if (!item.id.includes('logout')) {
-                    item.addEventListener('click', function() {
-                        userDropdownMenu.classList.remove('show');
-                        userAvatarBtn.setAttribute('aria-expanded', 'false');
-                    });
-                }
-            });
-        }
-        
-        // Logout modal logic
-        const logoutLink = document.getElementById('logout-link');
-        const dropdownLogoutLink = document.getElementById('dropdown-logout-link');
-        const logoutModal = document.getElementById('logout-modal');
-        const logoutCancel = document.getElementById('logout-cancel');
-        
-        if (logoutLink && logoutModal && logoutCancel) {
-            logoutLink.addEventListener('click', function(e){ 
-                e.preventDefault(); 
-                logoutModal.style.display = 'flex'; 
-            });
-            logoutCancel.addEventListener('click', function(){ 
-                logoutModal.style.display = 'none'; 
-            });
-            logoutModal.addEventListener('click', function(e){ 
-                if (e.target === logoutModal) logoutModal.style.display = 'none'; 
-            });
-        }
-        
-        if (dropdownLogoutLink && logoutModal && logoutCancel) {
-            dropdownLogoutLink.addEventListener('click', function(e){ 
-                e.preventDefault(); 
-                logoutModal.style.display = 'flex';
-                if (userDropdownMenu) {
-                    userDropdownMenu.classList.remove('show');
-                }
-                if (userAvatarBtn) {
-                    userAvatarBtn.setAttribute('aria-expanded', 'false');
-                }
-            });
-        }
-
-        // AI Chat Assistant Function - Redirect to AI Chat page
-        function openAIChat() {
-            window.location.href = '/ai-chat/';
-        }
-        
-        // Make openAIChat globally available
-        window.openAIChat = openAIChat;
-    </script>
+    <script src="{% static 'js/navbar.js' %}"></script>
     
     {% block extra_scripts %}{% endblock %}
 </body>

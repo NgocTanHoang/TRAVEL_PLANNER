@@ -80,43 +80,57 @@ class AccommodationTools:
         """
         hotels = []
         
-        # Ưu tiên SerpAPI (Google Hotels) - chính xác nhất
+        # Danh sách các API theo thứ tự ưu tiên
+        api_chain = []
+        
+        # Ưu tiên 1: SerpAPI (Google Hotels) - chính xác nhất
         if self.serpapi and self.serpapi.api_key:
+            api_chain.append(('serpapi', self._search_via_serpapi))
+        
+        # Ưu tiên 2: Travelpayouts API
+        if self.travelpayouts_token:
+            api_chain.append(('travelpayouts', self._search_via_api))
+        
+        # Thử từng API theo thứ tự ưu tiên
+        last_error = None
+        for api_name, api_func in api_chain:
             try:
-                serpapi_result = self.serpapi.search_hotels(
-                    city, check_in, check_out, guests
-                )
+                logger.info(f"Trying {api_name} for hotels in {city}")
+                api_hotels = api_func(city, check_in, check_out, guests, rooms)
                 
-                if serpapi_result.get('status') == 'success' and serpapi_result.get('hotels'):
-                    # Convert format từ SerpAPI sang format chuẩn
-                    for hotel in serpapi_result['hotels']:
-                        hotels.append({
-                            'name': hotel.get('name', 'Unknown'),
-                            'price_per_night': hotel.get('price_per_night', 0),
-                            'stars': self._extract_stars_from_name(hotel.get('name', '')),
-                            'rating': hotel.get('rating', 0),
-                            'reviews': hotel.get('reviews', 0),
-                            'address': hotel.get('address', city),
-                            'image_url': hotel.get('thumbnail', ''),
-                            'link': hotel.get('link', ''),
-                            'amenities': hotel.get('amenities', []),
-                            'source': 'serpapi'
-                        })
-                    logger.info(f"Found {len(hotels)} hotels from SerpAPI")
+                if api_hotels and len(api_hotels) > 0:
+                    hotels.extend(api_hotels)
+                    logger.info(f"✓ {api_name} found {len(api_hotels)} hotels")
+                    
+                    # Nếu đã có đủ kết quả (>= 5), không cần thử API khác
+                    if len(hotels) >= 5:
+                        break
+                else:
+                    logger.warning(f"✗ {api_name} returned no hotels, trying next API...")
+                    
+            except requests.exceptions.RequestException as e:
+                logger.warning(f"✗ {api_name} network error: {e}, trying next API...")
+                last_error = e
+                continue
             except Exception as e:
-                logger.warning(f"SerpAPI hotels search failed: {e}")
+                logger.warning(f"✗ {api_name} error: {e}, trying next API...")
+                last_error = e
+                continue
         
-        # Fallback: Travelpayouts API
-        if len(hotels) < 5 and self.travelpayouts_token:
-            api_hotels = self._search_via_api(city, check_in, check_out, guests, rooms)
-            hotels.extend(api_hotels)
-        
-        # Fallback cuối: Từ fallback data
+        # Fallback cuối: Từ fallback data nếu vẫn chưa đủ
         if len(hotels) < 5:
-            fallback_hotels = self._search_fallback_data(
-                city, min_price, max_price, stars
-            )
-            hotels.extend(fallback_hotels)
+            try:
+                logger.info(f"Using fallback data for {city}")
+                fallback_hotels = self._search_fallback_data(
+                    city, min_price, max_price, stars
+                )
+                hotels.extend(fallback_hotels)
+                logger.info(f"Fallback data added {len(fallback_hotels)} hotels")
+            except Exception as e:
+                logger.warning(f"Fallback data search failed: {e}")
+        
+        if len(hotels) == 0 and last_error:
+            logger.error(f"All hotel APIs failed for {city}. Last error: {last_error}")
         
         # Lọc theo tiêu chí
         hotels = self._filter_hotels(hotels, min_price, max_price, stars)
@@ -126,6 +140,55 @@ class AccommodationTools:
         
         return hotels[:20]  # Trả về tối đa 20 kết quả
     
+    def _search_via_serpapi(
+        self,
+        city: str,
+        check_in: str,
+        check_out: str,
+        guests: int,
+        rooms: int
+    ) -> List[Dict[str, Any]]:
+        """
+        Tìm kiếm qua SerpAPI (Google Hotels)
+        
+        Raises:
+            Exception: Nếu API call thất bại
+        """
+        if not self.serpapi or not self.serpapi.api_key:
+            raise Exception("SerpAPI not configured")
+        
+        serpapi_result = self.serpapi.search_hotels(
+            city, check_in, check_out, guests
+        )
+        
+        if serpapi_result.get('status') == 'success' and serpapi_result.get('hotels'):
+            hotels = []
+            # Convert format từ SerpAPI sang format chuẩn
+            for hotel in serpapi_result['hotels']:
+                hotels.append({
+                    'name': hotel.get('name', 'Unknown'),
+                    'price_per_night': hotel.get('price_per_night', 0),
+                    'stars': self._extract_stars_from_name(hotel.get('name', '')),
+                    'rating': hotel.get('rating', 0),
+                    'reviews': hotel.get('reviews', 0),
+                    'address': hotel.get('address', city),
+                    'image_url': hotel.get('thumbnail', ''),
+                    'images': hotel.get('images', []),  # Tất cả ảnh
+                    'link': hotel.get('link', ''),
+                    'website': hotel.get('website', ''),
+                    'phone': hotel.get('phone', ''),
+                    'email': hotel.get('email', ''),
+                    'description': hotel.get('description', ''),
+                    'amenities': hotel.get('amenities', []),
+                    'hotel_class': hotel.get('hotel_class', ''),
+                    'latitude': hotel.get('latitude'),
+                    'longitude': hotel.get('longitude'),
+                    'source': 'serpapi'
+                })
+            return hotels
+        
+        raise Exception(f"SerpAPI returned no hotels: {serpapi_result.get('error', 'Unknown error')}")
+    
     def _search_via_api(
         self,
         city: str,
@@ -134,9 +197,18 @@ class AccommodationTools:
         guests: int,
         rooms: int
     ) -> List[Dict[str, Any]]:
-        """Tìm kiếm qua Travelpayouts API (Hotellook)"""
-        # TODO: Implement actual API call
-        return []
+        """
+        Tìm kiếm qua Travelpayouts API (Hotellook)
+        
+        Raises:
+            Exception: Nếu API call thất bại
+        """
+        if not self.travelpayouts_token:
+            raise Exception("Travelpayouts token not configured")
+        
+        # TODO: Implement actual Travelpayouts API call
+        # Hiện tại raise exception để fallback sang fallback data
+        raise Exception("Travelpayouts API not implemented yet")
     
     def _search_fallback_data(
         self,

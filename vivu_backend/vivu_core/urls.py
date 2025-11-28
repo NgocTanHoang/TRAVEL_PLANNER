@@ -47,13 +47,16 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('apps.users.urls')),
     
+    # Places
+    path('places/', include('apps.places.urls')),
+    
     # API v1
     path('api/v1/', include('apps.api.urls')),
     
     # API Documentation
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]
 
 # Serve static and media files in development

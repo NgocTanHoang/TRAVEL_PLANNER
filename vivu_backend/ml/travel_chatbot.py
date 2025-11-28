@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 # LangChain imports
 try:
     from langchain_openai import ChatOpenAI
-    from langchain_google_genai import ChatGoogleGenerativeAI
     from langchain.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
     from langchain.chains import LLMChain
     from langchain.memory import ConversationBufferMemory
@@ -45,7 +44,7 @@ class TravelChatbot:
     ):
         """
         Args:
-            llm_provider: 'openai', 'gemini', hoặc 'llama'
+            llm_provider: 'openai' hoặc 'llama'
             model_name: Tên model cụ thể
             temperature: Temperature cho LLM
         """
@@ -58,11 +57,14 @@ class TravelChatbot:
         # Initialize LLM
         self._initialize_llm(model_name)
         
-        # Initialize memory
-        self.memory = ConversationBufferMemory(
-            memory_key="chat_history",
-            return_messages=True
-        )
+        # Initialize memory (only if LangChain is available)
+        if LANGCHAIN_AVAILABLE:
+            self.memory = ConversationBufferMemory(
+                memory_key="chat_history",
+                return_messages=True
+            )
+        else:
+            self.memory = None
         
         # Initialize Vector DB for RAG
         try:
@@ -72,11 +74,48 @@ class TravelChatbot:
             logger.warning(f"Vector DB not available: {e}")
     
     def _initialize_llm(self, model_name: Optional[str]):
-        """Initialize LLM based on provider"""
+        """Initialize LLM với fallback: Groq -> GPT OSS 120B -> OpenAI -> LLaMA"""
         if not LANGCHAIN_AVAILABLE:
             logger.error("LangChain not available")
             return
         
+        # Priority 1: Try Groq
+        if self.llm_provider == 'groq' or (self.llm_provider == 'openai' and os.getenv('GROQ_API_KEY')):
+            try:
+                groq_api_key = os.getenv('GROQ_API_KEY')
+                if groq_api_key:
+                    from langchain_groq import ChatGroq
+                    groq_model = model_name or os.getenv('GROQ_MODEL', 'llama-3.1-70b-versatile')
+                    self.llm = ChatGroq(
+                        model=groq_model,
+                        temperature=self.temperature,
+                        groq_api_key=groq_api_key
+                    )
+                    logger.info(f"Initialized Groq LLM: {groq_model}")
+                    return
+            except ImportError:
+                logger.debug("langchain-groq not available, trying fallback")
+            except Exception as e:
+                logger.warning(f"Failed to initialize Groq LLM: {e}, trying fallback")
+        
+        # Priority 2: Try GPT OSS 120B (fallback model)
+        if self.llm_provider == 'openai' or self.llm_provider == 'fallback':
+            try:
+                fallback_model = os.getenv('FALLBACK_MODEL', 'gpt-oss-120b')
+                openai_api_key = os.getenv('OPENAI_API_KEY')
+                if openai_api_key and fallback_model:
+                    from langchain_openai import ChatOpenAI
+                    self.llm = ChatOpenAI(
+                        model=fallback_model,
+                        temperature=self.temperature,
+                        api_key=openai_api_key
+                    )
+                    logger.info(f"Initialized Fallback LLM: {fallback_model}")
+                    return
+            except Exception as e:
+                logger.warning(f"Failed to initialize fallback LLM: {e}, trying OpenAI")
+        
+        # Priority 3: Try OpenAI
         if self.llm_provider == 'openai':
             api_key = os.getenv('OPENAI_API_KEY')
             if not api_key:
@@ -91,20 +130,7 @@ class TravelChatbot:
             )
             logger.info(f"Initialized OpenAI LLM: {model}")
         
-        elif self.llm_provider == 'gemini':
-            api_key = os.getenv('GEMINI_API_KEY')
-            if not api_key:
-                logger.error("GEMINI_API_KEY not found")
-                return
-            
-            model = model_name or 'gemini-pro'
-            self.llm = ChatGoogleGenerativeAI(
-                model=model,
-                temperature=self.temperature,
-                google_api_key=api_key
-            )
-            logger.info(f"Initialized Gemini LLM: {model}")
-        
+        # Priority 4: Try LLaMA (local)
         elif self.llm_provider == 'llama':
             if not LLAMA_AVAILABLE:
                 logger.error("LlamaCpp not available")

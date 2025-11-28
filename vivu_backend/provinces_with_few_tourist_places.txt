@@ -1,0 +1,35 @@
+DANH SÁCH CÁC TỈNH CÓ ÍT ĐỊA ĐIỂM THAM QUAN (1-4 địa điểm)
+================================================================================
+
+Tỉnh Bến Tre (ID: 6)
+  - Địa điểm tham quan: 2 (Địa danh: 2, Giải trí: 0)
+  - Tổng địa điểm: 8 (Nhà hàng: 0, Khách sạn: 6)
+
+Tỉnh Trà Vinh (ID: 54)
+  - Địa điểm tham quan: 1 (Địa danh: 1, Giải trí: 0)
+  - Tổng địa điểm: 8 (Nhà hàng: 0, Khách sạn: 7)
+
+Tỉnh Bình Phước (ID: 9)
+  - Địa điểm tham quan: 1 (Địa danh: 1, Giải trí: 0)
+  - Tổng địa điểm: 9 (Nhà hàng: 4, Khách sạn: 1)
+
+Tỉnh Cà Mau (ID: 11)
+  - Địa điểm tham quan: 4 (Địa danh: 4, Giải trí: 0)
+  - Tổng địa điểm: 12 (Nhà hàng: 5, Khách sạn: 2)
+
+Tỉnh Điện Biên (ID: 15)
+  - Địa điểm tham quan: 1 (Địa danh: 1, Giải trí: 0)
+  - Tổng địa điểm: 27 (Nhà hàng: 1, Khách sạn: 25)
+
+Tỉnh Hậu Giang (ID: 25)
+  - Địa điểm tham quan: 3 (Địa danh: 3, Giải trí: 0)
+  - Tổng địa điểm: 28 (Nhà hàng: 4, Khách sạn: 19)
+
+Tỉnh Đồng Nai (ID: 16)
+  - Địa điểm tham quan: 2 (Địa danh: 2, Giải trí: 0)
+  - Tổng địa điểm: 47 (Nhà hàng: 5, Khách sạn: 38)
+
+Tỉnh Bắc Ninh (ID: 5)
+  - Địa điểm tham quan: 4 (Địa danh: 4, Giải trí: 0)
+  - Tổng địa điểm: 83 (Nhà hàng: 0, Khách sạn: 75)
+

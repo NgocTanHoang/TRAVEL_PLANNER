@@ -27,7 +27,8 @@ from .travel_plan_step_views import (
     Step1LocationSelectionView,
     Step2TravelInfoView,
     Step3BudgetSuggestionView,
-    Step4ConfirmAndPlanView
+    Step4ConfirmAndPlanView,
+    Step4SaveItineraryView
 )
 
 logger = logging.getLogger(__name__)
@@ -226,10 +227,27 @@ class ItineraryListView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
-        return LichTrinh.objects.filter(maNguoiDung=self.request.user)
+        return LichTrinh.objects.filter(maNguoiDung=self.request.user).order_by('-ngayTao')
     
     def perform_create(self, serializer):
         serializer.save(maNguoiDung=self.request.user)
+
+
+class RecentItinerariesView(APIView):
+    """Get recent itineraries for dropdown (limit 5)"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        limit = int(request.query_params.get('limit', 5))
+        itineraries = LichTrinh.objects.filter(
+            maNguoiDung=request.user
+        ).order_by('-ngayTao')[:limit]
+        
+        serializer = LichTrinhSerializer(itineraries, many=True)
+        return Response({
+            'status': 'success',
+            'itineraries': serializer.data
+        }, status=status.HTTP_200_OK)
 
 
 class ItineraryDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -1002,4 +1020,5 @@ class ReverseGeocodeView(APIView):
                 'error': str(e),
                 'location': 'Vị trí không xác định'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 

@@ -274,6 +274,65 @@ class TravelPlanCreateView(APIView):
                     'error': result_state.get('error', 'Unknown error occurred')
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
+            # Save itinerary to database if user is authenticated
+            saved_itinerary = None
+            if request.user.is_authenticated:
+                try:
+                    from utils.itinerary_saver import save_itinerary_to_database
+                    saved_itinerary = save_itinerary_to_database(
+                        itinerary_data=result_state.get('itinerary', {}),
+                        user=request.user,
+                        destination=validated_data.get('destination'),
+                        origin=validated_data.get('origin'),
+                        start_date=validated_data['start_date'].strftime('%Y-%m-%d'),
+                        days=validated_data['days'],
+                        travelers=validated_data['travelers'],
+                        travel_style=validated_data.get('travel_style', 'standard'),
+                        total_cost=result_state.get('budget', {}).get('total_vnd', 0)
+                    )
+                    if saved_itinerary:
+                        logger.info(f"Saved itinerary {saved_itinerary.maLichTrinh} to database")
+                except Exception as e:
+                    logger.error(f"Error saving itinerary to database: {e}", exc_info=True)
+                    # Don't fail the request if saving fails
+            
+            # Format response
+            response_data = {
+                'status': 'success',
+                'plan': {
+                    'transport': result_state.get('transport', {}),
+                    'flight': result_state.get('flight'),
+                    'hotels': result_state.get('hotels', []),
+                    'selected_hotel': result_state.get('selected_hotel'),
+                    'activities': result_state.get('activities', []),
+                    'restaurants': result_state.get('restaurants', []),
+                    'budget': result_state.get('budget', {}),
+                    'itinerary': result_state.get('itinerary', {}),
+                },
+                'costs': {
+                    'transport': result_state.get('transport_cost', 0),
+                    'accommodation': result_state.get('accommodation_cost', 0),
+                    'activities': result_state.get('activities_cost', 0),
+                    'dining': result_state.get('dining_cost', 0),
+                    'total': result_state.get('budget', {}).get('total_vnd', 0),
+                },
+                'saved_itinerary_id': saved_itinerary.maLichTrinh if saved_itinerary else None,
+                'timestamp': timezone.now()
+            }
+            
+            response_serializer = TravelPlanResponseSerializer(response_data)
+            
+            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+            
+        except ValidationError as e:
+            return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"Error creating travel plan: {e}", exc_info=True)
+            return Response({
+                'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
             # Format response
             response_data = {
                 'status': 'success',

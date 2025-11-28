@@ -692,10 +692,7 @@ async function handleStep2Submit(e) {
                 travel_style: travelStyle
             };
             displayStep2Result(data);
-            setTimeout(() => {
-                goToStep(3);
-                loadStep3();
-            }, 1000);
+            // Không tự động chuyển sang Step 3, đợi user chọn phương tiện và click "Tiếp tục"
         } else {
             // Backend validation error or other error
             showErrorModal('Lỗi: ' + (data.error || 'Không thể xử lý yêu cầu'));
@@ -720,17 +717,74 @@ function displayStep2Result(data) {
     
     const transport = data.transport || {};
     const options = transport.options || [];
+    const distance_km = transport.distance_km || 0;
+    const cheapest = transport.cheapest || null;
+    const fastest = transport.fastest || null;
     
+    // Tạo danh sách phương tiện để user chọn
     let optionsHTML = '';
     if (options.length > 0) {
-        optionsHTML = '<div class="transport-options">';
-        options.forEach(opt => {
+        optionsHTML = '<div class="transport-options" style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;">';
+        options.forEach((opt, index) => {
+            const method = opt.method || '';
+            const methodName = opt.method_name || opt.name || method;
+            // Tính cost: nếu có cost_vnd thì dùng, nếu không thì tính từ cost_per_person
+            let cost = opt.cost_vnd || 0;
+            if (cost === 0 && opt.cost_per_person) {
+                cost = opt.cost_per_person * (workflowState.step2Data.travelers || 1);
+            }
+            const duration = opt.duration_minutes || 0;
+            const hours = Math.floor(duration / 60);
+            const minutes = duration % 60;
+            const durationText = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+            
+            // Icon mapping
+            const iconMap = {
+                'flight': '✈️',
+                'train': '🚂',
+                'long_distance_bus': '🚌',
+                'city_bus': '🚌',
+                'taxi': '🚕',
+                'grab': '🚗',
+                'gojek': '🏍️',
+                'be': '🏍️',
+                'motorbike': '🏍️',
+                'car': '🚗',
+                'greencar': '🚗',
+                'luxurycar': '🚗',
+                'walking': '🚶',
+                'bicycle': '🚴'
+            };
+            const icon = iconMap[method] || '🚗';
+            
+            // Check if this is the cheapest or fastest
+            const isCheapest = cheapest && cheapest.method === method;
+            const isFastest = fastest && fastest.method === method;
+            
             optionsHTML += `
-                <div class="transport-option">
-                    <div class="transport-option-icon">${opt.icon}</div>
-                    <div><strong>${opt.name}</strong></div>
-                    <div style="font-size: 0.9rem; color: var(--color-gray-600);">
-                        ${opt.estimated_time} - ${formatCurrency(opt.estimated_cost_vnd)} VNĐ
+                <div class="transport-option" data-method="${method}" data-index="${index}" 
+                     onclick="selectTransport('${method}', ${index})" 
+                     style="padding: 1rem; border: 2px solid #e0e0e0; border-radius: 8px; cursor: pointer; transition: all 0.3s; background: white;"
+                     onmouseover="this.style.borderColor='var(--color-secondary)'" 
+                     onmouseout="if(!this.classList.contains('selected')) this.style.borderColor='#e0e0e0'">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="font-size: 2rem;">${icon}</div>
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <strong style="font-size: 1.1rem; color: var(--color-primary-dark);">${methodName}</strong>
+                                ${isCheapest ? '<span style="background: #4CAF50; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">Rẻ nhất</span>' : ''}
+                                ${isFastest ? '<span style="background: #2196F3; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">Nhanh nhất</span>' : ''}
+                            </div>
+                            <div style="margin-top: 0.5rem; color: var(--color-gray-600);">
+                                <span>⏱️ ${durationText}</span>
+                                <span style="margin-left: 1rem;">💰 ${formatCurrency(cost)} VNĐ</span>
+                                ${opt.cost_per_person ? `<span style="margin-left: 1rem; font-size: 0.9rem;">(${formatCurrency(opt.cost_per_person)} VNĐ/người)</span>` : ''}
+                            </div>
+                            ${opt.description ? `<div style="margin-top: 0.25rem; font-size: 0.85rem; color: var(--color-gray-500);">${opt.description}</div>` : ''}
+                        </div>
+                        <div class="transport-radio" style="width: 24px; height: 24px; border: 2px solid #ccc; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                            <div style="width: 12px; height: 12px; background: var(--color-secondary); border-radius: 50%; display: none;"></div>
+                        </div>
                     </div>
                 </div>
             `;
@@ -738,20 +792,87 @@ function displayStep2Result(data) {
         optionsHTML += '</div>';
     }
     
+    // Hiển thị thông báo nếu không có phương tiện
+    if (options.length === 0) {
+        resultDiv.innerHTML = `
+            <div class="info-card" style="margin-top: 1.5rem; padding: 2rem; text-align: center;">
+                <h4>⚠️ Không tìm thấy phương tiện phù hợp</h4>
+                <p style="color: var(--color-gray-600); margin-top: 1rem;">
+                    Không thể tìm thấy phương tiện di chuyển cho tuyến đường này. 
+                    Vui lòng thử lại hoặc chọn điểm đến khác.
+                </p>
+            </div>
+        `;
+        resultDiv.style.display = 'block';
+        return;
+    }
+    
     resultDiv.innerHTML = `
-        <div class="info-card">
-            <h4>✈️ Thông tin vận chuyển</h4>
-            <p><strong>Khoảng cách:</strong> ${transport.distance_km || 0} km</p>
-            <p><strong>Thời gian:</strong> ${(transport.duration_minutes / 60).toFixed(1)}h</p>
-            <p><strong>Phương tiện đề xuất:</strong> ${data.recommended_transport}</p>
+        <div class="info-card" style="margin-top: 1.5rem;">
+            <h4>✈️ Chọn phương tiện di chuyển</h4>
+            <p style="margin-bottom: 0.5rem;"><strong>Khoảng cách:</strong> ${distance_km.toFixed(1)} km</p>
+            <p style="margin-bottom: 1rem;"><strong>Phương tiện đề xuất:</strong> ${data.recommended_transport || 'Nhiều lựa chọn'}</p>
             ${optionsHTML}
         </div>
-        <div class="info-card">
-            <h4>📅 Thời gian</h4>
-            <p><strong>Số ngày đề xuất:</strong> ${data.recommended_days || workflowState.step2Data.days} ngày</p>
+        <div class="info-card" style="margin-top: 1rem;">
+            <h4>📅 Thông tin chuyến đi</h4>
+            <p><strong>Số ngày:</strong> ${data.recommended_days || workflowState.step2Data.days} ngày</p>
+            <p><strong>Số người:</strong> ${workflowState.step2Data.travelers} người</p>
+        </div>
+        <div style="margin-top: 1.5rem; text-align: center;">
+            <button type="button" class="btn-workflow btn-primary" id="step2-continue" onclick="continueToStep3()" disabled>
+                Tiếp tục
+            </button>
         </div>
     `;
     resultDiv.style.display = 'block';
+}
+
+function selectTransport(method, index) {
+    // Remove previous selection
+    document.querySelectorAll('.transport-option').forEach(opt => {
+        opt.classList.remove('selected');
+        opt.style.borderColor = '#e0e0e0';
+        opt.style.backgroundColor = 'white';
+        const radio = opt.querySelector('.transport-radio > div');
+        if (radio) radio.style.display = 'none';
+    });
+    
+    // Mark as selected - use data-index for more reliable selection
+    const selectedOption = document.querySelector(`.transport-option[data-index="${index}"]`);
+    
+    if (selectedOption) {
+        selectedOption.classList.add('selected');
+        selectedOption.style.borderColor = 'var(--color-secondary)';
+        selectedOption.style.backgroundColor = 'rgba(var(--color-secondary-rgb), 0.05)';
+        const radio = selectedOption.querySelector('.transport-radio > div');
+        if (radio) radio.style.display = 'block';
+        
+        // Save selected transport to state
+        const transport = workflowState.step2Data.transport || {};
+        const options = transport.options || [];
+        
+        if (options && options.length > index && options[index]) {
+            workflowState.step2Data.selected_transport = options[index];
+        }
+        
+        // Enable continue button
+        const continueBtn = document.getElementById('step2-continue');
+        if (continueBtn) {
+            continueBtn.disabled = false;
+        }
+    }
+}
+
+function continueToStep3() {
+    if (!workflowState.step2Data.selected_transport) {
+        showErrorModal('Vui lòng chọn phương tiện di chuyển');
+        return;
+    }
+    
+    // Proceed to Step 3
+    goToStep(3);
+    loadStep3();
 }
 
 // Step 3: Budget & Hotels
@@ -764,21 +885,28 @@ async function loadStep3() {
     resultDiv.innerHTML = '<div style="text-align: center; padding: 3rem;"><p>Đang tải thông tin...</p></div>';
     
     try {
+        const payload = {
+            origin: workflowState.step1Data.origin.name,
+            destination: workflowState.step1Data.destination.name,
+            start_date: workflowState.step2Data.start_date,
+            days: workflowState.step2Data.days,
+            travelers: workflowState.step2Data.travelers,
+            travel_style: workflowState.step2Data.travel_style,
+            rooms: 1
+        };
+        
+        // Include selected transport if available
+        if (workflowState.step2Data.selected_transport) {
+            payload.selected_transport = workflowState.step2Data.selected_transport;
+        }
+        
         const response = await fetch('/api/v1/travel-plans/step3/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCookie('csrftoken')
             },
-            body: JSON.stringify({
-                origin: workflowState.step1Data.origin.name,
-                destination: workflowState.step1Data.destination.name,
-                start_date: workflowState.step2Data.start_date,
-                days: workflowState.step2Data.days,
-                travelers: workflowState.step2Data.travelers,
-                travel_style: workflowState.step2Data.travel_style,
-                rooms: 1
-            })
+            body: JSON.stringify(payload)
         });
         
         const data = await response.json();
@@ -786,7 +914,8 @@ async function loadStep3() {
         if (response.ok && data.status === 'success') {
             workflowState.step3Data = data;
             displayStep3Result(data);
-            if (continueBtn) continueBtn.disabled = false;
+            // Button "Tiếp tục" sẽ được enable khi user chọn khách sạn
+            if (continueBtn) continueBtn.disabled = true;
         } else {
             resultDiv.innerHTML = `<div style="color: red; padding: 2rem;">Lỗi: ${data.error || 'Không thể tải dữ liệu'}</div>`;
         }
@@ -846,15 +975,53 @@ function displayStep3Result(data) {
         hotelsHTML = `
             <div style="margin-top: 2rem;">
                 <h4 style="margin-bottom: 1rem; color: var(--color-primary-dark);">🏨 Chọn khách sạn</h4>
-                <div class="hotels-grid">
-                    ${hotels.map((hotel, index) => `
-                        <div class="hotel-card" onclick="selectHotel(${index})" data-hotel-index="${index}">
-                            <div class="hotel-name">${hotel.name || 'N/A'}</div>
-                            ${hotel.stars ? `<div class="hotel-rating">${'⭐'.repeat(hotel.stars)} ${hotel.rating || ''}/5</div>` : ''}
-                            ${hotel.price_per_night ? `<div class="hotel-price">${formatCurrency(hotel.price_per_night)} VNĐ/đêm</div>` : ''}
-                            ${hotel.source ? `<div style="font-size: 0.85rem; color: var(--color-gray-600); margin-top: 0.5rem;">Nguồn: ${hotel.source}</div>` : ''}
+                <div class="hotels-list">
+                    ${hotels.map((hotel, index) => {
+                        // Lấy ảnh đầu tiên nếu có
+                        let imageUrl = '';
+                        if (hotel.images && hotel.images.length > 0) {
+                            imageUrl = hotel.images[0];
+                        } else if (hotel.image_url) {
+                            imageUrl = hotel.image_url;
+                        } else if (hotel.thumbnail) {
+                            imageUrl = hotel.thumbnail;
+                        }
+                        
+                        return `
+                        <div class="hotel-card" onclick="selectHotel(${index})" data-hotel-index="${index}" 
+                             style="padding: 1rem; border: 2px solid #e0e0e0; border-radius: 8px; cursor: pointer; transition: all 0.3s; background: white; margin-bottom: 1rem;"
+                             onmouseover="if(!this.classList.contains('selected')) this.style.borderColor='var(--color-secondary)'" 
+                             onmouseout="if(!this.classList.contains('selected')) this.style.borderColor='#e0e0e0'">
+                            <div style="display: flex; gap: 1.5rem; align-items: flex-start;">
+                                ${imageUrl ? `
+                                <div style="flex-shrink: 0; width: 150px; height: 120px; border-radius: 8px; overflow: hidden;">
+                                    <img src="${imageUrl}" alt="${hotel.name || 'Hotel'}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'">
+                                </div>
+                                ` : ''}
+                                <div style="flex: 1; min-width: 0;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                        <div class="hotel-name" style="font-size: 1.1rem; font-weight: 600; color: var(--color-primary-dark);">${hotel.name || 'N/A'}</div>
+                                        <div class="hotel-radio" style="width: 24px; height: 24px; border: 2px solid #ccc; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-left: auto; flex-shrink: 0;">
+                                            <div style="width: 12px; height: 12px; background: var(--color-secondary); border-radius: 50%; display: none;"></div>
+                                        </div>
+                                    </div>
+                                    ${hotel.stars ? `<div class="hotel-rating" style="margin-bottom: 0.5rem;">${'⭐'.repeat(hotel.stars)} ${hotel.rating || ''}/5 ${hotel.reviews ? `(${hotel.reviews} đánh giá)` : ''}</div>` : ''}
+                                    ${hotel.hotel_class ? `<div style="font-size: 0.9rem; color: var(--color-gray-600); margin-bottom: 0.5rem;">${hotel.hotel_class} sao</div>` : ''}
+                                    ${hotel.address ? `<div style="font-size: 0.9rem; color: var(--color-gray-600); margin-bottom: 0.5rem;">📍 ${hotel.address}</div>` : ''}
+                                    ${hotel.phone ? `<div style="font-size: 0.9rem; color: var(--color-gray-600); margin-bottom: 0.25rem;">📞 ${hotel.phone}</div>` : ''}
+                                    ${hotel.email ? `<div style="font-size: 0.9rem; color: var(--color-gray-600); margin-bottom: 0.25rem;">✉️ ${hotel.email}</div>` : ''}
+                                    ${hotel.website ? `<div style="font-size: 0.9rem; color: var(--color-secondary); margin-bottom: 0.25rem;"><a href="${hotel.website}" target="_blank" onclick="event.stopPropagation();" style="color: var(--color-secondary); text-decoration: none;">🌐 Website</a></div>` : ''}
+                                    ${hotel.description ? `<div style="font-size: 0.85rem; color: var(--color-gray-600); margin-top: 0.5rem; line-height: 1.4;">${hotel.description.substring(0, 150)}${hotel.description.length > 150 ? '...' : ''}</div>` : ''}
+                                    ${hotel.amenities && hotel.amenities.length > 0 ? `<div style="font-size: 0.85rem; color: var(--color-gray-600); margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">${hotel.amenities.slice(0, 5).map(a => `<span style="background: var(--color-gray-100); padding: 0.25rem 0.5rem; border-radius: 4px;">${a}</span>`).join('')}</div>` : ''}
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.75rem;">
+                                        ${hotel.price_per_night ? `<div class="hotel-price" style="font-size: 1.1rem; font-weight: 600; color: var(--color-secondary-dark);">${formatCurrency(hotel.price_per_night)} VNĐ/đêm</div>` : ''}
+                                        ${hotel.source ? `<div style="font-size: 0.85rem; color: var(--color-gray-600);">Nguồn: ${hotel.source}</div>` : ''}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    `).join('')}
+                        `;
+                    }).join('')}
                 </div>
             </div>
         `;
@@ -867,14 +1034,41 @@ function selectHotel(index) {
     // Remove previous selection
     document.querySelectorAll('.hotel-card').forEach(card => {
         card.classList.remove('selected');
+        card.style.borderColor = '#e0e0e0';
+        card.style.backgroundColor = 'white';
+        const radio = card.querySelector('.hotel-radio > div');
+        if (radio) radio.style.display = 'none';
     });
     
     // Mark as selected
     const card = document.querySelector(`[data-hotel-index="${index}"]`);
     if (card) {
         card.classList.add('selected');
+        card.style.borderColor = 'var(--color-secondary)';
+        card.style.backgroundColor = 'rgba(var(--color-secondary-rgb), 0.05)';
+        const radio = card.querySelector('.hotel-radio > div');
+        if (radio) radio.style.display = 'block';
+        
+        // Save selected hotel to state
         workflowState.step3Data.selected_hotel = workflowState.step3Data.hotels[index];
+        
+        // Enable continue button
+        const continueBtn = document.getElementById('step3-continue');
+        if (continueBtn) {
+            continueBtn.disabled = false;
+        }
     }
+}
+
+function continueToStep4() {
+    if (!workflowState.step3Data || !workflowState.step3Data.selected_hotel) {
+        showErrorModal('Vui lòng chọn khách sạn');
+        return;
+    }
+    
+    // Proceed to Step 4
+    goToStep(4);
+    loadStep4();
 }
 
 // Step 4: Confirm & Create Plan
@@ -935,16 +1129,68 @@ function displayStep4Result(data) {
     const activities = plan.activities || [];
     const itinerary = plan.itinerary || {};
     // Support both daily_plans and itinerary array format
+    // itinerary.itinerary is the array of daily plans from create_full_itinerary
     const dailyPlans = itinerary.daily_plans || itinerary.itinerary || [];
+    const itineraryDescription = plan.itinerary_description || '';
     
-    // Get destination from workflow state
-    const destination = workflowState.step1Data?.destination?.name || plan.destination || 'Điểm đến';
+    // Lấy thông tin từ JSON LICHTRINH để hiển thị ở header
+    const itineraryJson = plan.itinerary_json || {};
+    const lichtrinhInfo = itineraryJson.LICHTRINH && itineraryJson.LICHTRINH[0] ? itineraryJson.LICHTRINH[0] : {};
     
-    // Destination header
+    // Ưu tiên lấy từ JSON LICHTRINH, fallback về các nguồn khác
+    const destination = lichtrinhInfo.diemDen || workflowState.step1Data?.destination?.name || plan.destination || itinerary.destination || 'Điểm đến';
+    // Ưu tiên lấy từ itinerary.total_days, sau đó từ dailyPlans.length, cuối cùng từ workflowState
+    const totalDays = itinerary.total_days || dailyPlans.length || lichtrinhInfo.soNgay || workflowState.step2Data?.days || workflowState.step1Data?.days || 0;
+    const soNguoi = lichtrinhInfo.soNguoi || workflowState.step1Data?.travelers || 2;
+    const phongCach = lichtrinhInfo.phongCach || workflowState.step1Data?.travel_style || 'standard';
+    const ngayBatDau = lichtrinhInfo.ngayBatDau || workflowState.step1Data?.start_date || '';
+    const ngayKetThuc = lichtrinhInfo.ngayKetThuc || '';
+    const diemXuatPhat = lichtrinhInfo.diemXuatPhat || workflowState.step1Data?.origin?.name || '';
+    
+    // Format phong cách để hiển thị đẹp hơn
+    const phongCachLabels = {
+        'eco': 'Sinh thái bền vững',
+        'budget': 'Tiết kiệm',
+        'standard': 'Tiêu chuẩn',
+        'luxury': 'Cao cấp',
+        'romantic': 'Lãng mạn',
+        'adventure': 'Phiêu lưu',
+        'cultural': 'Văn hóa',
+        'gastronomy': 'Ẩm thực',
+        'wellness': 'Sức khỏe',
+        'family': 'Gia đình'
+    };
+    const phongCachDisplay = phongCachLabels[phongCach] || phongCach;
+    
+    // Tạo thông tin hiển thị cho header từ JSON LICHTRINH
+    let scheduleInfo = `Lịch trình ${totalDays} ngày`;
+    if (ngayBatDau && ngayKetThuc) {
+        // Format ngày để hiển thị đẹp hơn (DD/MM/YYYY)
+        try {
+            const startDate = new Date(ngayBatDau);
+            const endDate = new Date(ngayKetThuc);
+            const startFormatted = `${startDate.getDate()}/${startDate.getMonth() + 1}/${startDate.getFullYear()}`;
+            const endFormatted = `${endDate.getDate()}/${endDate.getMonth() + 1}/${endDate.getFullYear()}`;
+            scheduleInfo += ` (${startFormatted} - ${endFormatted})`;
+        } catch (e) {
+            scheduleInfo += ` (${ngayBatDau} - ${ngayKetThuc})`;
+        }
+    }
+    if (soNguoi) {
+        scheduleInfo += ` • ${soNguoi} người`;
+    }
+    if (phongCachDisplay) {
+        scheduleInfo += ` • ${phongCachDisplay}`;
+    }
+    if (diemXuatPhat) {
+        scheduleInfo += ` • Từ ${diemXuatPhat}`;
+    }
+    
+    // Destination header với thông tin từ JSON LICHTRINH
     let destinationHTML = `
         <div style="margin-bottom: 2rem; padding: 1.5rem; background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%); border-radius: 12px; color: white;">
             <h3 style="color: white; margin: 0; font-size: 1.5rem; font-weight: 600;">📍 ${destination}</h3>
-            <p style="color: rgba(255,255,255,0.9); margin-top: 0.5rem; margin: 0;">Lịch trình ${dailyPlans.length} ngày</p>
+            <p style="color: rgba(255,255,255,0.9); margin-top: 0.5rem; margin: 0;">${scheduleInfo}</p>
         </div>
     `;
     
@@ -974,16 +1220,41 @@ function displayStep4Result(data) {
                 <div style="display: flex; flex-direction: column; gap: 1rem;">
                     ${dailyPlans.map((dayPlan, index) => {
                         const day = dayPlan.day || (index + 1);
-                        const date = dayPlan.date || '';
-                        const theme = dayPlan.theme || '';
+                        // Lấy thông tin ngày từ JSON LICHTRINH nếu có (từ chiTietNgay)
+                        const chiTietNgay = lichtrinhInfo.chiTietNgay || [];
+                        const ngayInfo = chiTietNgay.find(n => n.ngayThu === day) || {};
+                        const date = ngayInfo.ngay || dayPlan.date || '';
+                        const theme = ngayInfo.chuDe || dayPlan.theme || '';
+                        const thoiGianBatDau = ngayInfo.thoiGianBatDau || '';
+                        const thoiGianKetThuc = ngayInfo.thoiGianKetThuc || '';
                         const meals = dayPlan.meals || {};
                         const activities_list = dayPlan.activities || [];
                         const tips = dayPlan.tips || [];
                         const dayId = `day-${index}`;
                         
                         // Count activities
-                        const activityCount = activities_list.length;
+                        const activityCount = ngayInfo.soHoatDong || activities_list.length;
                         const totalHours = Math.ceil(activityCount * 1.5); // Estimate
+                        
+                        // Tạo tiêu đề ngày với thời gian từ JSON LICHTRINH
+                        let dayTitle = `📆 Ngày ${day}`;
+                        if (date) {
+                            try {
+                                const dateObj = new Date(date);
+                                const dateFormatted = `${dateObj.getDate()}/${dateObj.getMonth() + 1}/${dateObj.getFullYear()}`;
+                                dayTitle += ` (${dateFormatted})`;
+                            } catch (e) {
+                                dayTitle += ` (${date})`;
+                            }
+                        }
+                        if (thoiGianBatDau && thoiGianKetThuc) {
+                            dayTitle += ` • ${thoiGianBatDau} - ${thoiGianKetThuc}`;
+                        } else if (thoiGianBatDau) {
+                            dayTitle += ` • Bắt đầu: ${thoiGianBatDau}`;
+                        }
+                        if (theme) {
+                            dayTitle += `: ${theme}`;
+                        }
                         
                         let mealsHTML = '';
                         if (meals && Object.keys(meals).length > 0) {
@@ -1008,25 +1279,75 @@ function displayStep4Result(data) {
                         }
                         
                         let activitiesHTML_day = '';
-                        if (activities_list.length > 0) {
+                        
+                        // Lấy timeline từ dayPlan nếu có (có thời gian cụ thể hơn)
+                        const timeline = dayPlan.timeline || [];
+                        const activitiesToShow = timeline.length > 0 ? timeline : activities_list;
+                        
+                        if (activitiesToShow.length > 0) {
                             activitiesHTML_day = '<div style="margin-top: 0.75rem;"><strong style="color: #153D68;">🎯 Hoạt động:</strong><div style="margin-top: 0.5rem;">';
-                            activities_list.forEach(actItem => {
+                            
+                            activitiesToShow.forEach((actItem, idx) => {
                                 if (typeof actItem === 'string') {
-                                    activitiesHTML_day += `<div class="itinerary-activity" style="margin-bottom: 0.5rem; color: #153D68;">${actItem}</div>`;
+                                    activitiesHTML_day += `<div class="itinerary-activity" style="margin-bottom: 0.75rem; padding: 0.75rem; background: white; border-radius: 8px; border-left: 3px solid #00838F;">${actItem}</div>`;
                                 } else if (typeof actItem === 'object') {
                                     const time = actItem.time || actItem.time_slot || '';
+                                    const endTime = actItem.end_time || '';
                                     const actDesc = actItem.description || '';
-                                    const activity = actItem.activity || {};
-                                    const actName = typeof activity === 'string' ? activity : (activity.name || 'Hoạt động');
+                                    const activity = actItem.activity || actItem.activity_details || {};
+                                    const actName = typeof activity === 'string' ? activity : (activity.name || actItem.label || 'Hoạt động');
+                                    const actType = actItem.type || '';
                                     
-                                    activitiesHTML_day += `<div class="itinerary-activity" style="margin-bottom: 0.5rem; color: #153D68;">`;
+                                    // Xác định màu và icon dựa trên loại hoạt động
+                                    let borderColor = '#00838F';
+                                    let icon = '📍';
+                                    if (actType === 'meal') {
+                                        borderColor = '#DAA520';
+                                        icon = '🍽️';
+                                    } else if (actType === 'free_time') {
+                                        borderColor = '#9E9E9E';
+                                        icon = '⏰';
+                                    } else if (actType === 'rest') {
+                                        borderColor = '#757575';
+                                        icon = '😴';
+                                    } else if (actType === 'transport') {
+                                        borderColor = '#1976D2';
+                                        icon = '🚗';
+                                    }
+                                    
+                                    activitiesHTML_day += `<div class="itinerary-activity" style="margin-bottom: 0.75rem; padding: 0.75rem; background: white; border-radius: 8px; border-left: 3px solid ${borderColor};">`;
+                                    
+                                    // Hiển thị thời gian
                                     if (time) {
-                                        activitiesHTML_day += `<div style="font-weight: 600; color: #00838F; margin-bottom: 0.25rem;">${time}</div>`;
+                                        let timeDisplay = time;
+                                        if (endTime) {
+                                            timeDisplay = `${time} - ${endTime}`;
+                                        }
+                                        activitiesHTML_day += `<div style="font-weight: 600; color: ${borderColor}; margin-bottom: 0.25rem; font-size: 0.9rem;">${icon} ${timeDisplay}</div>`;
                                     }
-                                    activitiesHTML_day += `<div style="font-weight: 600; color: #153D68;">${actName}</div>`;
+                                    
+                                    activitiesHTML_day += `<div style="font-weight: 600; color: #153D68; margin-bottom: 0.25rem;">${actName}</div>`;
+                                    
                                     if (actDesc) {
-                                        activitiesHTML_day += `<div style="color: #6c757d; font-size: 0.9rem; margin-top: 0.25rem;">${actDesc}</div>`;
+                                        activitiesHTML_day += `<div style="color: #6c757d; font-size: 0.9rem; margin-top: 0.25rem; line-height: 1.5;">${actDesc}</div>`;
                                     }
+                                    
+                                    // Hiển thị thông tin bổ sung cho free time
+                                    if (actType === 'free_time' && actItem.duration_minutes) {
+                                        const hours = Math.floor(actItem.duration_minutes / 60);
+                                        const minutes = actItem.duration_minutes % 60;
+                                        let durationText = '';
+                                        if (hours > 0) {
+                                            durationText = `${hours} giờ`;
+                                            if (minutes > 0) {
+                                                durationText += ` ${minutes} phút`;
+                                            }
+                                        } else {
+                                            durationText = `${minutes} phút`;
+                                        }
+                                        activitiesHTML_day += `<div style="color: #9E9E9E; font-size: 0.85rem; margin-top: 0.25rem; font-style: italic;">⏱️ Thời lượng: ${durationText}</div>`;
+                                    }
+                                    
                                     activitiesHTML_day += `</div>`;
                                 }
                             });
@@ -1047,7 +1368,7 @@ function displayStep4Result(data) {
                                 <div class="day-card-header" onclick="toggleDay('${dayId}')" style="padding: 1rem 1.5rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: white; border-bottom: 1px solid #e0e0e0;">
                                     <div>
                                         <h4 style="color: #153D68; margin: 0; font-size: 1.1rem; font-weight: 600;">
-                                            📆 Ngày ${day}${date ? ` (${date})` : ''}${theme ? `: ${theme}` : ''}
+                                            ${dayTitle}
                                         </h4>
                                         <div style="color: #6c757d; font-size: 0.85rem; margin-top: 0.25rem;">
                                             ${activityCount} hoạt động • ${totalHours} tiếng
@@ -1071,6 +1392,17 @@ function displayStep4Result(data) {
                         `;
                     }).join('')}
                 </div>
+            </div>
+        `;
+    }
+    
+    // Hiển thị itinerary description nếu có (LLM-generated)
+    let descriptionHTML = '';
+    if (itineraryDescription && itineraryDescription.trim()) {
+        descriptionHTML = `
+            <div style="margin-top: 2rem; padding: 1.5rem; background: #f8f9fa; border-radius: 12px; border-left: 4px solid var(--color-secondary);">
+                <h4 style="margin-bottom: 1rem; color: var(--color-primary-dark);">📝 Mô tả lịch trình</h4>
+                <div style="color: #495057; line-height: 1.8; white-space: pre-wrap; font-size: 0.95rem;">${itineraryDescription}</div>
             </div>
         `;
     }
@@ -1100,6 +1432,7 @@ function displayStep4Result(data) {
                 <span>${formatCurrency(costs.total || 0)} VNĐ</span>
             </div>
         </div>
+        ${descriptionHTML}
         ${activitiesHTML}
         ${itineraryHTML}
     `;
@@ -1121,15 +1454,70 @@ function toggleDay(dayId) {
     }
 }
 
-function createFinalPlan() {
+async function createFinalPlan() {
     // This will be called when user clicks "Tạo lịch trình"
-    // For now, just show success message
-    showErrorModal('Lịch trình đã được tạo thành công! (Trong tương lai sẽ lưu vào database)', 'success');
+    // Save itinerary to database
     
-    // In the future, you might want to:
-    // 1. Save to database
-    // 2. Redirect to itinerary detail page
-    // 3. Show success message with link
+    if (!workflowState.step4Data) {
+        showErrorModal('Vui lòng tạo lịch trình trước khi lưu', 'error');
+        return;
+    }
+    
+    const saveBtn = document.getElementById('step4-create');
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        const originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<span class="loading-spinner"></span> Đang lưu...';
+        
+        try {
+            // Prepare data to save
+            const plan = workflowState.step4Data.plan || {};
+            const costs = workflowState.step4Data.costs || {};
+            
+            const payload = {
+                origin: workflowState.step1Data.origin.name,
+                destination: workflowState.step1Data.destination.name,
+                start_date: workflowState.step2Data.start_date,
+                days: workflowState.step2Data.days,
+                travelers: workflowState.step2Data.travelers,
+                travel_style: workflowState.step2Data.travel_style,
+                plan: plan,
+                costs: costs
+            };
+            
+            const response = await fetch('/api/v1/travel-plans/step4/save/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(payload)
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.status === 'success') {
+                showErrorModal('Lịch trình đã được lưu thành công!', 'success');
+                // Optionally redirect to itinerary detail page
+                setTimeout(() => {
+                    window.location.href = `/accounts/itineraries/`;
+                }, 2000);
+            } else {
+                showErrorModal('Lỗi: ' + (data.error || 'Không thể lưu lịch trình'), 'error');
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = originalText;
+                }
+            }
+        } catch (error) {
+            console.error('Error saving itinerary:', error);
+            showErrorModal('Lỗi kết nối. Vui lòng thử lại.', 'error');
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalText;
+            }
+        }
+    }
 }
 
 // Step Navigation
@@ -1286,4 +1674,6 @@ window.goToStep = goToStep;
 window.selectHotel = selectHotel;
 window.createFinalPlan = createFinalPlan;
 window.toggleDay = toggleDay;
+window.selectTransport = selectTransport;
+window.continueToStep3 = continueToStep3;
 

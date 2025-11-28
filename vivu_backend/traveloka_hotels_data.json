@@ -1,0 +1,113 @@
+{
+    "ho chi minh city": [
+        {
+            "name": "Rex Hotel Saigon",
+            "price": 3500000,
+            "stars": 5,
+            "rating": 4.5,
+            "address": "141 Nguyen Hue, District 1, Ho Chi Minh City"
+        },
+        {
+            "name": "Liberty Central Saigon Citypoint",
+            "price": 2500000,
+            "stars": 4,
+            "rating": 4.3,
+            "address": "59 Pasteur, District 1, Ho Chi Minh City"
+        },
+        {
+            "name": "The Myst Dong Khoi",
+            "price": 4000000,
+            "stars": 5,
+            "rating": 4.6,
+            "address": "6-8 Ho Huan Nghiep, District 1, Ho Chi Minh City"
+        },
+        {
+            "name": "Silverland Yen Hotel",
+            "price": 1800000,
+            "stars": 4,
+            "rating": 4.4,
+            "address": "73-75 Thu Khoa Huan, District 1, Ho Chi Minh City"
+        },
+        {
+            "name": "Alagon Saigon Hotel & Spa",
+            "price": 1200000,
+            "stars": 3,
+            "rating": 4.0,
+            "address": "289-291 Ly Tu Trong, District 1, Ho Chi Minh City"
+        }
+    ],
+    "da nang": [
+        {
+            "name": "InterContinental Danang Sun Peninsula Resort",
+            "price": 12000000,
+            "stars": 5,
+            "rating": 4.8,
+            "address": "Son Tra Peninsula, Da Nang"
+        },
+        {
+            "name": "Sala Danang Beach Hotel",
+            "price": 1500000,
+            "stars": 4,
+            "rating": 4.4,
+            "address": "36-38 Lam Hoanh, Son Tra, Da Nang"
+        },
+        {
+            "name": "Novotel Danang Premier Han River",
+            "price": 2800000,
+            "stars": 5,
+            "rating": 4.5,
+            "address": "36 Bach Dang, Hai Chau, Da Nang"
+        },
+        {
+            "name": "Haian Beach Hotel & Spa",
+            "price": 1600000,
+            "stars": 4,
+            "rating": 4.3,
+            "address": "278 Vo Nguyen Giap, Ngu Hanh Son, Da Nang"
+        },
+        {
+            "name": "Monarque Hotel Danang",
+            "price": 1400000,
+            "stars": 4,
+            "rating": 4.6,
+            "address": "238 Vo Nguyen Giap, Son Tra, Da Nang"
+        }
+    ],
+    "hanoi": [
+        {
+            "name": "Sofitel Legend Metropole Hanoi",
+            "price": 8000000,
+            "stars": 5,
+            "rating": 4.9,
+            "address": "15 Ngo Quyen, Hoan Kiem, Hanoi"
+        },
+        {
+            "name": "Hanoi La Siesta Hotel & Spa",
+            "price": 2000000,
+            "stars": 4,
+            "rating": 4.7,
+            "address": "94 Ma May, Hoan Kiem, Hanoi"
+        },
+        {
+            "name": "Lotte Hotel Hanoi",
+            "price": 3500000,
+            "stars": 5,
+            "rating": 4.6,
+            "address": "54 Lieu Giai, Ba Dinh, Hanoi"
+        },
+        {
+            "name": "Apricot Hotel",
+            "price": 3200000,
+            "stars": 5,
+            "rating": 4.5,
+            "address": "136 Hang Trong, Hoan Kiem, Hanoi"
+        },
+        {
+            "name": "Tirant Hotel",
+            "price": 1500000,
+            "stars": 4,
+            "rating": 4.2,
+            "address": "38 Gia Ngu, Hoan Kiem, Hanoi"
+        }
+    ]
+}

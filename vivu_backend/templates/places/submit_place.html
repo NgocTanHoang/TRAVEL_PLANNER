@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+{% load static i18n %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .form-title {
+        color: var(--color-primary);
+        margin-bottom: 1.5rem;
+        text-align: center;
+        font-weight: 600;
+    }
+    
+    .btn-submit {
+        background-color: var(--color-primary);
+        color: white;
+        padding: 0.5rem 1.5rem;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    
+    .btn-submit:hover {
+        background-color: var(--color-primary-dark);
+    }
+    
+    .image-preview {
+        max-width: 150px;
+        max-height: 150px;
+        margin: 0.5rem;
+        border-radius: 5px;
+    }
+    
+    .image-preview-container {
+        display: flex;
+        flex-wrap: wrap;
+        margin: 1rem 0;
+    }
+    
+    .form-section {
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+    }
+    
+    .section-title {
+        color: var(--color-secondary);
+        margin-bottom: 1rem;
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="form-container">
+        <h1 class="form-title">{% trans 'Gửi địa điểm mới' %}</h1>
+        
+        <form method="post" enctype="multipart/form-data" id="place-form">
+            {% csrf_token %}
+            
+            <div class="form-section">
+                <h2 class="section-title">{% trans 'Thông tin cơ bản' %}</h2>
+                <div class="mb-3">
+                    <label for="{{ form.tenDiaDiem.id_for_label }}" class="form-label">
+                        {{ form.tenDiaDiem.label }}
+                    </label>
+                    {{ form.tenDiaDiem }}
+                    {% if form.tenDiaDiem.errors %}
+                        <div class="text-danger">{{ form.tenDiaDiem.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.maTinhThanh.id_for_label }}" class="form-label">
+                            {{ form.maTinhThanh.label }}
+                        </label>
+                        {{ form.maTinhThanh }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.diaChi.id_for_label }}" class="form-label">
+                            {{ form.diaChi.label }}
+                        </label>
+                        {{ form.diaChi }}
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ form.moTa.id_for_label }}" class="form-label">
+                        {{ form.moTa.label }}
+                    </label>
+                    {{ form.moTa }}
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h2 class="section-title">{% trans 'Vị trí' %}</h2>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.viDo.id_for_label }}" class="form-label">
+                            {{ form.viDo.label }}
+                        </label>
+                        {{ form.viDo }}
+                        <div class="form-text">{% trans 'Ví dụ: 10.762622' %}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.kinhDo.id_for_label }}" class="form-label">
+                            {{ form.kinhDo.label }}
+                        </label>
+                        {{ form.kinhDo }}
+                        <div class="form-text">{% trans 'Ví dụ: 106.660172' %}</div>
+                    </div>
+                </div>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    {% trans 'Bạn có thể tìm tọa độ tại' %} 
+                    <a href="https://www.google.com/maps" target="_blank" class="alert-link">Google Maps</a>.
+                    {% trans 'Nhấp chuột phải vào địa điểm và chọn tọa độ.' %}
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h2 class="section-title">{% trans 'Hình ảnh' %}</h2>
+                <div class="mb-3">
+                    <label for="images" class="form-label">
+                        {% trans 'Tải lên hình ảnh' %} ({% trans 'Tối đa 5 ảnh' %})
+                    </label>
+                    <input type="file" name="images" id="images" class="form-control" multiple accept="image/*">
+                    <div class="form-text">
+                        {% trans 'Chọn ít nhất 1 ảnh. Ảnh đầu tiên sẽ được đặt làm ảnh đại diện.' %}
+                    </div>
+                </div>
+                
+                <div id="image-preview-container" class="image-preview-container">
+                    <!-- Image previews will be added here -->
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> {% trans 'Quay lại' %}
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i> {% trans 'Gửi địa điểm' %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Image preview functionality
+document.getElementById('images').addEventListener('change', function(e) {
+    const container = document.getElementById('image-preview-container');
+    container.innerHTML = ''; // Clear previous previews
+    
+    const files = e.target.files;
+    if (files.length > 5) {
+        alert('{% trans "Bạn chỉ có thể tải lên tối đa 5 ảnh." %}');
+        this.value = '';
+        return;
+    }
+    
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (!file.type.startsWith('image/')) {
+            continue;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.className = 'image-preview';
+            img.title = file.name;
+            container.appendChild(img);
+        }
+        reader.readAsDataURL(file);
+    }
+});
+
+// Form validation
+document.getElementById('place-form').addEventListener('submit', function(e) {
+    const images = document.getElementById('images').files;
+    if (images.length === 0) {
+        e.preventDefault();
+        alert('{% trans "Vui lòng chọn ít nhất một hình ảnh." %}');
+    }
+});
+</script>
+{% endblock %}

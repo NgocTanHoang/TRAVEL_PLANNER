@@ -211,6 +211,31 @@ def calculate_airport_transport_cost(
         cost_per_km = 2000  # Xe buýt: 2k/km
     elif method == 'taxi' or method == 'grab':
         cost_per_km = 12000  # Taxi/Grab: 12k/km
+    elif method == 'greencar':
+        # VinFast GreenCar: tính theo cấu trúc giá đặc biệt
+        opening_fee = 20000
+        if distance_km <= 0:
+            cost = opening_fee
+        elif distance_km <= 25:
+            cost = opening_fee + (distance_km * 14000)
+        else:
+            cost = opening_fee + (25 * 14000) + ((distance_km - 25) * 12000)
+        return {
+            'cost_vnd': round(cost),
+            'method': method,
+            'distance_km': round(distance_km, 2),
+            'duration_minutes': round((distance_km / 50) * 60, 1)
+        }
+    elif method == 'luxurycar':
+        # VinFast LuxuryCar: 21k/km cố định
+        opening_fee = 21000
+        cost = opening_fee + (distance_km * 21000) if distance_km > 0 else opening_fee
+        return {
+            'cost_vnd': round(cost),
+            'method': method,
+            'distance_km': round(distance_km, 2),
+            'duration_minutes': round((distance_km / 50) * 60, 1)
+        }
     else:
         cost_per_km = 12000
     
