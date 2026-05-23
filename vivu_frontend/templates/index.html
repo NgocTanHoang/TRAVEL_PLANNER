@@ -1,133 +1,546 @@
-{% extends 'base.html' %}
 {% load static %}
+<!DOCTYPE html>
+<html class="light" lang="vi">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Vi Vu AI | Khám phá hành trình thông minh</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "tertiary-fixed-dim": "#ffb598",
+                        "background": "#f7faf8",
+                        "surface": "#f7faf8",
+                        "tertiary-fixed": "#ffdbce",
+                        "on-surface-variant": "#3e4947",
+                        "on-secondary-container": "#566771",
+                        "emerald-soft": "#ECFDF5",
+                        "on-secondary-fixed": "#0c1e26",
+                        "secondary-fixed-dim": "#b7c9d5",
+                        "on-background": "#181c1c",
+                        "outline-variant": "#bdc9c6",
+                        "on-tertiary-container": "#ffe5db",
+                        "surface-dim": "#d7dbd9",
+                        "primary-container": "#0f766e",
+                        "on-primary-fixed": "#00201d",
+                        "on-tertiary-fixed-variant": "#72361b",
+                        "error": "#ba1a1a",
+                        "tertiary-container": "#9c573a",
+                        "outline": "#6e7977",
+                        "on-primary-fixed-variant": "#00504a",
+                        "accent": "#059669",
+                        "on-error": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "primary-fixed": "#9cf2e8",
+                        "surface-container-low": "#f1f4f3",
+                        "secondary": "#50616b",
+                        "ocean": "#0F172A",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-on-surface": "#eef1f0",
+                        "surface-variant": "#e0e3e1",
+                        "on-error-container": "#93000a",
+                        "secondary-container": "#d3e5f1",
+                        "surface-container-highest": "#e0e3e1",
+                        "secondary-fixed": "#d3e5f1",
+                        "tertiary": "#7f4025",
+                        "warning": "#F59E0B",
+                        "primary": "#005c55",
+                        "surface-container": "#ebefed",
+                        "on-secondary-fixed-variant": "#384953",
+                        "surface-tint": "#006a63",
+                        "ocean-soft": "#164E63",
+                        "inverse-primary": "#80d5cb",
+                        "on-primary": "#ffffff",
+                        "surface-container-high": "#e5e9e7",
+                        "on-tertiary-fixed": "#370e00",
+                        "surface-bright": "#f7faf8",
+                        "on-surface": "#181c1c",
+                        "on-primary-container": "#a3faef",
+                        "primary-fixed-dim": "#80d5cb",
+                        "inverse-surface": "#2d3130",
+                        "error-container": "#ffdad6"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "stack-sm": "0.5rem",
+                        "stack-xl": "2.5rem",
+                        "stack-md": "1rem",
+                        "margin-desktop": "2.5rem",
+                        "margin-mobile": "1rem",
+                        "stack-xs": "0.25rem",
+                        "stack-lg": "1.5rem",
+                        "gutter": "1.5rem",
+                        "container-max": "1280px"
+                    },
+                    fontFamily: {
+                        "headline-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "display-lg-mobile": ["Inter"],
+                        "headline-lg-mobile": ["Inter"]
+                    },
+                    fontSize: {
+                        "headline-lg": ["32px", { lineHeight: "40px", fontWeight: "600" }],
+                        "headline-md": ["24px", { lineHeight: "32px", fontWeight: "600" }],
+                        "label-md": ["14px", { lineHeight: "20px", letterSpacing: "0.01em", fontWeight: "500" }],
+                        "label-sm": ["12px", { lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "600" }],
+                        "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+                        "body-sm": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+                        "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }],
+                        "display-lg": ["48px", { lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700" }],
+                        "display-lg-mobile": ["36px", { lineHeight: "44px", letterSpacing: "-0.02em", fontWeight: "700" }],
+                        "headline-lg-mobile": ["28px", { lineHeight: "36px", fontWeight: "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --premium-ease: cubic-bezier(0.22, 1, 0.36, 1);
+        }
 
-{% block title %}Vi Vu | Lập kế hoạch thông minh, trọn vẹn hành trình{% endblock %}
+        body {
+            transition: background-color 0.5s var(--premium-ease), color 0.5s var(--premium-ease);
+            overflow-x: hidden;
+        }
 
-{% block content %}
-<section class="relative overflow-hidden">
-    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(20,184,166,0.14),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(16,185,129,0.10),transparent_24%)]"></div>
-    <div class="relative mx-auto grid max-w-7xl gap-10 px-4 pb-16 pt-12 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:pb-24 lg:pt-20">
-        <div class="flex flex-col justify-center">
-            <span class="theme-badge inline-flex w-fit items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] shadow-sm">
-                <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-                Cổng thông tin du lịch tương tác
-            </span>
-            <h1 class="mt-6 max-w-3xl font-heading text-4xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
-                Khám phá điểm đến, xem bản đồ trực quan và dựng hành trình bằng AI trong một không gian duy nhất.
-            </h1>
-            <p class="theme-text-muted mt-6 max-w-2xl text-base leading-7 md:text-lg">
-                Sử dụng công nghệ AI để tạo lịch trình chi tiết, quản lý ngân sách thông minh, giúp bạn tận hưởng trọn vẹn hành trình của mình.
-            </p>
-            <div class="mt-8 flex flex-col gap-3 sm:flex-row">
-                <a href="/places/search/" class="theme-btn-primary inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold shadow-soft">
-                    Khám phá điểm đến
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .dark .glass-panel {
+            background: rgba(15, 23, 42, 0.7);
+        }
+
+        .ambient-mesh {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: -2;
+            background:
+                radial-gradient(circle at 20% 30%, rgba(15, 118, 110, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(15, 23, 42, 0.03) 0%, transparent 50%);
+        }
+
+        #cursor-glow {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(5, 150, 105, 0.05) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.5s var(--premium-ease);
+        }
+
+        .nav-link {
+            position: relative;
+            transition: color 0.3s var(--premium-ease);
+        }
+
+        .nav-link::after {
+            content: "";
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: currentColor;
+            transition: width 0.3s var(--premium-ease);
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        @keyframes cameraDrift {
+            0%, 100% { transform: scale(1.02) translate(0, 0); }
+            50% { transform: scale(1.05) translate(10px, -10px); }
+        }
+
+        .drift-animation {
+            animation: cameraDrift 10s ease-in-out infinite;
+        }
+
+        @keyframes pulseRoute {
+            0% { opacity: 0.2; }
+            50% { opacity: 0.6; }
+            100% { opacity: 0.2; }
+        }
+
+        .route-pulse {
+            animation: pulseRoute 3s ease-in-out infinite;
+        }
+
+        @keyframes floatCard {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .float-animation {
+            animation: floatCard 6s ease-in-out infinite;
+        }
+
+        .cta-bloom:hover {
+            box-shadow: 0 0 30px rgba(0, 92, 85, 0.3);
+            transform: scale(1.02);
+        }
+
+        .reveal-hidden {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 0.8s var(--premium-ease), transform 0.8s var(--premium-ease);
+        }
+
+        .reveal-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .pattern-bg {
+            background-image: radial-gradient(rgba(5, 150, 105, 0.05) 0.5px, transparent 0.5px);
+            background-size: 16px 16px;
+        }
+
+        @keyframes gradientDrift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .gradient-animate {
+            background-size: 200% 200%;
+            animation: gradientDrift 15s ease infinite;
+        }
+
+        .placeholder-black {
+            background: #000;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, .reveal-hidden, .drift-animation, .float-animation, .gradient-animate {
+                animation: none !important;
+                transition: none !important;
+                transform: none !important;
+                opacity: 1 !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md">
+    <div class="ambient-mesh"></div>
+    <div class="hidden lg:block" id="cursor-glow"></div>
+
+    <header class="fixed top-0 z-50 w-full bg-transparent py-4 transition-all duration-500" id="main-nav">
+        <div class="mx-auto flex h-16 w-full max-w-container-max items-center justify-between px-margin-desktop transition-all duration-500">
+            <div class="flex items-center gap-8">
+                <a href="/" class="font-headline-md text-headline-md font-bold tracking-tight text-primary dark:text-primary-fixed">Vi Vu</a>
+                <nav class="hidden gap-8 md:flex">
+                    <a class="nav-link font-label-md text-label-md font-bold text-primary dark:text-primary-fixed" href="/places/search/">Khám phá</a>
+                    <a class="nav-link font-label-md text-label-md text-on-secondary-container hover:text-primary dark:text-secondary-fixed-dim dark:hover:text-primary-fixed" href="/places/search/">Điểm đến</a>
+                    <a class="nav-link font-label-md text-label-md text-on-secondary-container hover:text-primary dark:text-secondary-fixed-dim dark:hover:text-primary-fixed" href="/travel-plan/">Lịch trình</a>
+                    <a class="nav-link font-label-md text-label-md text-on-secondary-container hover:text-primary dark:text-secondary-fixed-dim dark:hover:text-primary-fixed" href="/ai-chat/">AI Chat</a>
+                </nav>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <button class="rounded-lg p-2 transition-all duration-200 hover:bg-emerald-soft/50 active:scale-95 dark:hover:bg-ocean-soft/30" id="theme-toggle">
+                        <span class="material-symbols-outlined text-primary dark:text-primary-fixed" data-icon="dark_mode">dark_mode</span>
+                    </button>
+                    <button class="rounded-lg p-2 transition-all duration-200 hover:bg-emerald-soft/50 active:scale-95 dark:hover:bg-ocean-soft/30">
+                        <span class="material-symbols-outlined text-primary dark:text-primary-fixed" data-icon="notifications">notifications</span>
+                    </button>
+                </div>
+                <a href="/travel-plan/" class="cta-bloom hidden rounded-full bg-primary px-6 py-2 font-label-md text-label-md text-on-primary transition-all hover:bg-primary-container active:scale-95 md:block">
+                    Tạo lịch trình
                 </a>
-                <a href="/travel-plan/" class="theme-btn-secondary inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold">
-                    Tạo lịch trình ngay
-                </a>
-            </div>
-            <div class="mt-10 grid gap-4 sm:grid-cols-3">
-                <div class="glass-panel rounded-3xl p-5">
-                    <p class="text-2xl font-bold" style="color: rgb(var(--primary));">500+</p>
-                    <p class="theme-text-muted mt-2 text-sm leading-6">Địa điểm được đồng bộ để tìm kiếm, lọc và so sánh theo nhu cầu thực tế.</p>
-                </div>
-                <div class="glass-panel rounded-3xl p-5">
-                    <p class="text-2xl font-bold" style="color: rgb(var(--primary));">3 lớp</p>
-                    <p class="theme-text-muted mt-2 text-sm leading-6">Bản đồ, thông tin bản địa và gợi ý AI được gắn kết trên cùng một màn hình.</p>
-                </div>
-                <div class="glass-panel rounded-3xl p-5">
-                    <p class="text-2xl font-bold" style="color: rgb(var(--primary));">Mobile-first</p>
-                    <p class="theme-text-muted mt-2 text-sm leading-6">Tối ưu hiển thị để bạn có thể lên kế hoạch ngay trên điện thoại khi đang di chuyển.</p>
+                <div class="h-8 w-8 overflow-hidden rounded-full border-2 border-primary-fixed transition-transform hover:scale-105">
+                    <div class="placeholder-black h-full w-full"></div>
                 </div>
             </div>
         </div>
+    </header>
 
-        <div class="relative">
-            <div class="glass-panel rounded-[2rem] p-4">
-                <div class="overflow-hidden rounded-[1.5rem] border shadow-soft theme-divider" style="background: linear-gradient(180deg, rgba(var(--ocean), 0.98) 0%, rgba(var(--ocean-soft), 0.92) 100%);">
-                    <div class="flex items-center justify-between border-b border-white/10 px-5 py-4 text-sm text-slate-300">
-                        <div>
-                            <p class="font-semibold text-white">Portal khám phá thông minh</p>
-                            <p class="text-xs text-slate-400">Bản đồ, thời tiết và danh sách địa điểm đồng bộ theo điểm đến</p>
+    <main>
+        <section class="relative flex min-h-[921px] items-center overflow-hidden pt-16">
+            <div class="absolute inset-0 z-0 bg-gradient-to-br from-background via-emerald-soft/20 to-secondary-container/20 dark:from-ocean dark:via-ocean-soft/20 dark:to-surface"></div>
+            <div class="container relative z-10 mx-auto max-w-container-max px-margin-desktop">
+                <div class="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
+                    <div class="hero-content space-y-stack-lg">
+                        <div class="reveal-hidden inline-flex items-center gap-2 rounded-full border border-primary/20 bg-emerald-soft px-3 py-1 text-primary dark:bg-ocean-soft dark:text-primary-fixed" style="transition-delay: 0ms">
+                            <span class="material-symbols-outlined text-[16px]" data-icon="auto_awesome">auto_awesome</span>
+                            <span class="font-label-sm text-label-sm uppercase tracking-wider">Trợ lý du lịch AI thế hệ mới</span>
                         </div>
-                        <span class="rounded-full px-3 py-1 text-xs font-semibold" style="background: rgba(var(--accent), 0.18); color: rgb(167 243 208);">Live Search</span>
+                        <h1 class="reveal-hidden font-display-lg text-display-lg leading-tight text-ocean dark:text-surface-bright" style="transition-delay: 80ms">
+                            Khám phá mọi hành trình với <span class="text-primary dark:text-primary-fixed">độ chính xác từ AI</span>
+                        </h1>
+                        <p class="reveal-hidden max-w-xl font-body-lg text-body-lg text-on-secondary-container" style="transition-delay: 160ms">
+                            Tạo lịch trình cá nhân hóa, khám phá điểm đến phù hợp và tối ưu toàn bộ kế hoạch du lịch bằng một lớp điều phối AI hiện đại, nhanh và dễ dùng.
+                        </p>
+                        <div class="reveal-hidden flex flex-wrap gap-4 pt-stack-md" style="transition-delay: 240ms">
+                            <a href="/travel-plan/" class="cta-bloom rounded-xl bg-primary px-8 py-4 font-headline-md text-[18px] text-on-primary transition-all active:scale-95">
+                                Bắt đầu hành trình
+                            </a>
+                            <a href="/places/search/" class="rounded-xl border border-outline/20 bg-white/50 px-8 py-4 font-headline-md text-[18px] backdrop-blur-sm transition-all hover:bg-white active:scale-95 dark:bg-ocean-soft/50 dark:hover:bg-ocean-soft">
+                                Xem cổng khám phá
+                            </a>
+                        </div>
                     </div>
-                    <div class="grid gap-4 p-4 sm:grid-cols-[0.95fr_1.05fr]" style="background: rgba(var(--ocean), 0.88);">
-                        <div class="theme-surface rounded-[1.25rem] p-4">
-                            <div class="theme-muted-surface rounded-full px-4 py-3 text-sm theme-text-muted">Tìm kiếm “Hạ Long” hoặc “ẩm thực biển”</div>
-                            <div class="mt-4 space-y-3">
-                                <div class="theme-warning-surface rounded-2xl p-4">
-                                    <p class="text-xs font-semibold uppercase tracking-[0.24em]">Lưu ý bản địa</p>
-                                    <ul class="mt-3 space-y-2 text-sm">
-                                        <li>Ưu tiên trang phục lịch sự khi ghé đền chùa hoặc không gian tâm linh.</li>
-                                        <li>Chủ động hỏi giá trước với dịch vụ tàu, xe điện hoặc hải sản theo cân.</li>
-                                    </ul>
-                                </div>
-                                <div class="theme-muted-surface rounded-2xl p-4">
-                                    <div class="flex items-center justify-between">
-                                        <p class="font-semibold">Bãi Cháy</p>
-                                        <span class="text-sm text-amber-500">4.7 ★</span>
+
+                    <div class="reveal-hidden relative" style="transition-delay: 300ms">
+                        <div class="drift-animation relative z-10 overflow-hidden rounded-3xl border border-white/20 shadow-2xl">
+                            <img alt="Bờ biển du lịch cùng lớp giao diện AI" class="aspect-[4/5] w-full scale-110 object-cover" src="{% static 'img/stitch-deep-ocean-landing.png' %}"/>
+                            <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-ocean/40 to-transparent"></div>
+                            <div class="glass-panel absolute bottom-6 left-6 right-6 rounded-2xl border border-white/30 p-6 backdrop-blur-xl">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="font-label-sm text-label-sm uppercase text-primary">Điểm đến đang nổi bật</p>
+                                        <h3 class="font-headline-md text-headline-md text-ocean">Tuyến biển Việt Nam</h3>
                                     </div>
-                                    <p class="theme-text-muted mt-2 text-sm">Khung biển, giải trí và cụm dịch vụ đông khách nhất Hạ Long.</p>
-                                </div>
-                                <div class="theme-muted-surface rounded-2xl p-4">
-                                    <div class="flex items-center justify-between">
-                                        <p class="font-semibold">Bảo tàng Quảng Ninh</p>
-                                        <span class="text-sm text-amber-500">4.8 ★</span>
-                                    </div>
-                                    <p class="theme-text-muted mt-2 text-sm">Điểm indoor đẹp, phù hợp làm phương án dự phòng khi mưa.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="rounded-[1.25rem] p-4 text-white" style="background: linear-gradient(180deg, rgba(var(--ocean), 0.92) 0%, rgba(var(--primary), 0.78) 100%);">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm text-slate-200">Bản đồ tương tác</p>
-                                    <p class="text-lg font-semibold">Quảng Ninh</p>
-                                </div>
-                                <span class="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-slate-100">OpenStreetMap</span>
-                            </div>
-                            <div class="mt-4 h-72 rounded-[1.25rem] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.18),transparent_35%),linear-gradient(135deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] p-4">
-                                <div class="grid h-full place-items-center rounded-[1rem] border border-dashed border-white/15">
-                                    <div class="text-center">
-                                        <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/10">
-                                            <i class="fas fa-map-location-dot text-2xl text-white"></i>
-                                        </div>
-                                        <p class="mt-4 text-sm text-slate-200">Marker địa điểm, lớp thời tiết và tuyến đường sẽ được đồng bộ trực tiếp trên bản đồ.</p>
+                                    <div class="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-primary text-on-primary transition-transform hover:rotate-45">
+                                        <span class="material-symbols-outlined" data-icon="north_east">north_east</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
+
+                        <div class="float-animation glass-panel absolute -right-8 -top-8 z-20 w-48 rounded-2xl border border-white/40 p-4 shadow-xl" style="animation-delay: -1s">
+                            <div class="mb-2 flex items-center gap-3">
+                                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-soft text-primary">
+                                    <span class="material-symbols-outlined text-sm">cloud</span>
+                                </div>
+                                <span class="font-label-sm text-xs font-bold text-ocean">Thời tiết bản địa</span>
+                            </div>
+                            <p class="text-sm text-ocean">28°C / Trời nắng</p>
+                            <p class="text-xs text-on-secondary-container">Phù hợp cho lịch trình ngoài trời</p>
+                        </div>
+
+                        <div class="float-animation glass-panel absolute -bottom-4 -left-12 z-20 w-56 rounded-2xl border border-white/40 p-4 shadow-xl" style="animation-delay: -3s">
+                            <div class="mb-2 flex items-center gap-3">
+                                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white">
+                                    <span class="material-symbols-outlined text-sm">auto_awesome</span>
+                                </div>
+                                <span class="font-label-sm text-xs font-bold text-ocean">Gợi ý AI</span>
+                            </div>
+                            <p class="text-xs italic leading-relaxed text-ocean">"Lộ trình này phù hợp với người thích cảnh quan biển, điểm dừng vừa phải và ngân sách cân bằng."</p>
+                        </div>
+
+                        <div class="absolute -right-12 -top-12 -z-10 h-64 w-64 rounded-full bg-primary/20 opacity-60 blur-3xl"></div>
+                        <div class="absolute -bottom-12 -left-12 -z-10 h-48 w-48 rounded-full bg-accent/20 opacity-60 blur-3xl"></div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</section>
+        </section>
 
-<section class="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8 lg:pb-24">
-    <div class="grid gap-6 lg:grid-cols-3">
-        <div class="glass-panel rounded-[1.75rem] p-6">
-            <div class="theme-icon-badge flex h-12 w-12 items-center justify-center rounded-2xl">
-                <i class="fas fa-cloud-sun text-lg"></i>
+        <section class="reveal-hidden bg-surface-container-low py-stack-xl dark:bg-ocean/95">
+            <div class="container mx-auto max-w-container-max px-margin-desktop">
+                <div class="mb-16 space-y-4 text-center">
+                    <h2 class="font-headline-lg text-headline-lg text-ocean dark:text-surface-bright">Tính năng thông minh cho người mê dịch chuyển</h2>
+                    <p class="mx-auto max-w-2xl text-on-secondary-container">Các lớp AI của Vi Vu giúp bạn xử lý phần phức tạp của chuyến đi, để bạn dành nhiều thời gian hơn cho trải nghiệm thực tế.</p>
+                </div>
+                <div class="grid grid-cols-1 gap-gutter md:grid-cols-3">
+                    <div class="group relative overflow-hidden rounded-3xl border border-outline/10 bg-white p-stack-lg transition-all hover:-translate-y-2 hover:border-primary/30 hover:shadow-2xl dark:bg-ocean-soft/10">
+                        <div class="pattern-bg pointer-events-none absolute inset-0 opacity-20"></div>
+                        <div class="relative z-10">
+                            <div class="mb-stack-md flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-soft transition-transform group-hover:scale-110 group-hover:shadow-[0_0_15px_rgba(5,150,105,0.4)] dark:bg-ocean-soft">
+                                <span class="material-symbols-outlined text-3xl text-primary" data-icon="route">route</span>
+                            </div>
+                            <h3 class="mb-stack-sm font-headline-md text-headline-md text-ocean dark:text-surface-bright">Lịch trình AI</h3>
+                            <p class="text-body-md text-on-secondary-container">Tạo lộ trình dựa trên sở thích, lịch sử tìm kiếm và tín hiệu theo thời gian thực. Mỗi hành trình là một bản phối riêng.</p>
+                            <div class="mt-stack-lg flex cursor-pointer items-center justify-between border-t border-outline/10 pt-stack-md font-label-md text-primary transition-colors group-hover:text-primary-container">
+                                <span>Khám phá engine</span>
+                                <span class="material-symbols-outlined transition-transform group-hover:translate-x-1" data-icon="arrow_forward">arrow_forward</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="group relative overflow-hidden rounded-3xl border border-outline/10 bg-white p-stack-lg transition-all hover:-translate-y-2 hover:border-primary/30 hover:shadow-2xl dark:bg-ocean-soft/10">
+                        <div class="pattern-bg pointer-events-none absolute inset-0 opacity-20"></div>
+                        <div class="relative z-10">
+                            <div class="mb-stack-md flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-soft transition-transform group-hover:scale-110 group-hover:shadow-[0_0_15px_rgba(5,150,105,0.4)] dark:bg-ocean-soft">
+                                <span class="material-symbols-outlined text-3xl text-primary" data-icon="smart_toy">smart_toy</span>
+                            </div>
+                            <h3 class="mb-stack-sm font-headline-md text-headline-md text-ocean dark:text-surface-bright">Đặt dịch vụ thông minh</h3>
+                            <p class="text-body-md text-on-secondary-container">Theo dõi mức giá, gợi ý lựa chọn hợp lý và hỗ trợ bạn ra quyết định nhanh hơn khi chọn chỗ ở hoặc điểm dừng.</p>
+                            <div class="mt-stack-lg flex cursor-pointer items-center justify-between border-t border-outline/10 pt-stack-md font-label-md text-primary transition-colors group-hover:text-primary-container">
+                                <span>Quản lý lựa chọn</span>
+                                <span class="material-symbols-outlined transition-transform group-hover:translate-x-1" data-icon="arrow_forward">arrow_forward</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="group relative overflow-hidden rounded-3xl border border-outline/10 bg-white p-stack-lg transition-all hover:-translate-y-2 hover:border-primary/30 hover:shadow-2xl dark:bg-ocean-soft/10">
+                        <div class="pattern-bg pointer-events-none absolute inset-0 opacity-20"></div>
+                        <div class="relative z-10">
+                            <div class="mb-stack-md flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-soft transition-transform group-hover:scale-110 group-hover:shadow-[0_0_15px_rgba(5,150,105,0.4)] dark:bg-ocean-soft">
+                                <span class="material-symbols-outlined text-3xl text-primary" data-icon="support_agent">support_agent</span>
+                            </div>
+                            <h3 class="mb-stack-sm font-headline-md text-headline-md text-ocean dark:text-surface-bright">Hỗ trợ theo thời gian thực</h3>
+                            <p class="text-body-md text-on-secondary-container">Luôn có lớp hỗ trợ AI để xử lý thay đổi thời tiết, điểm đến thay thế và những nhu cầu phát sinh trên đường đi.</p>
+                            <div class="mt-stack-lg flex cursor-pointer items-center justify-between border-t border-outline/10 pt-stack-md font-label-md text-primary transition-colors group-hover:text-primary-container">
+                                <span>Nhận hỗ trợ</span>
+                                <span class="material-symbols-outlined transition-transform group-hover:translate-x-1" data-icon="arrow_forward">arrow_forward</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <h2 class="mt-5 text-xl font-semibold">Thời tiết gắn với hành trình</h2>
-            <p class="theme-text-muted mt-3 text-sm leading-7">Theo dõi nhiệt độ hiện tại và dự báo ngắn hạn ngay cạnh danh sách điểm đến để ra quyết định nhanh hơn.</p>
-        </div>
-        <div class="glass-panel rounded-[1.75rem] p-6">
-            <div class="theme-icon-badge flex h-12 w-12 items-center justify-center rounded-2xl">
-                <i class="fas fa-sliders text-lg"></i>
+        </section>
+
+        <section class="reveal-hidden relative overflow-hidden bg-ocean py-stack-xl text-on-primary">
+            <div class="pattern-bg absolute inset-0 opacity-5"></div>
+            <div class="absolute right-0 top-0 h-full w-1/2 skew-x-12 bg-emerald-soft/5"></div>
+            <div class="container relative z-10 mx-auto max-w-container-max px-margin-desktop">
+                <div class="grid grid-cols-2 gap-gutter text-center md:grid-cols-4">
+                    <div>
+                        <div class="stat-number mb-2 text-[44px] font-bold text-primary-fixed" data-target="500">0</div>
+                        <div class="font-label-md uppercase tracking-widest text-secondary-fixed-dim">Điểm đến đã đồng bộ</div>
+                    </div>
+                    <div>
+                        <div class="stat-number mb-2 text-[44px] font-bold text-primary-fixed" data-target="34">0</div>
+                        <div class="font-label-md uppercase tracking-widest text-secondary-fixed-dim">Tỉnh thành tiêu biểu</div>
+                    </div>
+                    <div>
+                        <div class="stat-number mb-2 text-[44px] font-bold text-primary-fixed" data-target="99.9">0</div>
+                        <div class="font-label-md uppercase tracking-widest text-secondary-fixed-dim">Độ chính xác gợi ý</div>
+                    </div>
+                    <div>
+                        <div class="stat-number mb-2 text-[44px] font-bold text-primary-fixed" data-target="4.9">0</div>
+                        <div class="font-label-md uppercase tracking-widest text-secondary-fixed-dim">Mức hài lòng</div>
+                    </div>
+                </div>
             </div>
-            <h2 class="mt-5 text-xl font-semibold">Bộ lọc sâu, thao tác gọn</h2>
-            <p class="theme-text-muted mt-3 text-sm leading-7">Lọc nhanh theo loại địa điểm, mức vé, đánh giá và nhu cầu chuyến đi với giao diện thân thiện trên cả mobile lẫn desktop.</p>
-        </div>
-        <div class="glass-panel rounded-[1.75rem] p-6">
-            <div class="theme-icon-badge flex h-12 w-12 items-center justify-center rounded-2xl">
-                <i class="fas fa-sparkles text-lg"></i>
+        </section>
+
+        <section class="reveal-hidden py-stack-xl">
+            <div class="container mx-auto max-w-container-max px-margin-desktop">
+                <div class="gradient-animate relative overflow-hidden rounded-[2.5rem] bg-gradient-to-r from-primary via-primary-container to-primary p-stack-xl text-center text-on-primary shadow-2xl">
+                    <div class="absolute inset-0 opacity-10" style="background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTAgNDBDMjUgMzAgNzUgNTAgMTAwIDQwTTI1IDYwQzUwIDcwIDc1IDUwIDExMCA2MCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIwLjUiLz48L3N2Zz4='); background-size: 200px 200px;"></div>
+                    <div class="relative z-10 mx-auto max-w-3xl space-y-stack-md">
+                        <h2 class="font-display-lg text-display-lg">Sẵn sàng nâng cấp cách bạn lên kế hoạch du lịch?</h2>
+                        <p class="font-body-lg text-body-lg opacity-90">Tham gia cùng những người dùng đang tận dụng Vi Vu AI để khám phá điểm đến, chuẩn bị lịch trình và ra quyết định nhanh hơn.</p>
+                        <div class="pt-stack-lg">
+                            <a href="/travel-plan/" class="cta-bloom inline-flex rounded-2xl bg-white px-10 py-5 font-headline-md text-[20px] text-primary shadow-lg transition-all hover:bg-emerald-soft active:scale-95">
+                                Tạo tài khoản AI của bạn
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <h2 class="mt-5 text-xl font-semibold">AI hỗ trợ ra quyết định</h2>
-            <p class="theme-text-muted mt-3 text-sm leading-7">Từ dữ liệu địa điểm đến lịch trình hoàn chỉnh, Vi Vu giữ cho trải nghiệm khám phá và lên kế hoạch diễn ra liền mạch.</p>
+        </section>
+    </main>
+
+    <footer class="reveal-hidden mt-stack-xl w-full border-t border-outline/10 bg-ocean text-on-primary dark:bg-surface-container-lowest dark:text-on-surface">
+        <div class="mx-auto grid max-w-container-max grid-cols-1 items-center px-margin-desktop py-stack-lg md:grid-cols-2 lg:flex lg:justify-between">
+            <div class="mb-stack-lg lg:mb-0">
+                <span class="font-headline-md text-headline-md font-bold text-emerald-soft dark:text-primary">Vi Vu</span>
+                <p class="mt-2 font-body-sm text-body-sm text-secondary-fixed-dim dark:text-on-secondary-container">© 2026 Vi Vu AI. Lên kế hoạch thông minh, trọn vẹn hành trình.</p>
+            </div>
+            <nav class="flex flex-wrap gap-x-8 gap-y-4">
+                <a class="font-label-sm text-label-sm text-secondary-fixed-dim transition-all hover:text-primary-fixed hover:underline decoration-primary underline-offset-4 dark:text-on-secondary-container dark:hover:text-primary" href="#">Chính sách bảo mật</a>
+                <a class="font-label-sm text-label-sm text-secondary-fixed-dim transition-all hover:text-primary-fixed hover:underline decoration-primary underline-offset-4 dark:text-on-secondary-container dark:hover:text-primary" href="#">Điều khoản sử dụng</a>
+                <a class="font-label-sm text-label-sm text-secondary-fixed-dim transition-all hover:text-primary-fixed hover:underline decoration-primary underline-offset-4 dark:text-on-secondary-container dark:hover:text-primary" href="#">Trung tâm hỗ trợ</a>
+                <a class="font-label-sm text-label-sm text-secondary-fixed-dim transition-all hover:text-primary-fixed hover:underline decoration-primary underline-offset-4 dark:text-on-secondary-container dark:hover:text-primary" href="#">Trạng thái hệ thống</a>
+                <a class="font-label-sm text-label-sm text-secondary-fixed-dim transition-all hover:text-primary-fixed hover:underline decoration-primary underline-offset-4 dark:text-on-secondary-container dark:hover:text-primary" href="#">Liên hệ</a>
+            </nav>
         </div>
-    </div>
-</section>
-{% endblock %}
+    </footer>
+
+    <script>
+        const themeToggle = document.getElementById('theme-toggle');
+        const html = document.documentElement;
+        const themeIcon = themeToggle.querySelector('span');
+
+        themeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            themeIcon.innerText = isDark ? 'light_mode' : 'dark_mode';
+            themeIcon.setAttribute('data-icon', isDark ? 'light_mode' : 'dark_mode');
+        });
+
+        const nav = document.getElementById('main-nav');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                nav.classList.add('bg-white/80', 'dark:bg-ocean/80', 'backdrop-blur-md', 'shadow-md', 'py-2');
+                nav.classList.remove('bg-transparent', 'py-4');
+            } else {
+                nav.classList.remove('bg-white/80', 'dark:bg-ocean/80', 'backdrop-blur-md', 'shadow-md', 'py-2');
+                nav.classList.add('bg-transparent', 'py-4');
+            }
+        });
+
+        const cursorGlow = document.getElementById('cursor-glow');
+        document.addEventListener('mousemove', (e) => {
+            cursorGlow.style.left = e.clientX + 'px';
+            cursorGlow.style.top = e.clientY + 'px';
+        });
+
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('reveal-visible');
+                    if (entry.target.classList.contains('hero-content')) {
+                        const children = entry.target.querySelectorAll('.reveal-hidden');
+                        children.forEach(child => child.classList.add('reveal-visible'));
+                    }
+                    if (entry.target.querySelector('.stat-number')) {
+                        startCountUp(entry.target);
+                    }
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal-hidden').forEach(el => observer.observe(el));
+        observer.observe(document.querySelector('.hero-content'));
+
+        function startCountUp(container) {
+            const stats = container.querySelectorAll('.stat-number');
+            stats.forEach(stat => {
+                if (stat.dataset.animated) return;
+                stat.dataset.animated = 'true';
+                const target = parseFloat(stat.dataset.target);
+                const suffix = stat.innerText.replace(/[0-9.]/g, '');
+                let current = 0;
+                const duration = 2000;
+                const increment = target / (duration / 16);
+
+                const update = () => {
+                    current += increment;
+                    if (current < target) {
+                        stat.innerText = (target % 1 === 0 ? Math.floor(current) : current.toFixed(1)) + suffix;
+                        requestAnimationFrame(update);
+                    } else {
+                        stat.innerText = target + suffix;
+                    }
+                };
+
+                update();
+            });
+        }
+    </script>
+</body>
+</html>

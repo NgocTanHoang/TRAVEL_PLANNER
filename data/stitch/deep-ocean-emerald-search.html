@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Bookings | AetherTravel AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: 
+                radial-gradient(circle at 0% 0%, rgba(15, 118, 110, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 100% 100%, rgba(15, 23, 42, 0.05) 0%, transparent 40%),
+                #f7faf8;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(226, 232, 240, 0.5);
+        }
+        .ai-glow:hover {
+            box-shadow: 0 0 25px rgba(5, 150, 105, 0.25);
+        }
+        .premium-easing {
+            transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .reveal-up {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: revealUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        @keyframes revealUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .ai-pulse {
+            animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.4); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(5, 150, 105, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(5, 150, 105, 0); }
+        }
+        .flight-path {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: dash 3s linear infinite;
+        }
+        @keyframes dash {
+            to { stroke-dashoffset: 0; }
+        }
+        .search-input::placeholder {
+            transition: opacity 0.3s ease;
+        }
+        .search-input.fade-out::placeholder {
+            opacity: 0;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            box-shadow: 0 0 10px rgba(5, 150, 105, 0.5);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary-fixed-dim": "#ffb598",
+                      "background": "#f7faf8",
+                      "surface": "#f7faf8",
+                      "tertiary-fixed": "#ffdbce",
+                      "on-surface-variant": "#3e4947",
+                      "on-secondary-container": "#566771",
+                      "emerald-soft": "#ECFDF5",
+                      "on-secondary-fixed": "#0c1e26",
+                      "secondary-fixed-dim": "#b7c9d5",
+                      "on-background": "#181c1c",
+                      "outline-variant": "#bdc9c6",
+                      "on-tertiary-container": "#ffe5db",
+                      "surface-dim": "#d7dbd9",
+                      "primary-container": "#0f766e",
+                      "on-primary-fixed": "#00201d",
+                      "on-tertiary-fixed-variant": "#72361b",
+                      "error": "#ba1a1a",
+                      "tertiary-container": "#9c573a",
+                      "outline": "#6e7977",
+                      "on-primary-fixed-variant": "#00504a",
+                      "accent": "#059669",
+                      "on-error": "#ffffff",
+                      "on-tertiary": "#ffffff",
+                      "on-secondary": "#ffffff",
+                      "primary-fixed": "#9cf2e8",
+                      "surface-container-low": "#f1f4f3",
+                      "secondary": "#50616b",
+                      "ocean": "#0F172A",
+                      "surface-container-lowest": "#ffffff",
+                      "inverse-on-surface": "#eef1f0",
+                      "surface-variant": "#e0e3e1",
+                      "on-error-container": "#93000a",
+                      "secondary-container": "#d3e5f1",
+                      "surface-container-highest": "#e0e3e1",
+                      "secondary-fixed": "#d3e5f1",
+                      "tertiary": "#7f4025",
+                      "warning": "#F59E0B",
+                      "primary": "#005c55",
+                      "surface-container": "#ebefed",
+                      "on-secondary-fixed-variant": "#384953",
+                      "surface-tint": "#006a63",
+                      "ocean-soft": "#164E63",
+                      "inverse-primary": "#80d5cb",
+                      "on-primary": "#ffffff",
+                      "surface-container-high": "#e5e9e7",
+                      "on-tertiary-fixed": "#370e00",
+                      "surface-bright": "#f7faf8",
+                      "on-surface": "#181c1c",
+                      "on-primary-container": "#a3faef",
+                      "primary-fixed-dim": "#80d5cb",
+                      "inverse-surface": "#2d3130",
+                      "error-container": "#ffdad6"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "stack-sm": "0.5rem",
+                      "stack-xl": "2.5rem",
+                      "stack-md": "1rem",
+                      "margin-desktop": "2.5rem",
+                      "margin-mobile": "1rem",
+                      "stack-xs": "0.25rem",
+                      "stack-lg": "1.5rem",
+                      "gutter": "1.5rem",
+                      "container-max": "1280px"
+              },
+              "fontFamily": {
+                      "headline-lg": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "label-md": ["Inter"],
+                      "label-sm": ["Inter"],
+                      "body-md": ["Inter"],
+                      "body-sm": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "display-lg": ["Inter"],
+                      "display-lg-mobile": ["Inter"],
+                      "headline-lg-mobile": ["Inter"]
+              },
+              "fontSize": {
+                      "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "display-lg-mobile": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md dark:bg-ocean/80 shadow-sm transition-all duration-300">
+<div class="flex justify-between items-center px-margin-desktop w-full max-w-container-max mx-auto h-16">
+<div class="flex items-center gap-8">
+<span class="font-headline-md text-headline-md font-bold tracking-tight text-primary dark:text-primary-fixed cursor-pointer">AetherTravel</span>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-on-secondary-container dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-primary-fixed transition-colors font-label-md text-label-md relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-primary after:transition-all hover:after:w-full" href="#">Explore</a>
+<a class="text-primary dark:text-primary-fixed font-bold border-b-2 border-primary dark:border-primary-fixed pb-1 font-label-md text-label-md" href="#">Bookings</a>
+<a class="text-on-secondary-container dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-primary-fixed transition-colors font-label-md text-label-md relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-primary after:transition-all hover:after:w-full" href="#">Dashboard</a>
+<a class="text-on-secondary-container dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-primary-fixed transition-colors font-label-md text-label-md relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-primary after:transition-all hover:after:w-full" href="#">AI Insights</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden lg:flex items-center bg-surface-container px-3 py-1.5 rounded-xl border border-outline/10 focus-within:border-primary/50 transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px] mr-2" data-icon="search">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-sm p-0 w-48" placeholder="Search destinations..." type="text"/>
+</div>
+<button class="material-symbols-outlined p-2 text-on-surface hover:bg-emerald-soft/50 rounded-lg transition-all" data-icon="dark_mode">dark_mode</button>
+<button class="material-symbols-outlined p-2 text-on-surface hover:bg-emerald-soft/50 rounded-lg transition-all" data-icon="notifications">notifications</button>
+<div class="h-8 w-8 rounded-full overflow-hidden bg-outline-variant ring-2 ring-primary/20 cursor-pointer">
+<img alt="User profile avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCtUYxt4r5fBT5bNHonj6Guo31qHsg-W9_wb-keYC3UTSy7h3Yu-nXi8mZnR1ur_ye921-IGApprlXg-hIt_QPBUMjngYXvTozAZDZIQVWwmQ0H-66yQiGN2pl-xH7QV_GN9wB4Owi0WuegPCjGbGW6bNghDAMXqLjW5OD3tm5e0oe0aSVhyz5oKukYRhWvhvIh8LAZ_PbIHmzOMgjDqmHULNFAjGbXBi9j99UPdZNRrKvMJEeC-GPoWpSxAX1mYixUN2-GUeLhLukT"/>
+</div>
+<button class="hidden sm:block px-5 py-2 bg-primary text-on-primary font-label-md text-label-md rounded-xl ai-glow active:scale-95 transition-transform">Plan Trip</button>
+</div>
+</div>
+</header>
+<main class="pt-24 pb-stack-xl px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<!-- Hero Search Section -->
+<section class="mb-stack-xl reveal-up">
+<h1 class="font-display-lg text-display-lg-mobile md:text-display-lg mb-stack-md text-ocean tracking-tight">Find your next <span class="text-primary italic">Aether</span> escape.</h1>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Search Inputs Panel -->
+<div class="lg:col-span-12 glass-panel p-stack-lg rounded-2xl shadow-2xl shadow-primary/5 flex flex-col gap-6">
+<div class="flex flex-col md:flex-row gap-4 items-end">
+<div class="flex-1 w-full space-y-1 group">
+<label class="font-label-sm text-label-sm text-on-surface-variant ml-1 group-focus-within:text-primary transition-colors">Destination</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary" data-icon="location_on">location_on</span>
+<input class="search-input w-full pl-12 pr-4 py-4 bg-surface-container-lowest/50 border border-outline-variant rounded-xl focus:ring-2 focus:ring-accent focus:border-accent font-body-md transition-all" id="destination-input" placeholder="Santorini sunset retreats" type="text"/>
+</div>
+</div>
+<div class="flex-1 w-full space-y-1 group">
+<label class="font-label-sm text-label-sm text-on-surface-variant ml-1 group-focus-within:text-primary transition-colors">Dates</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary" data-icon="calendar_month">calendar_month</span>
+<input class="w-full pl-12 pr-4 py-4 bg-surface-container-lowest/50 border border-outline-variant rounded-xl focus:ring-2 focus:ring-accent focus:border-accent font-body-md transition-all" placeholder="Add dates" type="text"/>
+</div>
+</div>
+<div class="flex-1 w-full space-y-1 group">
+<label class="font-label-sm text-label-sm text-on-surface-variant ml-1 group-focus-within:text-primary transition-colors">Travelers</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary" data-icon="person">person</span>
+<select class="w-full pl-12 pr-4 py-4 bg-surface-container-lowest/50 border border-outline-variant rounded-xl focus:ring-2 focus:ring-accent focus:border-accent font-body-md appearance-none transition-all">
+<option>1 Adult</option>
+<option>2 Adults</option>
+<option>Family (2+2)</option>
+</select>
+</div>
+</div>
+<button class="w-full md:w-auto px-10 py-4 bg-ocean text-on-primary rounded-xl font-headline-md flex items-center justify-center gap-2 hover:bg-ocean/90 premium-easing transition-all active:scale-95 shadow-lg shadow-ocean/20">
+<span class="material-symbols-outlined" data-icon="search">search</span> Search
+                    </button>
+</div>
+<!-- AI Search Intelligence Chips -->
+<div class="flex flex-wrap items-center gap-3">
+<span class="text-label-sm font-bold text-primary flex items-center gap-1.5 px-2">
+<span class="material-symbols-outlined text-sm" data-icon="smart_toy">smart_toy</span>
+AI INSIGHTS:
+</span>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1.5 bg-emerald-soft text-primary rounded-full text-label-sm border border-primary/10 flex items-center gap-1 hover:bg-primary hover:text-white transition-all cursor-pointer">
+<span class="material-symbols-outlined text-[14px]" data-icon="trending_up">trending_up</span> Trending for your Bali profile
+</span>
+<span class="px-3 py-1.5 bg-emerald-soft text-primary rounded-full text-label-sm border border-primary/10 flex items-center gap-1 hover:bg-primary hover:text-white transition-all cursor-pointer">
+<span class="material-symbols-outlined text-[14px]" data-icon="wb_sunny">wb_sunny</span> Best weather in October
+</span>
+<span class="px-3 py-1.5 bg-emerald-soft text-primary rounded-full text-label-sm border border-primary/10 flex items-center gap-1 hover:bg-primary hover:text-white transition-all cursor-pointer">
+<span class="material-symbols-outlined text-[14px]" data-icon="price_change">price_change</span> Prices predicted to drop
+</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Sidebar Filters (Glassmorphism) -->
+<aside class="lg:col-span-3 space-y-stack-lg reveal-up" style="animation-delay: 0.1s">
+<div class="glass-panel p-stack-lg rounded-2xl shadow-xl shadow-black/5">
+<div class="flex items-center justify-between mb-stack-md">
+<h3 class="font-headline-md text-headline-md text-ocean">Filters</h3>
+<button class="text-primary font-label-sm text-label-sm hover:underline premium-easing transition-all">Clear all</button>
+</div>
+<!-- Filter Groups -->
+<div class="space-y-stack-lg">
+<div>
+<p class="font-label-md text-label-md mb-stack-sm text-on-surface">AI Predicted Price</p>
+<div class="flex items-center gap-2 px-3 py-2 bg-emerald-soft rounded-lg border border-primary/20 relative overflow-hidden group">
+<div class="absolute inset-0 bg-white/50 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+<span class="material-symbols-outlined text-primary text-sm ai-pulse rounded-full" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-body-sm text-body-sm text-primary font-medium relative">Likely to drop in 48h</span>
+</div>
+</div>
+<div>
+<p class="font-label-md text-label-md mb-stack-sm text-on-surface">Price Range</p>
+<input class="w-full accent-primary h-1.5 bg-surface-container rounded-lg appearance-none cursor-pointer hover:shadow-[0_0_10px_rgba(5,150,105,0.3)] transition-shadow" type="range"/>
+<div class="flex justify-between text-label-sm text-on-surface-variant mt-2">
+<span>$0</span>
+<span>$2,500+</span>
+</div>
+</div>
+<div>
+<p class="font-label-md text-label-md mb-stack-sm text-on-surface">Stops</p>
+<div class="space-y-2">
+<label class="flex items-center gap-3 text-body-sm cursor-pointer group">
+<input class="rounded text-primary focus:ring-primary h-5 w-5 border-outline-variant transition-all hover:border-primary cursor-pointer" type="checkbox"/> <span class="group-hover:text-primary transition-colors">Non-stop</span>
+</label>
+<label class="flex items-center gap-3 text-body-sm cursor-pointer group">
+<input class="rounded text-primary focus:ring-primary h-5 w-5 border-outline-variant transition-all hover:border-primary cursor-pointer" type="checkbox"/> <span class="group-hover:text-primary transition-colors">1 Stop</span>
+</label>
+</div>
+</div>
+<div>
+<p class="font-label-md text-label-md mb-stack-sm text-on-surface">Amenities</p>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1 bg-surface-container-high rounded-full text-label-sm border border-outline/10 cursor-pointer hover:bg-primary hover:text-on-primary transition-all premium-easing hover:scale-105 active:scale-95">WiFi</span>
+<span class="px-3 py-1 bg-surface-container-high rounded-full text-label-sm border border-outline/10 cursor-pointer hover:bg-primary hover:text-on-primary transition-all premium-easing hover:scale-105 active:scale-95">Pool</span>
+<span class="px-3 py-1 bg-surface-container-high rounded-full text-label-sm border border-outline/10 cursor-pointer hover:bg-primary hover:text-on-primary transition-all premium-easing hover:scale-105 active:scale-95">Spa</span>
+<span class="px-3 py-1 bg-surface-container-high rounded-full text-label-sm border border-outline/10 cursor-pointer hover:bg-primary hover:text-on-primary transition-all premium-easing hover:scale-105 active:scale-95">Breakfast</span>
+</div>
+</div>
+</div>
+</div>
+<!-- AI Concierge Card -->
+<div class="bg-ocean text-on-primary p-stack-lg rounded-2xl relative overflow-hidden group shadow-2xl shadow-ocean/20 transition-transform duration-500 hover:scale-[1.02]">
+<div class="absolute top-0 right-0 w-40 h-40 bg-primary/20 blur-[50px] -mr-16 -mt-16 group-hover:bg-primary/40 transition-all duration-700"></div>
+<div class="relative z-10">
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-primary ai-pulse bg-primary/20 p-2 rounded-full" data-icon="smart_toy">smart_toy</span>
+<span class="text-label-sm font-bold text-primary tracking-widest">AI CONCIERGE</span>
+</div>
+<h4 class="font-headline-md text-headline-md mb-2">Smart Suggestion</h4>
+<p class="font-body-sm text-body-sm text-secondary-fixed-dim mb-4 leading-relaxed">Rain expected in Kuta next week. Ubud eco-resorts may fit your style better and offer a more serene experience.</p>
+<button class="w-full py-3 bg-primary text-on-primary rounded-xl font-label-md ai-glow premium-easing transition-all active:scale-95">Update Preferences</button>
+</div>
+</div>
+</aside>
+<!-- Main Results -->
+<div class="lg:col-span-9 space-y-gutter">
+<div class="flex items-center justify-between reveal-up" style="animation-delay: 0.15s">
+<p class="font-body-md text-body-md text-on-surface-variant">Showing <span class="font-bold text-on-surface">142</span> premium options</p>
+<div class="flex items-center gap-2">
+<span class="text-label-sm text-on-surface-variant">Sort by:</span>
+<select class="bg-transparent border-none font-label-md text-label-md focus:ring-0 text-primary p-0 pr-6 cursor-pointer hover:underline underline-offset-4">
+<option>AI Recommendation</option>
+<option>Price: Low to High</option>
+<option>User Rating</option>
+</select>
+</div>
+</div>
+<!-- Result Card 1 -->
+<div class="bg-surface-container-lowest border border-outline/10 rounded-2xl overflow-hidden hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] premium-easing transition-all flex flex-col md:flex-row group reveal-up hover:-translate-y-2" style="animation-delay: 0.2s">
+<div class="md:w-80 h-64 md:h-auto relative overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-110 group-hover:rotate-1 transition-transform duration-1000 grayscale-[0.2] group-hover:grayscale-0" data-alt="A luxurious coastal resort with glass-fronted suites overlooking a crystal-clear turquoise ocean at dusk. The lighting is warm and golden, contrasting with the deep blue water. The aesthetic is ultra-modern and premium, with minimalist architectural lines and lush tropical landscaping in the foreground. High-end serenity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD0lEiRwKHaP0KgsNxUX76B1lMLIT_6dFskJYGuclnj-fquUL-FJ5PkbGoUbuR9ue06bL1wJld9WXaX0Y_iA-O8r6uImUkB3VjKyWGpXmsFP3DLQ5mJ3P8n3_ijnYkaNIHmfuat9PrkxXC3Gkdbu3ZVyp2usEcJrQDeG-y0maqQWYd5uLCL17OssW7Wl5leQbzGUyCxx52IMvVivHJtSYy-GXQPImK_T2u6VIgFDxAl6kKk87h0NilO-r1FEFzHhyT2IQ9dwDUa2FkA"/>
+<div class="absolute top-4 left-4 bg-surface/90 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined text-warning text-sm fill-1" data-icon="star">star</span>
+<span class="font-label-sm text-label-sm font-bold">4.9</span>
+</div>
+</div>
+<div class="flex-1 p-stack-lg flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-2">
+<div>
+<span class="text-label-sm text-primary font-bold uppercase tracking-widest text-[10px]">Resort &amp; Spa</span>
+<h3 class="font-headline-md text-headline-md text-ocean group-hover:text-primary transition-colors">Azure Horizon Eco-Lodge</h3>
+</div>
+<div class="bg-emerald-soft text-primary px-4 py-1.5 rounded-full text-label-sm font-bold border border-primary/5">$420 / night</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2 mb-6 leading-relaxed">Experience carbon-neutral luxury nestled between the volcanic cliffs and the deep blue Mediterranean. Featuring private infinity pools and AI-driven concierge.</p>
+<div class="flex gap-6">
+<div class="flex items-center gap-2 text-on-surface-variant group/icon cursor-default">
+<span class="material-symbols-outlined text-[20px] group-hover/icon:text-primary transition-colors" data-icon="wifi">wifi</span>
+<span class="text-label-sm">Free WiFi</span>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant group/icon cursor-default">
+<span class="material-symbols-outlined text-[20px] group-hover/icon:text-primary transition-colors" data-icon="pool">pool</span>
+<span class="text-label-sm">Infinity Pool</span>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant group/icon cursor-default">
+<span class="material-symbols-outlined text-[20px] group-hover/icon:text-primary transition-colors" data-icon="spa">spa</span>
+<span class="text-label-sm">Wellness Center</span>
+</div>
+</div>
+</div>
+<div class="mt-8 flex items-center justify-between border-t border-outline/5 pt-6">
+<div class="flex items-center gap-3">
+<div class="p-2 bg-emerald-soft rounded-full relative">
+<span class="material-symbols-outlined text-primary text-sm ai-pulse" data-icon="verified">verified</span>
+<div class="absolute inset-0 bg-primary/10 rounded-full animate-ping"></div>
+</div>
+<span class="text-label-sm font-bold text-primary tracking-wide">Aether AI Pick</span>
+</div>
+<button class="px-8 py-2.5 bg-primary text-on-primary rounded-xl font-label-md ai-glow premium-easing transition-all active:scale-95 shadow-md shadow-primary/20">Select Room</button>
+</div>
+</div>
+</div>
+<!-- Result Card 2 (Flight) -->
+<div class="bg-surface-container-lowest border border-outline/10 rounded-2xl overflow-hidden hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] premium-easing transition-all p-stack-lg group reveal-up hover:-translate-y-2" style="animation-delay: 0.3s">
+<div class="flex flex-col md:flex-row items-center gap-gutter relative">
+<div class="flex items-center gap-5 min-w-[160px]">
+<div class="w-14 h-14 bg-surface-container rounded-2xl flex items-center justify-center text-ocean group-hover:bg-primary/10 group-hover:text-primary transition-all duration-500">
+<span class="material-symbols-outlined text-[36px]" data-icon="flight_takeoff">flight_takeoff</span>
+</div>
+<div>
+<p class="font-headline-md text-headline-md text-ocean">SkyWays</p>
+<p class="text-label-sm text-on-surface-variant">Flight SW-204</p>
+</div>
+</div>
+<div class="flex-1 flex items-center justify-between w-full px-4 md:px-10">
+<div class="text-center">
+<p class="font-headline-md text-headline-md text-ocean">09:40</p>
+<p class="text-label-sm font-bold text-on-surface-variant">LHR</p>
+</div>
+<div class="flex-1 px-8 relative flex flex-col items-center group-hover:px-12 transition-all duration-700">
+<div class="w-full h-[1px] bg-outline-variant/50 relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-r from-transparent via-primary/50 to-transparent flight-path"></div>
+<div class="absolute top-1/2 left-0 -translate-y-1/2 w-full flex justify-center">
+<div class="bg-surface-container-lowest px-3 py-1 rounded-full border border-outline/5 shadow-sm group-hover:scale-125 transition-transform">
+<span class="material-symbols-outlined text-[18px] text-primary group-hover:translate-x-4 transition-transform duration-[3000ms] ease-in-out" data-icon="flight">flight</span>
+</div>
+</div>
+</div>
+<span class="text-label-sm text-on-surface-variant mt-4 font-medium">11h 20m (Direct)</span>
+</div>
+<div class="text-center">
+<p class="font-headline-md text-headline-md text-ocean">21:00</p>
+<p class="text-label-sm font-bold text-on-surface-variant">DPS</p>
+</div>
+</div>
+<div class="flex flex-col items-end gap-3 min-w-[180px]">
+<div class="text-right">
+<p class="font-headline-md text-headline-md text-primary">$1,150</p>
+<p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-tighter">Round Trip / Economy</p>
+</div>
+<button class="w-full px-8 py-3 bg-primary text-on-primary rounded-xl font-label-md ai-glow premium-easing transition-all active:scale-95 shadow-md shadow-primary/20">Book Flight</button>
+</div>
+</div>
+<div class="mt-6 pt-5 border-t border-outline/5 flex justify-between items-center">
+<div class="flex gap-6">
+<span class="text-label-sm text-on-surface-variant flex items-center gap-2 group-hover:text-primary transition-colors cursor-default"><span class="material-symbols-outlined text-[16px]" data-icon="luggage">luggage</span> 23kg included</span>
+<span class="text-label-sm text-on-surface-variant flex items-center gap-2 group-hover:text-primary transition-colors cursor-default"><span class="material-symbols-outlined text-[16px]" data-icon="event_seat">event_seat</span> Extra legroom</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="h-2 w-2 rounded-full bg-error ai-pulse"></div>
+<span class="text-label-sm text-error font-bold tracking-tight">Atlas predicts this fare may rise within 6 hours.</span>
+</div>
+</div>
+</div>
+<!-- Result Card 3 -->
+<div class="bg-surface-container-lowest border border-outline/10 rounded-2xl overflow-hidden hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] premium-easing transition-all flex flex-col md:flex-row group reveal-up hover:-translate-y-2" style="animation-delay: 0.4s">
+<div class="md:w-80 h-64 md:h-auto relative overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-110 group-hover:-rotate-1 transition-transform duration-1000 grayscale-[0.2] group-hover:grayscale-0" data-alt="A contemporary urban hotel interior featuring a sleek lounge area with floor-to-ceiling windows showing a bright metropolitan skyline. The furniture is minimalist and high-end, using deep ocean blues and emerald green accents. Soft morning sunlight floods the room, creating a crisp, professional, yet inviting atmosphere. Modern corporate travel aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDu4kGKM6AaRjqDwIHWUD4lYh_E6sWv05sFnmiU6JbdoRhuoxAEYzfNiEHk8XzZ4DDrVU--iCPZgB7fz-cUWjnguzZqivgIPYJLG2y3oY6SBwCA4MCPukpNUhGEJSTyT3Zj5MfDfrSysxQ2Rtl_0irJSyBYYGduCpyEPBd0Od76ZpVzYkHjcFcfwkvamH54zPzvY7j0UqBIvdxTk0jQrkxTFyr3xXcNKGpbEFQZ8jU4LCrbc9P7FZsemX1dhKscwrRMjr-1OTo5Saq-"/>
+<div class="absolute top-4 left-4 bg-surface/90 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined text-warning text-sm fill-1" data-icon="star">star</span>
+<span class="font-label-sm text-label-sm font-bold">4.7</span>
+</div>
+</div>
+<div class="flex-1 p-stack-lg flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-2">
+<div>
+<span class="text-label-sm text-primary font-bold uppercase tracking-widest text-[10px]">Boutique Hotel</span>
+<h3 class="font-headline-md text-headline-md text-ocean group-hover:text-primary transition-colors">The Emerald Executive</h3>
+</div>
+<div class="bg-emerald-soft text-primary px-4 py-1.5 rounded-full text-label-sm font-bold border border-primary/5">$280 / night</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2 mb-6 leading-relaxed">Centrally located for the modern professional. Smart-room automation, dedicated co-working hubs, and award-winning rooftop dining.</p>
+<div class="flex gap-6">
+<div class="flex items-center gap-2 text-on-surface-variant group/icon cursor-default">
+<span class="material-symbols-outlined text-[20px] group-hover/icon:text-primary transition-colors" data-icon="fitness_center">fitness_center</span>
+<span class="text-label-sm">24/7 Gym</span>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant group/icon cursor-default">
+<span class="material-symbols-outlined text-[20px] group-hover/icon:text-primary transition-colors" data-icon="restaurant">restaurant</span>
+<span class="text-label-sm">Michelin Star</span>
+</div>
+</div>
+</div>
+<div class="mt-8 flex items-center justify-between border-t border-outline/5 pt-6">
+<div class="flex items-center gap-3">
+<span class="text-label-sm font-medium text-on-surface-variant flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm" data-icon="near_me">near_me</span>
+300m from City Center
+</span>
+</div>
+<button class="px-8 py-2.5 bg-primary text-on-primary rounded-xl font-label-md ai-glow premium-easing transition-all active:scale-95 shadow-md shadow-primary/20">Select Room</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full mt-stack-xl bg-ocean dark:bg-surface-container-lowest border-t border-outline/10 overflow-hidden">
+<div class="relative h-1 w-full bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:flex lg:justify-between items-center py-stack-lg px-margin-desktop max-w-container-max mx-auto">
+<div class="mb-6 lg:mb-0 reveal-up">
+<span class="font-headline-md text-headline-md font-bold text-emerald-soft dark:text-primary cursor-pointer hover:opacity-80 transition-opacity">AetherTravel</span>
+<p class="font-body-sm text-body-sm text-on-primary dark:text-on-surface mt-2 max-w-xs opacity-70">© 2024 AetherTravel AI. Experience the future of global exploration.</p>
+</div>
+<div class="flex flex-wrap gap-x-10 gap-y-4 reveal-up" style="animation-delay: 0.1s">
+<a class="text-secondary-fixed-dim dark:text-on-secondary-container hover:text-primary-fixed dark:hover:text-primary transition-all duration-300 font-label-sm text-label-sm relative group" href="#">
+    Privacy Policy
+    <span class="absolute bottom-0 left-0 w-0 h-[1px] bg-current transition-all duration-300 group-hover:w-full"></span>
+</a>
+<a class="text-secondary-fixed-dim dark:text-on-secondary-container hover:text-primary-fixed dark:hover:text-primary transition-all duration-300 font-label-sm text-label-sm relative group" href="#">
+    Terms of Service
+    <span class="absolute bottom-0 left-0 w-0 h-[1px] bg-current transition-all duration-300 group-hover:w-full"></span>
+</a>
+<a class="text-secondary-fixed-dim dark:text-on-secondary-container hover:text-primary-fixed dark:hover:text-primary transition-all duration-300 font-label-sm text-label-sm relative group" href="#">
+    Help Center
+    <span class="absolute bottom-0 left-0 w-0 h-[1px] bg-current transition-all duration-300 group-hover:w-full"></span>
+</a>
+<a class="text-secondary-fixed-dim dark:text-on-secondary-container hover:text-primary-fixed dark:hover:text-primary transition-all duration-300 font-label-sm text-label-sm relative group" href="#">
+    API Status
+    <span class="absolute bottom-0 left-0 w-0 h-[1px] bg-current transition-all duration-300 group-hover:w-full"></span>
+</a>
+<a class="text-secondary-fixed-dim dark:text-on-secondary-container hover:text-primary-fixed dark:hover:text-primary transition-all duration-300 font-label-sm text-label-sm relative group" href="#">
+    Contact
+    <span class="absolute bottom-0 left-0 w-0 h-[1px] bg-current transition-all duration-300 group-hover:w-full"></span>
+</a>
+</div>
+<div class="flex gap-4 mt-6 lg:mt-0 reveal-up" style="animation-delay: 0.2s">
+<button class="w-10 h-10 rounded-full border border-outline/20 flex items-center justify-center text-on-primary hover:bg-primary hover:border-primary transition-all duration-500 hover:rotate-[360deg]">
+<span class="material-symbols-outlined text-[20px]" data-icon="language">language</span>
+</button>
+<button class="w-10 h-10 rounded-full border border-outline/20 flex items-center justify-center text-on-primary hover:bg-primary hover:border-primary transition-all duration-500 hover:rotate-[360deg]">
+<span class="material-symbols-outlined text-[20px]" data-icon="public">public</span>
+</button>
+</div>
+</div>
+</footer>
+<script>
+    // Placeholder Cycling Animation
+    const placeholders = [
+        'Santorini sunset retreats',
+        'Kyoto escapes',
+        'Modern Swiss chalets',
+        'Hidden Bali eco-villas',
+        'London boutique stays'
+    ];
+    let currentIndex = 0;
+    const input = document.getElementById('destination-input');
+
+    setInterval(() => {
+        input.classList.add('fade-out');
+        setTimeout(() => {
+            currentIndex = (currentIndex + 1) % placeholders.length;
+            input.placeholder = placeholders[currentIndex];
+            input.classList.remove('fade-out');
+        }, 300);
+    }, 4000);
+
+    // Theme toggle simulation
+    const themeBtn = document.querySelector('[data-icon="dark_mode"]');
+    themeBtn.addEventListener('click', () => {
+        document.documentElement.classList.toggle('dark');
+        const isDark = document.documentElement.classList.contains('dark');
+        themeBtn.innerText = isDark ? 'light_mode' : 'dark_mode';
+    });
+
+    // Cursor-reactive lighting effect
+    const mainContainer = document.querySelector('main');
+    document.addEventListener('mousemove', (e) => {
+        const x = e.clientX;
+        const y = e.clientY;
+        document.body.style.background = `
+            radial-gradient(circle at ${x}px ${y}px, rgba(15, 118, 110, 0.08) 0%, transparent 40%),
+            radial-gradient(circle at 0% 0%, rgba(15, 118, 110, 0.05) 0%, transparent 40%),
+            radial-gradient(circle at 100% 100%, rgba(15, 23, 42, 0.05) 0%, transparent 40%),
+            #f7faf8`;
+    });
+
+    // Header scroll effect
+    window.addEventListener('scroll', () => {
+        const header = document.querySelector('header');
+        if (window.scrollY > 20) {
+            header.classList.add('shadow-lg', 'h-14');
+            header.classList.remove('h-16');
+        } else {
+            header.classList.remove('shadow-lg', 'h-14');
+            header.classList.add('h-16');
+        }
+    });
+</script>
+</body></html>

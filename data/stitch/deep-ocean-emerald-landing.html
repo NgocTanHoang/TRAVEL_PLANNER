@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AetherTravel AI | Explore the Unknown</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-fixed-dim": "#ffb598",
+                    "background": "#f7faf8",
+                    "surface": "#f7faf8",
+                    "tertiary-fixed": "#ffdbce",
+                    "on-surface-variant": "#3e4947",
+                    "on-secondary-container": "#566771",
+                    "emerald-soft": "#ECFDF5",
+                    "on-secondary-fixed": "#0c1e26",
+                    "secondary-fixed-dim": "#b7c9d5",
+                    "on-background": "#181c1c",
+                    "outline-variant": "#bdc9c6",
+                    "on-tertiary-container": "#ffe5db",
+                    "surface-dim": "#d7dbd9",
+                    "primary-container": "#0f766e",
+                    "on-primary-fixed": "#00201d",
+                    "on-tertiary-fixed-variant": "#72361b",
+                    "error": "#ba1a1a",
+                    "tertiary-container": "#9c573a",
+                    "outline": "#6e7977",
+                    "on-primary-fixed-variant": "#00504a",
+                    "accent": "#059669",
+                    "on-error": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "primary-fixed": "#9cf2e8",
+                    "surface-container-low": "#f1f4f3",
+                    "secondary": "#50616b",
+                    "ocean": "#0F172A",
+                    "surface-container-lowest": "#ffffff",
+                    "inverse-on-surface": "#eef1f0",
+                    "surface-variant": "#e0e3e1",
+                    "on-error-container": "#93000a",
+                    "secondary-container": "#d3e5f1",
+                    "surface-container-highest": "#e0e3e1",
+                    "secondary-fixed": "#d3e5f1",
+                    "tertiary": "#7f4025",
+                    "warning": "#F59E0B",
+                    "primary": "#005c55",
+                    "surface-container": "#ebefed",
+                    "on-secondary-fixed-variant": "#384953",
+                    "surface-tint": "#006a63",
+                    "ocean-soft": "#164E63",
+                    "inverse-primary": "#80d5cb",
+                    "on-primary": "#ffffff",
+                    "surface-container-high": "#e5e9e7",
+                    "on-tertiary-fixed": "#370e00",
+                    "surface-bright": "#f7faf8",
+                    "on-surface": "#181c1c",
+                    "on-primary-container": "#a3faef",
+                    "primary-fixed-dim": "#80d5cb",
+                    "inverse-surface": "#2d3130",
+                    "error-container": "#ffdad6"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-sm": "0.5rem",
+                    "stack-xl": "2.5rem",
+                    "stack-md": "1rem",
+                    "margin-desktop": "2.5rem",
+                    "margin-mobile": "1rem",
+                    "stack-xs": "0.25rem",
+                    "stack-lg": "1.5rem",
+                    "gutter": "1.5rem",
+                    "container-max": "1280px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "label-md": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "body-md": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "display-lg-mobile": ["Inter"],
+                    "headline-lg-mobile": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "display-lg-mobile": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        :root {
+            --premium-ease: cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        body {
+            transition: background-color 0.5s var(--premium-ease), color 0.5s var(--premium-ease);
+            overflow-x: hidden;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .dark .glass-panel {
+            background: rgba(15, 23, 42, 0.7);
+        }
+
+        /* Ambient Background */
+        .ambient-mesh {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: -2;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(15, 118, 110, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(15, 23, 42, 0.03) 0%, transparent 50%);
+        }
+
+        /* Cursor Glow */
+        #cursor-glow {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(5, 150, 105, 0.05) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.5s var(--premium-ease);
+        }
+
+        /* Nav Animations */
+        .nav-link {
+            position: relative;
+            transition: color 0.3s var(--premium-ease);
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: currentColor;
+            transition: width 0.3s var(--premium-ease);
+        }
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        /* Hero Image Animations */
+        @keyframes cameraDrift {
+            0%, 100% { transform: scale(1.02) translate(0, 0); }
+            50% { transform: scale(1.05) translate(10px, -10px); }
+        }
+        .drift-animation {
+            animation: cameraDrift 10s ease-in-out infinite;
+        }
+
+        @keyframes pulseRoute {
+            0% { opacity: 0.2; }
+            50% { opacity: 0.6; }
+            100% { opacity: 0.2; }
+        }
+        .route-pulse {
+            animation: pulseRoute 3s ease-in-out infinite;
+        }
+
+        @keyframes floatCard {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        .float-animation {
+            animation: floatCard 6s ease-in-out infinite;
+        }
+
+        /* CTA Animations */
+        .cta-bloom:hover {
+            box-shadow: 0 0 30px rgba(0, 92, 85, 0.3);
+            transform: scale(1.02);
+        }
+
+        /* Scroll Reveal */
+        .reveal-hidden {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 0.8s var(--premium-ease), transform 0.8s var(--premium-ease);
+        }
+        .reveal-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Bento/Feature Patterns */
+        .pattern-bg {
+            background-image: radial-gradient(rgba(5, 150, 105, 0.05) 0.5px, transparent 0.5px);
+            background-size: 16px 16px;
+        }
+
+        @keyframes gradientDrift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .gradient-animate {
+            background-size: 200% 200%;
+            animation: gradientDrift 15s ease infinite;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, .reveal-hidden, .drift-animation, .float-animation, .gradient-animate {
+                animation: none !important;
+                transition: none !important;
+                transform: none !important;
+                opacity: 1 !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md">
+<div class="ambient-mesh"></div>
+<div class="hidden lg:block" id="cursor-glow"></div>
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 bg-transparent transition-all duration-500 py-4" id="main-nav">
+<div class="flex justify-between items-center px-margin-desktop w-full max-w-container-max mx-auto h-16 transition-all duration-500">
+<div class="flex items-center gap-8">
+<span class="font-headline-md text-headline-md font-bold tracking-tight text-primary dark:text-primary-fixed">AetherTravel</span>
+<nav class="hidden md:flex gap-8">
+<a class="nav-link text-primary dark:text-primary-fixed font-bold font-label-md text-label-md" href="#">Explore</a>
+<a class="nav-link text-on-secondary-container dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-primary-fixed font-label-md text-label-md" href="#">Bookings</a>
+<a class="nav-link text-on-secondary-container dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-primary-fixed font-label-md text-label-md" href="#">Dashboard</a>
+<a class="nav-link text-on-secondary-container dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-primary-fixed font-label-md text-label-md" href="#">AI Insights</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<button class="p-2 hover:bg-emerald-soft/50 dark:hover:bg-ocean-soft/30 rounded-lg transition-all duration-200 active:scale-95" id="theme-toggle">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed" data-icon="dark_mode">dark_mode</span>
+</button>
+<button class="p-2 hover:bg-emerald-soft/50 dark:hover:bg-ocean-soft/30 rounded-lg transition-all duration-200 active:scale-95">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed" data-icon="notifications">notifications</span>
+</button>
+</div>
+<button class="hidden md:block px-6 py-2 bg-primary text-on-primary rounded-full font-label-md text-label-md hover:bg-primary-container transition-all cta-bloom active:scale-95">
+                    Plan Trip
+                </button>
+<div class="w-8 h-8 rounded-full overflow-hidden border-2 border-primary-fixed cursor-pointer hover:scale-105 transition-transform">
+<img alt="User profile avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSZz3UwVPlDfvEMGcdO58WYSU3IDM-EVv5sxN0WFDf3rNbSBGvRTrYxOJoCOj_LPvraQhLwkmzr868_jWMhGEfDJe9hhwujif0Y6rO29txMO4_Px5PrwWsQ8AJW3ZIVkLE_AgyOV-FGztyFPzDXNbh8QvqAxCg5wBW3xPAGNqcBF2pDGbAjtfCVw09PqKdgrOo4mo11KH-nZfpFQ4kNbfsEqYvZkAhQmbzA_Ed3MO22L5Ks-lbNg8WMgjnoJrHOmONgunrKCagWXiW"/>
+</div>
+</div>
+</div>
+</header>
+<main>
+<!-- Hero Section -->
+<section class="relative min-h-[921px] flex items-center pt-16 overflow-hidden">
+<div class="absolute inset-0 z-0 bg-gradient-to-br from-background via-emerald-soft/20 to-secondary-container/20 dark:from-ocean dark:via-ocean-soft/20 dark:to-surface"></div>
+<div class="container mx-auto px-margin-desktop max-w-container-max relative z-10">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+<div class="space-y-stack-lg hero-content">
+<div class="reveal-hidden inline-flex items-center gap-2 px-3 py-1 bg-emerald-soft dark:bg-ocean-soft text-primary dark:text-primary-fixed rounded-full border border-primary/20" style="transition-delay: 0ms">
+<span class="material-symbols-outlined text-[16px]" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Next-Gen Travel AI</span>
+</div>
+<h1 class="reveal-hidden font-display-lg text-display-lg text-ocean dark:text-surface-bright leading-tight" style="transition-delay: 80ms">
+                            Explore the Unknown with <span class="text-primary dark:text-primary-fixed">AI Precision</span>
+</h1>
+<p class="reveal-hidden font-body-lg text-body-lg text-on-secondary-container max-w-xl" style="transition-delay: 160ms">
+                            Unlock personalized journeys tailored by advanced neural networks. From hidden gems to seamless logistics, experience the future of exploration.
+                        </p>
+<div class="reveal-hidden flex flex-wrap gap-4 pt-stack-md" style="transition-delay: 240ms">
+<button class="px-8 py-4 bg-primary text-on-primary rounded-xl font-headline-md text-[18px] transition-all active:scale-95 cta-bloom">
+                                Start Your Journey
+                            </button>
+<button class="px-8 py-4 bg-white/50 dark:bg-ocean-soft/50 backdrop-blur-sm border border-outline/20 rounded-xl font-headline-md text-[18px] hover:bg-white dark:hover:bg-ocean-soft transition-all active:scale-95">
+                                View Demo
+                            </button>
+</div>
+</div>
+<div class="relative reveal-hidden" style="transition-delay: 300ms">
+<div class="relative z-10 rounded-3xl overflow-hidden shadow-2xl border border-white/20 drift-animation">
+<img alt="Tropical coastline with AI interface" class="w-full aspect-[4/5] object-cover scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCHO2cXiR0NSjXgKaQPmVUZXOfNg-xwlJeL_qzQB4Nw1DJ7L6spIzjRdgC2DoaWkyV9OPMj2Tq0nrGoHaVERslODMuh6BHQGh1QpkRCZAoweP3TDugWvfQzhKZx0V6NnlRbJR5jhIZy13l8liBCAQN2dCrxXtCKVua-_RBhaBUzIQZcy99-I87q8Qq2hNafk-AtV1qw_L-CiaKxlJlx_SbSqu074QScL2w2Gja7Uhue3MSxc-v46tpPKPERHL-oBXLSddgCBn-joLRe"/>
+<div class="absolute inset-0 bg-gradient-to-t from-ocean/40 to-transparent pointer-events-none"></div>
+<div class="absolute bottom-6 left-6 right-6 glass-panel p-6 rounded-2xl border border-white/30 backdrop-blur-xl">
+<div class="flex items-center justify-between">
+<div>
+<p class="font-label-sm text-label-sm text-primary uppercase">Trending Destination</p>
+<h3 class="font-headline-md text-headline-md text-ocean">Maldives AI Route</h3>
+</div>
+<div class="h-12 w-12 bg-primary rounded-full flex items-center justify-center text-on-primary hover:rotate-45 transition-transform cursor-pointer">
+<span class="material-symbols-outlined" data-icon="north_east">north_east</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Floating Contextual Cards -->
+<div class="absolute -top-8 -right-8 z-20 w-48 glass-panel p-4 rounded-2xl shadow-xl border border-white/40 float-animation" style="animation-delay: -1s">
+<div class="flex items-center gap-3 mb-2">
+<div class="w-8 h-8 rounded-full bg-emerald-soft flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-sm">cloud</span>
+</div>
+<span class="font-label-sm text-xs font-bold text-ocean">Local Weather</span>
+</div>
+<p class="text-ocean text-sm">28°C / Sunny</p>
+<p class="text-xs text-on-secondary-container">Perfect for beach tours</p>
+</div>
+<div class="absolute -bottom-4 -left-12 z-20 w-56 glass-panel p-4 rounded-2xl shadow-xl border border-white/40 float-animation" style="animation-delay: -3s">
+<div class="flex items-center gap-3 mb-2">
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-sm">auto_awesome</span>
+</div>
+<span class="font-label-sm text-xs font-bold text-ocean">AI Insight</span>
+</div>
+<p class="text-ocean text-xs leading-relaxed italic">"94% traveler satisfaction for this specific neural path."</p>
+</div>
+<!-- Ambient blobs -->
+<div class="absolute -top-12 -right-12 w-64 h-64 bg-primary/20 rounded-full blur-3xl -z-10 opacity-60"></div>
+<div class="absolute -bottom-12 -left-12 w-48 h-48 bg-accent/20 rounded-full blur-3xl -z-10 opacity-60"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Features Bento Section -->
+<section class="py-stack-xl bg-surface-container-low dark:bg-ocean/95 reveal-hidden">
+<div class="container mx-auto px-margin-desktop max-w-container-max">
+<div class="text-center mb-16 space-y-4">
+<h2 class="font-headline-lg text-headline-lg text-ocean dark:text-surface-bright">Intelligent Features for Modern Explorers</h2>
+<p class="text-on-secondary-container max-w-2xl mx-auto">Our proprietary AI engines handle the complexity of travel planning, so you can focus on the experience.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- Feature Card 1 -->
+<div class="bg-white dark:bg-ocean-soft/10 p-stack-lg rounded-3xl border border-outline/10 hover:border-primary/30 transition-all group hover:-translate-y-2 hover:shadow-2xl relative overflow-hidden">
+<div class="pattern-bg absolute inset-0 opacity-20 pointer-events-none"></div>
+<div class="relative z-10">
+<div class="w-14 h-14 bg-emerald-soft dark:bg-ocean-soft rounded-2xl flex items-center justify-center mb-stack-md group-hover:scale-110 transition-transform group-hover:shadow-[0_0_15px_rgba(5,150,105,0.4)]">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="route">route</span>
+</div>
+<h3 class="font-headline-md text-headline-md mb-stack-sm text-ocean dark:text-surface-bright">AI Itinerary</h3>
+<p class="text-body-md text-on-secondary-container">Generative travel paths based on your personality, history, and real-time local events. No two trips are ever the same.</p>
+<div class="mt-stack-lg pt-stack-md border-t border-outline/10 flex items-center justify-between text-primary font-label-md cursor-pointer group-hover:text-primary-container">
+<span>Explore Engine</span>
+<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+</div>
+</div>
+</div>
+<!-- Feature Card 2 -->
+<div class="bg-white dark:bg-ocean-soft/10 p-stack-lg rounded-3xl border border-outline/10 hover:border-primary/30 transition-all group hover:-translate-y-2 hover:shadow-2xl relative overflow-hidden">
+<div class="pattern-bg absolute inset-0 opacity-20 pointer-events-none"></div>
+<div class="relative z-10">
+<div class="w-14 h-14 bg-emerald-soft dark:bg-ocean-soft rounded-2xl flex items-center justify-center mb-stack-md group-hover:scale-110 transition-transform group-hover:shadow-[0_0_15px_rgba(5,150,105,0.4)]">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="smart_toy">smart_toy</span>
+</div>
+<h3 class="font-headline-md text-headline-md mb-stack-sm text-ocean dark:text-surface-bright">Smart Bookings</h3>
+<p class="text-body-md text-on-secondary-container">Automated price monitoring and instant confirmation for flights and stays, ensuring you always get premium value.</p>
+<div class="mt-stack-lg pt-stack-md border-t border-outline/10 flex items-center justify-between text-primary font-label-md cursor-pointer group-hover:text-primary-container">
+<span>Manage Assets</span>
+<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+</div>
+</div>
+</div>
+<!-- Feature Card 3 -->
+<div class="bg-white dark:bg-ocean-soft/10 p-stack-lg rounded-3xl border border-outline/10 hover:border-primary/30 transition-all group hover:-translate-y-2 hover:shadow-2xl relative overflow-hidden">
+<div class="pattern-bg absolute inset-0 opacity-20 pointer-events-none"></div>
+<div class="relative z-10">
+<div class="w-14 h-14 bg-emerald-soft dark:bg-ocean-soft rounded-2xl flex items-center justify-center mb-stack-md group-hover:scale-110 transition-transform group-hover:shadow-[0_0_15px_rgba(5,150,105,0.4)]">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="support_agent">support_agent</span>
+</div>
+<h3 class="font-headline-md text-headline-md mb-stack-sm text-ocean dark:text-surface-bright">Real-time Support</h3>
+<p class="text-body-md text-on-secondary-container">24/7 AI-driven assistance that adapts to your current location, language, and immediate travel needs.</p>
+<div class="mt-stack-lg pt-stack-md border-t border-outline/10 flex items-center justify-between text-primary font-label-md cursor-pointer group-hover:text-primary-container">
+<span>Get Help</span>
+<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Stats Section -->
+<section class="py-stack-xl relative overflow-hidden bg-ocean text-on-primary reveal-hidden">
+<div class="absolute inset-0 pattern-bg opacity-5"></div>
+<div class="absolute top-0 right-0 w-1/2 h-full bg-emerald-soft/5 skew-x-12"></div>
+<div class="container mx-auto px-margin-desktop max-w-container-max relative z-10">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-gutter text-center">
+<div>
+<div class="text-[44px] font-bold text-primary-fixed mb-2 stat-number" data-target="50000">0</div>
+<div class="font-label-md text-secondary-fixed-dim uppercase tracking-widest">Active Explorers</div>
+</div>
+<div>
+<div class="text-[44px] font-bold text-primary-fixed mb-2 stat-number" data-target="120">0</div>
+<div class="font-label-md text-secondary-fixed-dim uppercase tracking-widest">Countries</div>
+</div>
+<div>
+<div class="text-[44px] font-bold text-primary-fixed mb-2 stat-number" data-target="99.9">0</div>
+<div class="font-label-md text-secondary-fixed-dim uppercase tracking-widest">AI Accuracy</div>
+</div>
+<div>
+<div class="text-[44px] font-bold text-primary-fixed mb-2 stat-number" data-target="4.9">0</div>
+<div class="font-label-md text-secondary-fixed-dim uppercase tracking-widest">User Rating</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Call to Action Section -->
+<section class="py-stack-xl reveal-hidden">
+<div class="container mx-auto px-margin-desktop max-w-container-max">
+<div class="gradient-animate bg-gradient-to-r from-primary via-primary-container to-primary rounded-[2.5rem] p-stack-xl text-center text-on-primary relative overflow-hidden shadow-2xl">
+<div class="absolute inset-0 opacity-10" style="background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTAgNDBDMjUgMzAgNzUgNTAgMTAwIDQwTTI1IDYwQzUwIDcwIDc1IDUwIDExMCA2MCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIwLjUiLz48L3N2Zz4='); background-size: 200px 200px;"></div>
+<div class="relative z-10 max-w-3xl mx-auto space-y-stack-md">
+<h2 class="font-display-lg text-display-lg">Ready to redefine your travel?</h2>
+<p class="font-body-lg text-body-lg opacity-90">Join thousands of travelers who are using AetherTravel AI to discover the world in ways they never thought possible.</p>
+<div class="pt-stack-lg">
+<button class="px-10 py-5 bg-white text-primary rounded-2xl font-headline-md text-[20px] hover:bg-emerald-soft transition-all active:scale-95 shadow-lg cta-bloom">
+                                Create Your AI Account
+                            </button>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full mt-stack-xl bg-ocean dark:bg-surface-container-lowest border-t border-outline/10 text-on-primary dark:text-on-surface reveal-hidden">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:flex lg:justify-between items-center py-stack-lg px-margin-desktop max-w-container-max mx-auto">
+<div class="mb-stack-lg lg:mb-0">
+<span class="font-headline-md text-headline-md font-bold text-emerald-soft dark:text-primary">AetherTravel</span>
+<p class="mt-2 font-body-sm text-body-sm text-secondary-fixed-dim dark:text-on-secondary-container">© 2024 AetherTravel AI. Experience the future of global exploration.</p>
+</div>
+<nav class="flex flex-wrap gap-x-8 gap-y-4">
+<a class="font-label-sm text-label-sm text-secondary-fixed-dim dark:text-on-secondary-container hover:text-primary-fixed dark:hover:text-primary transition-all hover:underline underline-offset-4 decoration-primary" href="#">Privacy Policy</a>
+<a class="font-label-sm text-label-sm text-secondary-fixed-dim dark:text-on-secondary-container hover:text-primary-fixed dark:hover:text-primary transition-all hover:underline underline-offset-4 decoration-primary" href="#">Terms of Service</a>
+<a class="font-label-sm text-label-sm text-secondary-fixed-dim dark:text-on-secondary-container hover:text-primary-fixed dark:hover:text-primary transition-all hover:underline underline-offset-4 decoration-primary" href="#">Help Center</a>
+<a class="font-label-sm text-label-sm text-secondary-fixed-dim dark:text-on-secondary-container hover:text-primary-fixed dark:hover:text-primary transition-all hover:underline underline-offset-4 decoration-primary" href="#">API Status</a>
+<a class="font-label-sm text-label-sm text-secondary-fixed-dim dark:text-on-secondary-container hover:text-primary-fixed dark:hover:text-primary transition-all hover:underline underline-offset-4 decoration-primary" href="#">Contact</a>
+</nav>
+</div>
+</footer>
+<script>
+        // Theme Toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        const html = document.documentElement;
+        const themeIcon = themeToggle.querySelector('span');
+
+        themeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            themeIcon.innerText = isDark ? 'light_mode' : 'dark_mode';
+            themeIcon.setAttribute('data-icon', isDark ? 'light_mode' : 'dark_mode');
+        });
+
+        // Floating Navbar on scroll
+        const nav = document.getElementById('main-nav');
+        const navContainer = nav.querySelector('div');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                nav.classList.add('bg-white/80', 'dark:bg-ocean/80', 'backdrop-blur-md', 'shadow-md', 'py-2');
+                nav.classList.remove('bg-transparent', 'py-4');
+            } else {
+                nav.classList.remove('bg-white/80', 'dark:bg-ocean/80', 'backdrop-blur-md', 'shadow-md', 'py-2');
+                nav.classList.add('bg-transparent', 'py-4');
+            }
+        });
+
+        // Cursor Glow
+        const cursorGlow = document.getElementById('cursor-glow');
+        document.addEventListener('mousemove', (e) => {
+            cursorGlow.style.left = e.clientX + 'px';
+            cursorGlow.style.top = e.clientY + 'px';
+        });
+
+        // Scroll Reveal
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('reveal-visible');
+                    // Stagger children if they are hero items
+                    if (entry.target.classList.contains('hero-content')) {
+                        const children = entry.target.querySelectorAll('.reveal-hidden');
+                        children.forEach(child => child.classList.add('reveal-visible'));
+                    }
+                    // Handle stats count up
+                    if (entry.target.querySelector('.stat-number')) {
+                        startCountUp(entry.target);
+                    }
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal-hidden').forEach(el => observer.observe(el));
+        observer.observe(document.querySelector('.hero-content'));
+
+        // Stats Count Up
+        function startCountUp(container) {
+            const stats = container.querySelectorAll('.stat-number');
+            stats.forEach(stat => {
+                if (stat.dataset.animated) return;
+                stat.dataset.animated = "true";
+                const target = parseFloat(stat.dataset.target);
+                const suffix = stat.innerText.replace(/[0-9.]/g, '');
+                let current = 0;
+                const duration = 2000;
+                const increment = target / (duration / 16);
+
+                const update = () => {
+                    current += increment;
+                    if (current < target) {
+                        stat.innerText = (target % 1 === 0 ? Math.floor(current) : current.toFixed(1)) + suffix;
+                        requestAnimationFrame(update);
+                    } else {
+                        stat.innerText = target + suffix;
+                    }
+                };
+                update();
+            });
+        }
+    </script>
+</body></html>

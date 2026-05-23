@@ -9,77 +9,53 @@
       crossorigin=""/>
 
 <style>
-    .filter-scrollbar::-webkit-scrollbar {
-        height: 6px;
+    .search-page-ambient {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+            radial-gradient(circle at 0% 0%, rgba(var(--primary), 0.08) 0%, transparent 28%),
+            radial-gradient(circle at 100% 100%, rgba(var(--ocean-soft), 0.08) 0%, transparent 30%),
+            linear-gradient(180deg, rgba(var(--background), 0.92) 0%, rgba(var(--muted), 0.98) 100%);
     }
-
-    .filter-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(var(--muted-foreground), 0.45);
-        border-radius: 9999px;
-    }
-
-    #search-shell {
-        transition: grid-template-columns 0.3s ease;
-    }
-
-    #search-shell.sidebar-collapsed {
-        grid-template-columns: minmax(0, 1fr);
-    }
-
-    #search-sidebar {
-        transition: opacity 0.25s ease, transform 0.25s ease, max-width 0.3s ease;
-    }
-
-    #search-shell.sidebar-collapsed #search-sidebar {
-        opacity: 0;
-        transform: translateX(-16px);
-        max-width: 0;
-        overflow: hidden;
-        padding: 0;
-        margin: 0;
-        border: 0;
-    }
-
-    #search-map {
-        min-height: 520px;
-    }
-
-    .search-card {
-        background: rgba(var(--card), 0.9);
-        border: 1px solid rgba(var(--border), 0.9);
-        box-shadow: var(--surface-shadow);
-        backdrop-filter: blur(16px);
-    }
-
-    .quick-filter-chip.is-active {
-        background: rgba(var(--secondary), 0.95);
-        color: rgb(var(--secondary-foreground));
-        border-color: rgba(var(--primary), 0.3);
-    }
-
-    @media (min-width: 1024px) {
-        #search-map {
-            height: calc(100vh - 12rem);
-        }
-    }
+    .filter-scrollbar::-webkit-scrollbar { height: 6px; }
+    .filter-scrollbar::-webkit-scrollbar-thumb { background: rgba(var(--muted-foreground), 0.45); border-radius: 9999px; }
+    #search-shell { transition: grid-template-columns 0.3s ease; }
+    #search-shell.sidebar-collapsed { grid-template-columns: minmax(0, 1fr); }
+    #search-sidebar { transition: opacity 0.25s ease, transform 0.25s ease, max-width 0.3s ease; }
+    #search-shell.sidebar-collapsed #search-sidebar { opacity: 0; transform: translateX(-16px); max-width: 0; overflow: hidden; padding: 0; margin: 0; border: 0; }
+    #search-map { min-height: 520px; }
+    .search-card { background: rgba(var(--card), 0.82); border: 1px solid rgba(var(--border), 0.82); box-shadow: var(--surface-shadow); backdrop-filter: blur(18px); }
+    .search-panel-hero { background: linear-gradient(135deg, rgba(var(--card), 0.92) 0%, rgba(var(--muted), 0.84) 100%); border: 1px solid rgba(var(--border), 0.85); box-shadow: var(--surface-shadow-strong); }
+    .search-badge-soft { background: rgba(var(--emerald-soft), 0.92); color: rgb(var(--primary)); border: 1px solid rgba(var(--primary), 0.12); }
+    .search-input-shell { background: rgba(var(--background), 0.76); border: 1px solid rgba(var(--border), 0.92); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45); }
+    .search-insight-chip { background: rgba(var(--emerald-soft), 0.92); color: rgb(var(--primary)); border: 1px solid rgba(var(--primary), 0.12); transition: all 0.2s ease-out; }
+    .search-insight-chip:hover, .quick-filter-chip.is-active { background: rgb(var(--primary)); color: rgb(var(--primary-foreground)); border-color: rgba(var(--primary), 0.2); transform: translateY(-1px); }
+    .quick-filter-chip { transition: all 0.2s ease-out; }
+    .result-card { transition: all 0.2s ease-out; }
+    .result-card:hover { transform: translateY(-2px); box-shadow: var(--surface-shadow-strong); }
+    .result-thumb { background: linear-gradient(135deg, rgba(var(--ocean), 1) 0%, rgba(var(--ocean-soft), 1) 38%, rgba(var(--accent), 0.96) 100%); }
+    .result-price-pill { background: rgba(var(--warning-soft), 0.95); color: rgb(var(--warning-foreground)); }
+    @media (min-width: 1024px) { #search-map { height: calc(100vh - 12rem); } }
 </style>
 {% endblock %}
 
 {% block content %}
-<section class="px-4 pb-8 pt-24 sm:px-6 lg:px-8">
-    <div class="mx-auto flex max-w-7xl flex-col gap-6">
-        <div class="theme-surface-strong overflow-hidden rounded-[32px] p-4 sm:p-6">
+<section class="relative overflow-hidden px-4 pb-8 pt-24 sm:px-6 lg:px-8">
+    <div class="search-page-ambient"></div>
+    <div class="relative mx-auto flex max-w-7xl flex-col gap-6">
+        <div class="search-panel-hero overflow-hidden rounded-[32px] p-4 sm:p-6">
             <div class="flex flex-col gap-4">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <div>
-                        <span class="theme-badge inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em]">
-                            Cổng khám phá điểm đến
+                        <span class="search-badge-soft inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em]">
+                            Premium booking discovery
                         </span>
                         <h1 class="mt-3 font-heading text-2xl font-bold tracking-tight sm:text-3xl">
-                            Tìm địa điểm phù hợp, xem bản đồ trực quan và chuẩn bị hành trình kỹ hơn.
+                            T?m ?i?m ??n ph? h?p, so s?nh k?t qu? r? r?ng v? nh?n b?n ?? trong c?ng m?t flow.
                         </h1>
                         <p class="theme-text-muted mt-2 max-w-3xl text-sm leading-6 sm:text-base">
-                            Sử dụng công nghệ AI để tạo lịch trình chi tiết, quản lý ngân sách thông minh, giúp bạn tận hưởng trọn vẹn hành trình của mình.
+                            D?a tr?n d? li?u ??a ?i?m th?c t?, Vi Vu gi?p b?n t?m nhanh l?a ch?n n?i b?t, xem th?i ti?t, l?c s?u v? ??a quy?t ??nh t? tin h?n.
                         </p>
                     </div>
                     <div class="flex items-center gap-3 lg:justify-end">
@@ -87,49 +63,46 @@
                                 type="button"
                                 class="theme-btn-secondary hidden items-center gap-2 rounded-full px-4 py-2 text-sm font-medium lg:inline-flex">
                             <i class="fa-solid fa-sliders"></i>
-                            Ẩn/hiện bảng thông tin
+                            ?n/hi?n b?ng th?ng tin
                         </button>
-                        <a href="{% url 'travel_plan' %}"
+                        <a href="{% url 'travel-plan' %}"
                            class="theme-btn-primary inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold">
-                            Tạo lịch trình ngay
+                            T?o l?ch tr?nh ngay
                         </a>
                     </div>
                 </div>
 
                 <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
-                    <div class="relative">
-                        <i class="fa-solid fa-magnifying-glass pointer-events-none absolute left-6 top-1/2 -translate-y-1/2 theme-text-muted"></i>
+                    <div class="search-input-shell relative rounded-2xl">
+                        <i class="fa-solid fa-location-dot pointer-events-none absolute left-6 top-1/2 -translate-y-1/2" style="color: rgb(var(--primary));"></i>
                         <input id="search-input"
                                type="text"
-                               class="theme-input h-14 w-full rounded-full pl-14 pr-6 text-sm"
-                               placeholder="Tìm theo tên địa điểm, tỉnh thành, loại hình trải nghiệm..."
+                               class="theme-input h-14 w-full rounded-2xl border-0 bg-transparent pl-14 pr-6 text-sm shadow-none"
+                               placeholder="T?m theo t?n ??a ?i?m, t?nh th?nh, lo?i h?nh tr?i nghi?m..."
                                value="{{ initial_query|default:'' }}"
                                autocomplete="off">
                     </div>
                     <button id="search-btn"
                             type="button"
-                            class="theme-btn-primary inline-flex h-14 items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold">
-                        <i class="fa-solid fa-sparkles"></i>
-                        Tìm kiếm
+                            class="inline-flex h-14 items-center justify-center gap-2 rounded-2xl px-6 text-sm font-semibold text-white shadow-lg transition-all duration-200 ease-out hover:-translate-y-0.5"
+                            style="background: rgb(var(--ocean));">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        T?m ki?m
                     </button>
                 </div>
 
-                <div class="filter-scrollbar flex gap-3 overflow-x-auto pb-1">
-                    <button type="button" class="quick-filter-chip theme-btn-secondary inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-medium" data-filter="weather">
-                        <span>⛅</span> Thời tiết
-                    </button>
-                    <button type="button" class="quick-filter-chip theme-btn-secondary inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-medium" data-filter="dia_danh">
-                        <span>📍</span> Địa danh
-                    </button>
-                    <button type="button" class="quick-filter-chip theme-btn-secondary inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-medium" data-filter="khach_san">
-                        <span>🏨</span> Khách sạn
-                    </button>
-                    <button type="button" class="quick-filter-chip theme-btn-secondary inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-medium" data-filter="nha_hang">
-                        <span>🍽️</span> Ăn uống
-                    </button>
-                    <button type="button" class="quick-filter-chip theme-btn-secondary inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-medium" data-filter="emergency">
-                        <span>🛡️</span> Lưu ý khẩn cấp
-                    </button>
+                <div class="flex flex-wrap items-center gap-3">
+                    <span class="inline-flex items-center gap-2 px-2 text-xs font-bold uppercase tracking-[0.22em]" style="color: rgb(var(--primary));">
+                        <i class="fa-solid fa-sparkles text-[11px]"></i>
+                        AI insights
+                    </span>
+                    <div class="filter-scrollbar flex gap-3 overflow-x-auto pb-1">
+                        <button type="button" class="search-insight-chip quick-filter-chip inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-medium" data-filter="weather"><span>?</span> Th?i ti?t</button>
+                        <button type="button" class="search-insight-chip quick-filter-chip inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-medium" data-filter="dia_danh"><span>??</span> ??a danh</button>
+                        <button type="button" class="search-insight-chip quick-filter-chip inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-medium" data-filter="khach_san"><span>??</span> Kh?ch s?n</button>
+                        <button type="button" class="search-insight-chip quick-filter-chip inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-medium" data-filter="nha_hang"><span>???</span> ?n u?ng</button>
+                        <button type="button" class="search-insight-chip quick-filter-chip inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-medium" data-filter="emergency"><span>???</span> L?u ? kh?n c?p</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -259,7 +232,7 @@
 
                 <div id="place-highlight" class="search-card rounded-[32px] p-5">
                     <div class="flex flex-col gap-4 lg:flex-row">
-                        <div class="flex h-52 items-end rounded-[28px] p-5 text-white lg:w-[38%]" style="background: linear-gradient(135deg, rgba(var(--ocean), 1) 0%, rgba(var(--ocean-soft), 1) 45%, rgba(var(--accent), 0.92) 100%);">
+                        <div class="relative flex h-52 items-end overflow-hidden rounded-[28px] p-5 text-white lg:w-[38%]" style="background: linear-gradient(135deg, rgba(var(--ocean), 1) 0%, rgba(var(--ocean-soft), 1) 45%, rgba(var(--accent), 0.92) 100%);"><img src="{% static 'img/stitch-deep-ocean-search.png' %}" alt="Search concept from Stitch" class="absolute inset-0 h-full w-full object-cover opacity-25"><div class="absolute inset-0 bg-gradient-to-t from-[rgba(2,6,23,0.82)] via-[rgba(2,6,23,0.28)] to-transparent"></div><div class="relative">
                             <div>
                                 <p class="text-xs font-semibold uppercase tracking-[0.2em] text-white/75">Điểm được chọn</p>
                                 <h3 id="detail-name" class="mt-2 text-2xl font-semibold">Chưa chọn địa điểm</h3>
@@ -542,7 +515,7 @@
                 const distance = calculateDistance(userLocation.lat, userLocation.lon, Number(place.viDo), Number(place.kinhDo));
                 if (Number.isFinite(distance)) distanceText = `Cách bạn khoảng ${distance.toFixed(1)} km`;
             }
-            return `<article class="result-card theme-card-hover theme-muted-surface rounded-[26px] p-4" data-place-id="${placeId}"><div class="flex gap-4"><div class="flex h-24 w-24 shrink-0 items-end rounded-[22px] p-3 text-white" style="background: linear-gradient(135deg, rgba(var(--ocean), 1) 0%, rgba(var(--ocean-soft), 1) 40%, rgba(var(--accent), 0.95) 100%);"><span class="text-xs font-semibold uppercase tracking-[0.16em]">${getPlaceTypeLabel(place.loaiDiaDiem)}</span></div><div class="min-w-0 flex-1"><div class="flex flex-wrap items-start justify-between gap-3"><div><h3 class="text-base font-semibold leading-6">${place.tenDiaDiem}</h3><p class="theme-text-muted mt-1 text-sm">${place.tenTinhThanh || 'Đang cập nhật vị trí'}</p></div><span class="rounded-full px-3 py-1 text-sm font-semibold" style="background: rgba(var(--warning-soft), 0.95); color: rgb(var(--warning-foreground));">★ ${rating}</span></div><p class="theme-text-muted mt-3 text-sm leading-6">${shortDescription}</p><div class="mt-3 flex flex-wrap gap-2 text-xs"><span class="theme-btn-secondary rounded-full px-3 py-1 shadow-sm">${formatCurrency(place.giaVe)}</span><span class="theme-btn-secondary rounded-full px-3 py-1 shadow-sm">${distanceText}</span></div><div class="mt-4 flex flex-wrap gap-2"><button type="button" class="focus-place-btn theme-btn-primary inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold" data-place-id="${placeId}"><i class="fa-solid fa-location-crosshairs"></i>Xem trên bản đồ</button><button type="button" class="detail-place-btn theme-btn-secondary inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium" data-place-id="${placeId}"><i class="fa-solid fa-circle-info"></i>Xem thông tin</button></div></div></div></article>`;
+            return `<article class="result-card search-card overflow-hidden rounded-[26px] p-4" data-place-id="${placeId}"><div class="flex flex-col gap-4 md:flex-row"><div class="result-thumb relative flex h-40 w-full shrink-0 items-end overflow-hidden rounded-[22px] p-3 text-white md:h-auto md:w-44"><div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.22),transparent_35%)]"></div><span class="relative text-xs font-semibold uppercase tracking-[0.16em]">${getPlaceTypeLabel(place.loaiDiaDiem)}</span></div><div class="min-w-0 flex-1"><div class="flex flex-wrap items-start justify-between gap-3"><div><div class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold search-badge-soft">? ${rating}</div><h3 class="mt-3 text-lg font-semibold leading-7">${place.tenDiaDiem}</h3><p class="theme-text-muted mt-1 text-sm">${place.tenTinhThanh || '?ang c?p nh?t v? tr?'}</p></div><span class="result-price-pill rounded-full px-3 py-1 text-xs font-semibold">${formatCurrency(place.giaVe)}</span></div><p class="theme-text-muted mt-3 text-sm leading-6">${shortDescription}</p><div class="mt-4 flex flex-wrap gap-2 text-xs"><span class="theme-btn-secondary rounded-full px-3 py-1 shadow-sm">${distanceText}</span><span class="theme-btn-secondary rounded-full px-3 py-1 shadow-sm">${place.gioMoCua || 'Gi? m? c?a ?ang c?p nh?t'}</span></div><div class="mt-4 flex flex-wrap gap-2"><button type="button" class="focus-place-btn inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:-translate-y-0.5" style="background: rgb(var(--primary));" data-place-id="${placeId}"><i class="fa-solid fa-location-crosshairs"></i>Xem tr?n b?n ??</button><button type="button" class="detail-place-btn theme-btn-secondary inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium" data-place-id="${placeId}"><i class="fa-solid fa-circle-info"></i>Xem th?ng tin</button></div></div></div></article>`;
         }).join('');
         displayMarkers(results);
         const defaultSelection = selectedPlace && results.find((place) => String(place.maDiaDiem || place.id || place.tenDiaDiem) === String(selectedPlace.maDiaDiem || selectedPlace.id || selectedPlace.tenDiaDiem)) ? selectedPlace : results[0];
