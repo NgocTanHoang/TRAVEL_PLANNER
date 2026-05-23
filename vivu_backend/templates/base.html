@@ -4,1057 +4,274 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Vi Vu - AI Travel Planner{% endblock %}</title>
+    <title>{% block title %}Vi Vu | Cổng thông tin du lịch AI{% endblock %}</title>
     <link rel="icon" type="image/png" href="{% static 'img/logo_crop-Photoroom.png' %}">
-    
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    
-    <!-- Tailwind CSS -->
-    <link rel="stylesheet" href="{% static 'css/tailwind.output.css' %}">
-    
-    <!-- Animations CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: ["class", '[data-theme="dark"]'],
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        heading: ['Plus Jakarta Sans', 'Inter', 'sans-serif']
+                    },
+                    boxShadow: {
+                        soft: '0 18px 45px rgba(15, 23, 42, 0.10)'
+                    }
+                }
+            }
+        };
+    </script>
+    <script>
+        (function () {
+            const storageKey = "vivu-theme";
+            const root = document.documentElement;
+            const stored = localStorage.getItem(storageKey);
+            const systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = stored || (systemDark ? 'dark' : 'light');
+            root.setAttribute('data-theme', theme);
+            if (theme === 'dark') {
+                root.classList.add('dark');
+            } else {
+                root.classList.remove('dark');
+            }
+        })();
+    </script>
     <link rel="stylesheet" href="{% static 'css/animations.css' %}">
-    
     {% block extra_styles %}{% endblock %}
-    
     <style>
-        /* Vi Vu Brand Color System - 60:30:10 */
         :root {
-            --color-primary: #153D68;
-            --color-primary-light: #1e4d7f;
-            --color-primary-dark: #0d2842;
-            --color-primary-rgb: 21, 61, 104;
-            --color-secondary: #00838F;
-            --color-secondary-light: #00a5b5;
-            --color-secondary-dark: #00616b;
-            --color-secondary-rgb: 0, 131, 143;
-            --color-accent: #DAA520;
-            --color-accent-light: #f0c040;
-            --color-accent-dark: #b8860b;
-            --color-accent-rgb: 218, 165, 32;
-            --color-text-light: #FFFFFF;
-            --color-text-dark: #1A1A1A;
-            --color-white: #FFFFFF;
-            --color-gray-50: #F9FAFB;
-            --color-gray-100: #F3F4F6;
-            --color-gray-200: #E5E7EB;
-            --color-gray-300: #D1D5DB;
-            --color-gray-600: #4B5563;
-            --color-gray-900: #111827;
-            --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            --font-family-heading: 'Poppins', 'Inter', sans-serif;
-            --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            --transition-fast: all 0.15s ease;
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            --radius-lg: 0.75rem;
+            --background: 255 255 255;
+            --foreground: 15 23 42;
+            --muted: 248 250 252;
+            --muted-foreground: 100 116 139;
+            --card: 255 255 255;
+            --card-foreground: 15 23 42;
+            --border: 226 232 240;
+            --input: 226 232 240;
+            --primary: 15 118 110;
+            --primary-hover: 13 148 136;
+            --primary-foreground: 255 255 255;
+            --secondary: 224 242 254;
+            --secondary-foreground: 7 89 133;
+            --accent: 5 150 105;
+            --accent-hover: 4 120 87;
+            --accent-foreground: 255 255 255;
+            --ocean: 15 23 42;
+            --ocean-soft: 22 78 99;
+            --emerald-soft: 236 253 245;
+            --warning: 245 158 11;
+            --warning-soft: 255 251 235;
+            --warning-foreground: 120 53 15;
+            --surface-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+            --surface-shadow-strong: 0 28px 80px rgba(15, 23, 42, 0.12);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root[data-theme="dark"] {
+            --background: 2 6 23;
+            --foreground: 248 250 252;
+            --muted: 15 23 42;
+            --muted-foreground: 148 163 184;
+            --card: 15 23 42;
+            --card-foreground: 248 250 252;
+            --border: 30 41 59;
+            --input: 51 65 85;
+            --primary: 20 184 166;
+            --primary-hover: 45 212 191;
+            --primary-foreground: 4 47 46;
+            --secondary: 8 47 73;
+            --secondary-foreground: 186 230 253;
+            --accent: 16 185 129;
+            --accent-hover: 52 211 153;
+            --accent-foreground: 2 44 34;
+            --ocean: 2 6 23;
+            --ocean-soft: 14 116 144;
+            --emerald-soft: 5 46 43;
+            --warning: 251 191 36;
+            --warning-soft: 69 26 3;
+            --warning-foreground: 254 243 199;
+            --surface-shadow: 0 22px 65px rgba(2, 6, 23, 0.45);
+            --surface-shadow-strong: 0 34px 90px rgba(2, 6, 23, 0.55);
+        }
+
+        html {
+            scroll-behavior: smooth;
         }
 
         body {
-            font-family: var(--font-family-base);
-            line-height: 1.6;
-            color: var(--color-text-light);
-            background: var(--color-primary);
-            min-height: 100vh;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+            font-family: 'Inter', system-ui, sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(var(--primary), 0.12), transparent 26%),
+                radial-gradient(circle at bottom right, rgba(var(--accent), 0.10), transparent 22%),
+                linear-gradient(180deg, rgba(var(--background), 1) 0%, rgba(var(--muted), 1) 100%);
+            color: rgb(var(--foreground));
+            transition: background-color 0.2s ease-out, color 0.2s ease-out;
         }
 
-        /* ===================================
-         * SHARED NAVBAR COMPONENT
-         * =================================== */
-        .navbar {
-            background: var(--color-primary);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            transition: var(--transition-base);
+        body.drawer-open {
+            overflow: hidden;
         }
 
-        .navbar.scrolled {
-            background: rgba(var(--color-primary-rgb), 0.7);
-            backdrop-filter: blur(20px);
-            box-shadow: var(--shadow-lg);
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+            color: rgb(var(--foreground));
         }
 
-        /* Ensure logo tagline is always white on all pages */
-        .logo-tagline {
-            color: rgba(255, 255, 255, 1) !important;
-            opacity: 1 !important;
+        .theme-surface {
+            background: rgba(var(--card), 0.88);
+            color: rgb(var(--card-foreground));
+            border: 1px solid rgba(var(--border), 0.9);
+            box-shadow: var(--surface-shadow);
+            backdrop-filter: blur(18px);
         }
 
-        .logo:hover .logo-tagline,
-        .logo-tagline:hover {
-            color: rgba(255, 255, 255, 1) !important;
-            opacity: 1 !important;
+        .theme-surface-strong {
+            background: rgba(var(--card), 0.92);
+            color: rgb(var(--card-foreground));
+            border: 1px solid rgba(var(--border), 0.9);
+            box-shadow: var(--surface-shadow-strong);
+            backdrop-filter: blur(24px);
         }
 
-        .nav-container {
-            max-width: 1280px;
-            margin: 0 auto;
-            padding: 0.25rem 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 2rem;
+        .theme-muted-surface {
+            background: rgba(var(--muted), 0.92);
+            border: 1px solid rgba(var(--border), 0.8);
         }
 
-        /* Logo wrapper: circle container */
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            text-decoration: none;
-            transition: var(--transition-fast);
+        .theme-warning-surface {
+            background: rgba(var(--warning-soft), 0.92);
+            color: rgb(var(--warning-foreground));
+            border: 1px solid rgba(var(--warning), 0.28);
         }
 
-        .logo:hover {
+        .theme-input {
+            background: rgba(var(--background), 0.85);
+            color: rgb(var(--foreground));
+            border: 1px solid rgba(var(--input), 1);
+            transition: all 0.2s ease-out;
+        }
+
+        .theme-input::placeholder {
+            color: rgb(var(--muted-foreground));
+        }
+
+        .theme-input:focus {
+            outline: none;
+            border-color: rgba(var(--primary), 0.7);
+            box-shadow: 0 0 0 4px rgba(var(--primary), 0.14);
+        }
+
+        .theme-btn-primary {
+            background: rgb(var(--primary));
+            color: rgb(var(--primary-foreground));
+            transition: all 0.2s ease-out;
+        }
+
+        .theme-btn-primary:hover {
+            background: rgb(var(--primary-hover));
+            transform: translateY(-1px);
+        }
+
+        .theme-btn-secondary {
+            background: rgba(var(--card), 0.72);
+            color: rgb(var(--foreground));
+            border: 1px solid rgba(var(--border), 1);
+            transition: all 0.2s ease-out;
+        }
+
+        .theme-btn-secondary:hover {
+            background: rgba(var(--muted), 0.95);
+            border-color: rgba(var(--primary), 0.3);
+            color: rgb(var(--foreground));
+            transform: translateY(-1px);
+        }
+
+        .theme-badge {
+            background: rgba(var(--secondary), 0.85);
+            color: rgb(var(--secondary-foreground));
+            border: 1px solid rgba(var(--secondary-foreground), 0.1);
+        }
+
+        .theme-icon-badge {
+            background: rgba(var(--secondary), 0.9);
+            color: rgb(var(--primary));
+            border: 1px solid rgba(var(--border), 0.75);
+        }
+
+        .theme-card-hover {
+            transition: all 0.2s ease-out;
+        }
+
+        .theme-card-hover:hover {
+            box-shadow: var(--surface-shadow-strong);
             transform: translateY(-2px);
         }
 
-        /* Logo image - no border, no background */
-        .logo-badge {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex: 0 0 auto;
+        .theme-text-muted {
+            color: rgb(var(--muted-foreground));
         }
 
-        /* The image itself */
-        .logo-badge img {
-            display: block;
-            width: 56px;
-            height: auto;
-            object-fit: contain;
-            object-position: center;
-            image-rendering: auto;
+        .theme-divider {
+            border-color: rgba(var(--border), 0.9);
         }
 
-        .logo-content {
-            display: flex;
-            flex-direction: column;
-            gap: 0.1rem;
-        }
-
-        .logo-brand {
-            font-family: var(--font-family-heading);
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: var(--color-text-light);
-            letter-spacing: 0.02em;
-            margin: 0;
-            line-height: 1;
-        }
-
-        .logo-tagline {
-            font-family: var(--font-family-base);
-            font-size: 0.7rem;
-            font-weight: 400;
-            color: rgba(255, 255, 255, 1) !important;
-            opacity: 1 !important;
-            margin: 0;
-            line-height: 1.2;
-            letter-spacing: 0.01em;
-        }
-
-        .nav-menu {
-            display: flex;
-            align-items: center;
-            gap: 1.8rem;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            flex-wrap: nowrap;
-        }
-
-        .nav-menu li {
-            margin: 0;
-        }
-
-        .nav-menu a {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0.45rem 1.15rem;
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--color-text-light);
-            text-decoration: none;
-            border-radius: 999px;
-            transition: var(--transition-fast);
-            white-space: nowrap;
-        }
-
-        .nav-link::before {
-            display: none !important;
-        }
-
-        .nav-menu a {
-            transition: transform 0.2s ease !important;
-            animation: none !important;
-        }
-
-        .nav-menu a:hover {
-            color: var(--color-accent);
-            background: rgba(218, 165, 32, .1);
-            transform: scale(0.95) !important;
-            animation: none !important;
-        }
-
-        .nav-menu a:active {
-            transform: scale(0.92) !important;
-            animation: none !important;
-        }
-
-        .nav-link:hover::before {
-            display: none !important;
-        }
-
-        .nav-link.active {
-            color: var(--color-accent);
-        }
-
-        /* User Avatar Dropdown */
-        .user-dropdown {
-            position: relative;
-        }
-
-        .user-avatar-btn {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0;
-            transition: var(--transition-fast);
-        }
-
-        .user-avatar {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            border: 2px solid var(--color-secondary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            background: rgba(var(--color-secondary-rgb), 0.2);
-            transition: var(--transition-fast);
-        }
-
-        .user-avatar-btn:hover .user-avatar {
-            border-color: var(--color-accent-light);
-            box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), 0.3);
-        }
-
-        .user-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .avatar-initials {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--color-secondary);
-            color: var(--color-text-light);
-            font-weight: 700;
-            font-size: 1.25rem;
-            letter-spacing: 0.05em;
-        }
-
-        .user-dropdown-menu {
-            position: absolute;
-            top: calc(100% + 10px);
-            right: 0;
-            background: var(--color-white);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-xl);
-            min-width: 220px;
-            list-style: none;
-            padding: 0.5rem 0;
-            margin: 0;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: var(--transition-base);
-            z-index: 1000;
-        }
-
-        .user-dropdown-menu.show {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-
-        /* Search Dropdown Styles - Available on all pages */
-        .search-dropdown {
-            position: relative;
-        }
-        
-        .search-dropdown-menu {
-            position: absolute;
-            top: calc(100% + 0.5rem);
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--color-white);
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            min-width: 800px;
-            max-width: 950px;
-            max-height: 70vh;
-            padding: 1.5rem;
-            margin-top: 0.5rem;
-            display: none;
-            z-index: 1000;
-            border: 1px solid var(--color-gray-200);
-            margin-top: 0.25rem;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s ease, transform 0.2s ease;
-            overflow-y: auto;
-            overflow-x: hidden;
-            overscroll-behavior: contain;
-        }
-        
-        .search-dropdown-menu::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        .search-dropdown-menu::-webkit-scrollbar-track {
-            background: var(--color-gray-100);
-            border-radius: 10px;
-        }
-        
-        .search-dropdown-menu::-webkit-scrollbar-thumb {
-            background: var(--color-gray-600);
-            border-radius: 10px;
-        }
-        
-        .search-dropdown-menu::-webkit-scrollbar-thumb:hover {
-            background: var(--color-secondary);
-        }
-        
-        .search-dropdown:hover .search-dropdown-menu,
-        .search-dropdown-menu:hover,
-        .search-dropdown.active .search-dropdown-menu {
-            display: block;
-            opacity: 1;
-            pointer-events: auto;
-        }
-        
-        .search-dropdown::after {
-            content: '';
-            position: absolute;
-            bottom: -0.5rem;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 120%;
-            height: 0.75rem;
-            background: transparent;
-            z-index: 999;
-        }
-        
-        .search-dropdown-header {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--color-primary);
-            margin-bottom: 1rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 2px solid var(--color-accent);
-        }
-        
-        .search-dropdown-category {
-            margin-bottom: 1.25rem;
-        }
-        
-        .search-dropdown-category-title {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--color-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 0.75rem;
-        }
-        
-        .search-dropdown-items {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 0.5rem;
-        }
-        
-        .search-dropdown-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 0.4rem;
-            padding: 0.6rem 0.5rem;
-            border-radius: 8px;
-            color: var(--color-text-dark);
-            text-decoration: none;
-            transition: all 0.2s;
-            font-size: 0.8rem;
-            white-space: nowrap;
-            border: 1px solid rgba(0, 0, 0, 0.08);
-            background: var(--color-white);
-            text-align: center;
-            min-height: 70px;
-        }
-        
-        .search-dropdown-item:hover {
-            background: var(--color-gray-100);
-            color: var(--color-primary);
-            transform: translateY(-2px);
-            border-color: rgba(0, 0, 0, 0.12);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .search-dropdown-item-icon {
-            font-size: 1.4rem;
-            width: auto;
-            text-align: center;
-            flex-shrink: 0;
-        }
-        
-        .search-dropdown-item span:not(.search-dropdown-item-icon) {
-            font-size: 0.8rem;
-            line-height: 1.2;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 100%;
-        }
-        
-        @media (max-width: 1024px) {
-            .search-dropdown-menu {
-                min-width: 650px;
-                max-width: 750px;
-            }
-            
-            .search-dropdown-items {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .search-dropdown-menu {
-                left: 0;
-                right: 0;
-                transform: none;
-                min-width: auto;
-                max-width: none;
-                width: calc(100vw - 2rem);
-                margin-left: 1rem;
-                margin-right: 1rem;
-            }
-            
-            .search-dropdown-items {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .search-dropdown-items {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem 1.25rem;
-            color: var(--color-text-dark);
-            text-decoration: none;
-            transition: var(--transition-fast);
-            border: none;
-            background: transparent;
-            width: 100%;
-            text-align: left;
-            cursor: pointer;
-        }
-
-        .dropdown-item:hover {
-            background: var(--color-gray-100);
-            color: var(--color-secondary);
-        }
-
-        .dropdown-divider {
-            height: 1px;
-            background: var(--color-gray-200);
-            margin: 0.5rem 0;
-        }
-
-        .dropdown-item-danger:hover {
-            background: rgba(239, 68, 68, 0.1);
-            color: #dc2626;
-        }
-
-        /* Mobile Menu Toggle */
-        .mobile-menu-toggle {
-            display: none;
-            background: none;
-            border: none;
-            color: var(--color-text-light);
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 0.5rem;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .nav-container {
-                padding: 0.25rem 1rem;
-            }
-
-            /* Smaller variant for tablet */
-            .logo-badge {
-                width: 48px;
-                height: 48px;
-                padding: 3px;
-            }
-            
-            .logo-badge img {
-                width: 96%;
-            }
-
-            .logo-brand {
-                font-size: 1.2rem;
-            }
-
-            .mobile-menu-toggle {
-                display: block;
-            }
-
-            .nav-menu {
-                display: none;
-                position: absolute;
-                top: 100%;
-                left: 0;
-                right: 0;
-                background: var(--color-primary-dark);
-                flex-direction: column;
-                gap: 0;
-                padding: 1rem 0;
-                box-shadow: var(--shadow-xl);
-            }
-
-            .nav-menu.mobile-open {
-                display: flex;
-            }
-
-            .nav-link {
-                width: 100%;
-                text-align: center;
-                padding: 1rem;
-                border-radius: 0;
-            }
-
-            .user-avatar {
-                width: 40px;
-                height: 40px;
-            }
-
-            .avatar-initials {
-                font-size: 1rem;
-            }
-
-            .user-dropdown-menu {
-                right: -10px;
-                left: auto;
-                min-width: 200px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .nav-container {
-                padding: 0.25rem 1rem;
-            }
-
-            /* Extra small mobile */
-            .logo-badge {
-                width: 40px;
-                height: 40px;
-                padding: 3px;
-            }
-            
-            .logo-badge img {
-                width: 99%;
-            }
-
-            .logo-brand {
-                font-size: 1.1rem;
-            }
+        .glass-panel {
+            background: rgba(var(--card), 0.72);
+            border: 1px solid rgba(var(--border), 0.8);
+            box-shadow: var(--surface-shadow);
+            backdrop-filter: blur(18px);
         }
     </style>
 </head>
-<body>
-    <!-- SHARED NAVBAR -->
-    <nav class="navbar" id="navbar" role="navigation" aria-label="Main navigation">
-        <div class="nav-container">
-            <a href="/" class="logo" aria-label="Vi Vu Home">
-                <div class="logo-badge">
-                    <img src="{% static 'img/logo_crop-Photoroom.png' %}" alt="Vi Vu Logo">
-                </div>
-                <div class="logo-content">
-                    <h1 class="logo-brand">Vi Vu</h1>
-                    <p class="logo-tagline">Plan in Minutes, Vibe for Months.</p>
-                </div>
-            </a>
-            
-            <ul class="nav-menu" role="menubar">
-                {% block nav_items %}
-                    <li role="none">
-                        <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}" role="menuitem">Trang chủ</a>
-                    </li>
-                    <li role="none" class="search-dropdown">
-                        <a href="#" class="nav-link search-toggle" role="menuitem" onclick="event.preventDefault(); return false;">🔍 Tìm kiếm</a>
-                        <div class="search-dropdown-menu" role="menu">
-                            <div class="search-dropdown-header">Tìm kiếm du lịch</div>
-                            
-                            <div class="search-dropdown-category">
-                                <div class="search-dropdown-category-title">📍 Địa điểm & Tham quan</div>
-                                <div class="search-dropdown-items">
-                                    <a href="/places/search/" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🗺️</span>
-                                        <span>Tìm kiếm địa điểm</span>
-                                    </a>
-                                    <a href="/places/search/?loai_dia_diem=di_tich_lich_su" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🏛️</span>
-                                        <span>Di tích lịch sử</span>
-                                    </a>
-                                    <a href="/places/search/?loai_dia_diem=thang_canh" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🏞️</span>
-                                        <span>Thắng cảnh</span>
-                                    </a>
-                                    <a href="/places/search/?loai_dia_diem=giai_tri" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🎢</span>
-                                        <span>Khu vui chơi</span>
-                                    </a>
-                                </div>
-                            </div>
-                            
-                            <div class="search-dropdown-category">
-                                <div class="search-dropdown-category-title">🏨 Lưu trú</div>
-                                <div class="search-dropdown-items">
-                                    <a href="/places/search/?loai_dia_diem=khach_san" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🏨</span>
-                                        <span>Tìm khách sạn</span>
-                                    </a>
-                                    <a href="/places/search/?loai_dia_diem=homestay" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🏡</span>
-                                        <span>Homestay</span>
-                                    </a>
-                                    <a href="/places/search/?loai_dia_diem=resort" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🏖️</span>
-                                        <span>Resort</span>
-                                    </a>
-                                </div>
-                            </div>
-                            
-                            <div class="search-dropdown-category">
-                                <div class="search-dropdown-category-title">🍽️ Ăn uống</div>
-                                <div class="search-dropdown-items">
-                                    <a href="/places/search/?loai_dia_diem=nha_hang" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🍜</span>
-                                        <span>Nhà hàng</span>
-                                    </a>
-                                    <a href="/places/search/?loai_dia_diem=cafe" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">☕</span>
-                                        <span>Quán cafe</span>
-                                    </a>
-                                    <a href="/places/search/?loai_dia_diem=bar" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🍻</span>
-                                        <span>Bar & Pub</span>
-                                    </a>
-                                    <a href="/places/search/?loai_dia_diem=dac_san" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🥘</span>
-                                        <span>Đặc sản địa phương</span>
-                                    </a>
-                                </div>
-                            </div>
-                            
-                            <div class="search-dropdown-category">
-                                <div class="search-dropdown-category-title">🛍️ Mua sắm</div>
-                                <div class="search-dropdown-items">
-                                    <a href="/places/search/?loai_dia_diem=trung_tam_thuong_mai" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🏬</span>
-                                        <span>Trung tâm thương mại</span>
-                                    </a>
-                                    <a href="/places/search/?loai_dia_diem=cho" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🛒</span>
-                                        <span>Chợ địa phương</span>
-                                    </a>
-                                    <a href="/places/search/?loai_dia_diem=qua_luu_niem" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🎁</span>
-                                        <span>Quà lưu niệm</span>
-                                    </a>
-                                </div>
-                            </div>
-                            
-                            <div class="search-dropdown-category">
-                                <div class="search-dropdown-category-title">✈️ Di chuyển</div>
-                                <div class="search-dropdown-items">
-                                    <a href="/travel-plan/" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">✈️</span>
-                                        <span>Tìm chuyến bay</span>
-                                    </a>
-                                    <a href="/travel-plan/" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🚂</span>
-                                        <span>Vé tàu hỏa</span>
-                                    </a>
-                                    <a href="/travel-plan/" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🚌</span>
-                                        <span>Vé xe khách</span>
-                                    </a>
-                                    <a href="/travel-plan/" class="search-dropdown-item" role="menuitem">
-                                        <span class="search-dropdown-item-icon">🚗</span>
-                                        <span>Thuê xe</span>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-                    <li role="none">
-                        <a href="/travel-plan/" class="nav-link {% if request.path == '/travel-plan/' %}active{% endif %}" role="menuitem">✈️ Tạo lịch trình</a>
-                    </li>
-                    <li role="none">
-                        <a href="/ai-chat/" class="nav-link {% if request.path == '/ai-chat/' %}active{% endif %}" role="menuitem">🤖 AI Chat Assistant</a>
-                    </li>
-                {% endblock %}
-                
-                {% if user.is_authenticated %}
-                    <!-- User Avatar Dropdown -->
-                    <li role="none" class="user-dropdown">
-                        <button class="user-avatar-btn" id="user-avatar-btn" aria-label="User menu" aria-expanded="false">
-                            <span class="user-avatar">
-                                {% if user.anhDaiDien %}
-                                    <img src="{{ user.anhDaiDien }}" alt="{{ user.hoTen|default:user.username }}">
-                                {% else %}
-                                    <span class="avatar-initials">{{ user.username|first|upper }}</span>
-                                {% endif %}
-                            </span>
-                        </button>
-                        <ul class="user-dropdown-menu" id="user-dropdown-menu" role="menu">
-                            <li role="none">
-                                <a href="/accounts/profile/" class="dropdown-item" role="menuitem">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                        <circle cx="12" cy="7" r="4"></circle>
-                                    </svg>
-                                    Thông tin cá nhân
-                                </a>
-                            </li>
-                            <li role="none">
-                                <a href="/accounts/change-password/" class="dropdown-item" role="menuitem">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <circle cx="12" cy="12" r="3"></circle>
-                                    </svg>
-                                    Đổi mật khẩu
-                                </a>
-                            </li>
-                            <li role="none">
-                                <a href="/accounts/search-history/" class="dropdown-item" role="menuitem">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <circle cx="11" cy="11" r="8"></circle>
-                                        <path d="M21 21l-4.35-4.35"></path>
-                                    </svg>
-                                    Lịch sử tìm kiếm
-                                </a>
-                            </li>
-                            <li role="none">
-                                <a href="/accounts/itineraries/" class="dropdown-item" role="menuitem">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                        <line x1="16" y1="2" x2="16" y2="6"></line>
-                                        <line x1="8" y1="2" x2="8" y2="6"></line>
-                                        <line x1="3" y1="10" x2="21" y2="10"></line>
-                                    </svg>
-                                    Lịch trình đã tạo
-                                </a>
-                            </li>
-                            <li role="none">
-                                <a href="{% url 'submit_place' %}" class="dropdown-item" role="menuitem">
-                                    <i class="fas fa-plus mr-2"></i> Thêm địa điểm
-                                </a>
-                            </li>
-                            <li role="separator" class="dropdown-divider"></li>
-                            <li role="none">
-                                <a href="#" id="dropdown-logout-link" class="dropdown-item dropdown-item-danger" role="menuitem">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                                        <polyline points="16 17 21 12 16 7"></polyline>
-                                        <line x1="21" y1="12" x2="9" y2="12"></line>
-                                    </svg>
-                                    Đăng xuất
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                {% else %}
-                    <li role="none">
-                        <a href="/accounts/login/" class="nav-link" role="menuitem">Đăng nhập</a>
-                    </li>
-                    <li role="none">
-                        <a href="/accounts/register/" class="nav-link" role="menuitem" style="border: 1px solid rgba(255,255,255,0.2); padding: 0.4rem 1rem;">Đăng ký</a>
-                    </li>
-                {% endif %}
-            </ul>
-            
-            <button class="mobile-menu-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-            </button>
-        </div>
-    </nav>
+<body class="min-h-screen antialiased">
+    {% include 'includes/navbar.html' %}
 
-    <!-- PAGE CONTENT -->
-    {% block content %}{% endblock %}
+    <main class="min-h-[calc(100vh-80px)]">
+        {% block content %}{% endblock %}
+    </main>
 
-    <!-- SHARED FOOTER -->
-    {% block footer %}{% endblock %}
+    {% block footer %}
+        {% include 'includes/footer.html' %}
+    {% endblock %}
 
-    <!-- LOGOUT MODAL -->
     {% if user.is_authenticated %}
-    <!-- Logout Confirmation Modal -->
-    <div id="logout-modal" class="logout-modal" style="display: none;">
-        <div class="logout-modal-content">
-            <div class="logout-modal-header">
-                <h3 class="logout-modal-title">Xác nhận đăng xuất</h3>
-                <button type="button" class="logout-modal-close" id="logout-modal-close">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="logout-modal-body">
-                <div class="logout-modal-icon">
-                    <i class="fas fa-sign-out-alt"></i>
+    <div id="logout-modal-overlay" class="fixed inset-0 z-[90] hidden items-center justify-center bg-slate-950/50 px-4 backdrop-blur-sm">
+        <div class="theme-surface-strong w-full max-w-md overflow-hidden rounded-3xl">
+            <div class="px-6 py-5 text-white" style="background: linear-gradient(135deg, rgb(var(--ocean)) 0%, rgb(var(--primary)) 100%);">
+                <div class="flex items-center gap-3">
+                    <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 text-xl">
+                        <i class="fas fa-right-from-bracket"></i>
+                    </span>
+                    <div>
+                        <h3 class="text-lg font-bold">Xác nhận đăng xuất</h3>
+                        <p class="text-sm text-slate-200">Phiên làm việc của bạn sẽ được kết thúc an toàn.</p>
+                    </div>
                 </div>
-                <p class="logout-modal-message">Bạn có chắc chắn muốn đăng xuất khỏi tài khoản của mình không?</p>
             </div>
-            <div class="logout-modal-footer">
-                <button type="button" class="btn btn-outline-secondary" id="logout-cancel">
-                    <i class="fas fa-times"></i> Hủy bỏ
+            <div class="px-6 py-6 text-sm leading-6 theme-text-muted">
+                Bạn có chắc chắn muốn đăng xuất khỏi tài khoản hiện tại không?
+            </div>
+            <div class="flex items-center justify-end gap-3 px-6 pb-6">
+                <button id="logout-modal-cancel" type="button" class="theme-btn-secondary rounded-full px-5 py-2.5 text-sm font-semibold">
+                    Ở lại
                 </button>
-                <a href="{% url 'logout' %}?next=/" class="btn btn-primary">
-                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
-                </a>
+                <form id="logout-form" method="post" action="/accounts/logout/">
+                    {% csrf_token %}
+                    <button type="submit" class="theme-btn-primary rounded-full px-5 py-2.5 text-sm font-semibold">
+                        Đăng xuất
+                    </button>
+                </form>
             </div>
         </div>
     </div>
     {% endif %}
 
-    <!-- SHARED SCRIPTS -->
-    <script>
-        /* ===================================
-         * NAVBAR FUNCTIONALITY
-         * =================================== */
-        
-        // Navbar scroll effect
-        const navbar = document.getElementById('navbar');
-        if (navbar) {
-            window.addEventListener('scroll', () => {
-                const currentScroll = window.pageYOffset;
-                if (currentScroll > 50) {
-                    navbar.classList.add('scrolled');
-                } else {
-                    navbar.classList.remove('scrolled');
-                }
-            });
-        }
-
-        // Mobile menu toggle
-        const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
-        const navMenu = document.querySelector('.nav-menu');
-        
-        if (mobileMenuToggle && navMenu) {
-            mobileMenuToggle.addEventListener('click', () => {
-                navMenu.classList.toggle('mobile-open');
-                const isExpanded = navMenu.classList.contains('mobile-open');
-                mobileMenuToggle.setAttribute('aria-expanded', isExpanded);
-            });
-        }
-
-        // Search Dropdown Toggle (click và hover)
-        const searchDropdown = document.querySelector('.search-dropdown');
-        const searchToggle = document.querySelector('.search-toggle');
-        const searchDropdownMenu = document.querySelector('.search-dropdown-menu');
-        
-        if (searchToggle && searchDropdownMenu) {
-            // Click để toggle dropdown
-            searchToggle.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                searchDropdown.classList.toggle('active');
-            });
-            
-            // Đóng dropdown khi click bên ngoài
-            document.addEventListener('click', function(e) {
-                if (searchDropdown && !searchDropdown.contains(e.target)) {
-                    searchDropdown.classList.remove('active');
-                }
-            });
-            
-            // Hover vào dropdown để giữ mở
-            searchDropdown.addEventListener('mouseenter', function() {
-                searchDropdown.classList.add('active');
-            });
-            
-            searchDropdown.addEventListener('mouseleave', function() {
-                // Chỉ đóng khi không hover (hover tự động được CSS xử lý)
-                setTimeout(() => {
-                    if (!searchDropdown.matches(':hover')) {
-                        searchDropdown.classList.remove('active');
-                    }
-                }, 200);
-            });
-        }
-
-        // User Avatar Dropdown Toggle
-        const userAvatarBtn = document.getElementById('user-avatar-btn');
-        const userDropdownMenu = document.getElementById('user-dropdown-menu');
-        
-        if (userAvatarBtn && userDropdownMenu && !userAvatarBtn.dataset.dropdownBound) {
-            userAvatarBtn.dataset.dropdownBound = 'true';
-            userAvatarBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                const isExpanded = userDropdownMenu.classList.contains('show');
-                
-                if (isExpanded) {
-                    userDropdownMenu.classList.remove('show');
-                    userAvatarBtn.setAttribute('aria-expanded', 'false');
-                } else {
-                    userDropdownMenu.classList.add('show');
-                    userAvatarBtn.setAttribute('aria-expanded', 'true');
-                }
-            });
-            
-            // Close dropdown when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!userAvatarBtn.contains(e.target) && !userDropdownMenu.contains(e.target)) {
-                    userDropdownMenu.classList.remove('show');
-                    userAvatarBtn.setAttribute('aria-expanded', 'false');
-                }
-            });
-            
-            // Close dropdown when clicking on menu items
-            const dropdownItems = userDropdownMenu.querySelectorAll('.dropdown-item');
-            dropdownItems.forEach(item => {
-                if (!item.id.includes('logout')) {
-                    item.addEventListener('click', function() {
-                        userDropdownMenu.classList.remove('show');
-                        userAvatarBtn.setAttribute('aria-expanded', 'false');
-                    });
-                }
-            });
-        }
-        
-        // Logout modal logic
-        const logoutLink = document.getElementById('logout-link');
-        const dropdownLogoutLink = document.getElementById('dropdown-logout-link');
-        const logoutModal = document.getElementById('logout-modal');
-        const logoutCancel = document.getElementById('logout-cancel');
-        const logoutModalClose = document.getElementById('logout-modal-close');
-        
-        // Function to show modal with animation
-        function showLogoutModal() {
-            if (logoutModal) {
-                logoutModal.style.display = 'flex';
-                // Trigger reflow
-                void logoutModal.offsetWidth;
-                logoutModal.classList.add('show');
-                document.body.style.overflow = 'hidden';
-            }
-        }
-        
-        // Function to hide modal with animation
-        function hideLogoutModal() {
-            if (logoutModal) {
-                logoutModal.classList.remove('show');
-                // Wait for animation to complete before hiding
-                setTimeout(() => {
-                    if (logoutModal.classList.contains('show') === false) {
-                        logoutModal.style.display = 'none';
-                    }
-                }, 300);
-                document.body.style.overflow = '';
-            }
-        }
-        
-        // Set up event listeners
-        if (logoutLink) {
-            logoutLink.addEventListener('click', function(e) { 
-                e.preventDefault();
-                showLogoutModal();
-            });
-        }
-        
-        if (dropdownLogoutLink) {
-            dropdownLogoutLink.addEventListener('click', function(e) { 
-                e.preventDefault();
-                showLogoutModal();
-                // Close user dropdown if open
-                if (userDropdownMenu) {
-                    userDropdownMenu.classList.remove('show');
-                }
-                if (userAvatarBtn) {
-                    userAvatarBtn.setAttribute('aria-expanded', 'false');
-                }
-            });
-        }
-        
-        // Close modal when clicking cancel, close button, or outside modal
-        if (logoutCancel) {
-            logoutCancel.addEventListener('click', hideLogoutModal);
-        }
-        
-        if (logoutModalClose) {
-            logoutModalClose.addEventListener('click', hideLogoutModal);
-        }
-        
-        if (logoutModal) {
-            logoutModal.addEventListener('click', function(e) { 
-                if (e.target === logoutModal) {
-                    hideLogoutModal();
-                }
-            });
-            
-            // Close with Escape key
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && logoutModal.style.display === 'flex') {
-                    hideLogoutModal();
-                }
-            });
-        }
-
-        // AI Chat Assistant Function - Redirect to AI Chat page
-        function openAIChat() {
-            window.location.href = '/ai-chat/';
-        }
-        
-        // Make openAIChat globally available
-        window.openAIChat = openAIChat;
-    </script>
-    
+    <script src="{% static 'js/navbar.js' %}"></script>
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>

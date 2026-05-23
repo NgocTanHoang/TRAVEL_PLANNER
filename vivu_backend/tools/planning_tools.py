@@ -14,6 +14,7 @@ from typing import Dict, Any, Optional, List, Tuple, Union
 from datetime import datetime, timedelta
 from math import exp, radians, sin, cos, sqrt, atan2
 import os
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +40,12 @@ except ImportError:
 # OpenAI LLM - CHỈ dùng để format/combine thông tin cuối cùng (optional, có thể tắt)
 # Không dùng để generate content hoặc cung cấp thông tin chính
 _llm = None
-_llm_enabled = os.getenv('PLANNING_USE_LLM', 'false').lower() == 'true'  # Tắt mặc định
+_llm_candidates = None
+
+
+def _is_llm_enabled() -> bool:
+    """Đọc flag ở runtime thay vì chốt tại import time."""
+    return os.getenv('PLANNING_USE_LLM', 'false').lower() == 'true'
 
 def get_llm():
     """
@@ -50,64 +56,239 @@ def get_llm():
     Chi phí API khá đắt, nên hạn chế sử dụng.
     """
     global _llm
-    if not _llm_enabled:
+    if not _is_llm_enabled():
+        logger.info("Planning LLM disabled by PLANNING_USE_LLM flag")
         return None  # Tắt mặc định
     
     if _llm is None:
-        # Priority 1: Try Groq
-        try:
-            GROQ_API_KEY = os.getenv('GROQ_API_KEY')
-            if GROQ_API_KEY:
-                from langchain_groq import ChatGroq
-                groq_model = os.getenv('GROQ_MODEL', 'llama-3.3-70b-versatile')  # Updated model
-                _llm = ChatGroq(
-                    model=groq_model,
-                    temperature=0.3,
-                    groq_api_key=GROQ_API_KEY
-                )
-                logger.info(f"Groq LLM initialized for planning tools: {groq_model}")
-                return _llm
-        except ImportError:
-            logger.debug("langchain-groq not available, trying fallback")
-        except Exception as e:
-            logger.warning(f"Failed to initialize Groq LLM: {e}, trying fallback")
-        
-        # Priority 2: Try GPT OSS 120B (fallback model)
-        try:
-            FALLBACK_MODEL = os.getenv('FALLBACK_MODEL', 'gpt-oss-120b')
-            # GPT OSS 120B có thể được host qua OpenAI-compatible API
-            # Hoặc có thể là một endpoint khác, tùy vào cấu hình
-            OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-            if OPENAI_API_KEY and FALLBACK_MODEL:
-                from langchain_openai import ChatOpenAI
-                # Nếu GPT OSS 120B được host qua OpenAI-compatible endpoint
-                # Có thể cần cấu hình base_url riêng
-                _llm = ChatOpenAI(
-                    model=FALLBACK_MODEL,
-                    temperature=0.3,
-                    api_key=OPENAI_API_KEY
-                )
-                logger.info(f"Fallback LLM initialized: {FALLBACK_MODEL}")
-                return _llm
-        except Exception as e:
-            logger.warning(f"Failed to initialize fallback LLM: {e}, trying OpenAI")
-        
-        # Priority 3: Fallback to OpenAI
-        try:
-            OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-            if OPENAI_API_KEY:
-                from langchain_openai import ChatOpenAI
-                _llm = ChatOpenAI(
-                    model=os.getenv('MODEL', 'gpt-4o-mini'),
-                    temperature=0.3,
-                    api_key=OPENAI_API_KEY
-                )
-                logger.info("OpenAI LLM initialized for planning tools (format only)")
-            else:
-                logger.warning("No LLM API keys found, LLM disabled")
-        except Exception as e:
-            logger.warning(f"Failed to initialize OpenAI LLM: {e}")
+        candidates = get_llm_candidates()
+        for candidate in candidates:
+            if candidate.get("type") == "langchain":
+                _llm = candidate.get("client")
+                if _llm is not None:
+                    logger.info(f"Using planning LLM candidate: {candidate.get('name')}")
+                    return _llm
+
+        if candidates:
+            logger.info(
+                "Planning LLM primary fallback is non-LangChain (%s); direct fallback handling will happen at call time",
+                candidates[0].get("name"),
+            )
+        else:
+            logger.warning("No LLM API keys found, LLM disabled")
     return _llm
+
+
+def reset_llm_cache() -> None:
+    """Clear cached LLM clients so runtime can pick up new env vars."""
+    global _llm, _llm_candidates
+    _llm = None
+    _llm_candidates = None
+
+
+def get_llm_candidates() -> List[Dict[str, Any]]:
+    """
+    Build ordered LLM fallback chain:
+    Groq -> Gemini -> OpenRouter (free only) -> OpenAI.
+    """
+    global _llm_candidates
+    if not _is_llm_enabled():
+        logger.info("Planning LLM disabled by PLANNING_USE_LLM flag")
+        return []
+
+    if _llm_candidates is None:
+        candidates: List[Dict[str, Any]] = []
+        _register_groq_candidate(candidates)
+        _register_gemini_candidate(candidates)
+        _register_openrouter_candidate(candidates)
+        _register_openai_candidate(candidates)
+        _llm_candidates = candidates
+
+    return list(_llm_candidates)
+
+
+def _register_groq_candidate(candidates: List[Dict[str, Any]]) -> None:
+    try:
+        groq_api_key = os.getenv("GROQ_API_KEY")
+        if not groq_api_key:
+            return
+        from langchain_groq import ChatGroq
+        groq_model = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+        client = ChatGroq(
+            model=groq_model,
+            temperature=0.3,
+            groq_api_key=groq_api_key,
+        )
+        candidates.append(
+            {
+                "name": "groq",
+                "type": "langchain",
+                "client": client,
+                "model": groq_model,
+            }
+        )
+        logger.info(f"Groq LLM candidate ready: {groq_model}")
+    except ImportError:
+        logger.debug("langchain-groq not available, skipping Groq candidate")
+    except Exception as exc:
+        logger.warning(f"Failed to initialize Groq LLM candidate: {exc}")
+
+
+def _register_gemini_candidate(candidates: List[Dict[str, Any]]) -> None:
+    gemini_api_key = os.getenv("GEMINI_API_KEY")
+    if not gemini_api_key:
+        return
+    gemini_model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+    candidates.append(
+        {
+            "name": "gemini",
+            "type": "gemini",
+            "api_key": gemini_api_key,
+            "model": gemini_model,
+        }
+    )
+    logger.info(f"Gemini LLM candidate ready: {gemini_model}")
+
+
+def _register_openrouter_candidate(candidates: List[Dict[str, Any]]) -> None:
+    try:
+        openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
+        if not openrouter_api_key:
+            return
+        openrouter_model = os.getenv("OPENROUTER_MODEL", "").strip()
+        if not openrouter_model:
+            logger.warning("OPENROUTER_API_KEY is set but OPENROUTER_MODEL is empty; skipping OpenRouter fallback")
+            return
+        if not openrouter_model.endswith(":free"):
+            logger.warning("OPENROUTER_MODEL must end with ':free'; skipping non-free OpenRouter model")
+            return
+
+        from langchain_openai import ChatOpenAI
+        client = ChatOpenAI(
+            model=openrouter_model,
+            temperature=0.3,
+            api_key=openrouter_api_key,
+            base_url=os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"),
+        )
+        candidates.append(
+            {
+                "name": "openrouter",
+                "type": "langchain",
+                "client": client,
+                "model": openrouter_model,
+            }
+        )
+        logger.info(f"OpenRouter free LLM candidate ready: {openrouter_model}")
+    except Exception as exc:
+        logger.warning(f"Failed to initialize OpenRouter LLM candidate: {exc}")
+
+
+def _register_openai_candidate(candidates: List[Dict[str, Any]]) -> None:
+    try:
+        openai_api_key = os.getenv("OPENAI_API_KEY")
+        if not openai_api_key:
+            return
+        from langchain_openai import ChatOpenAI
+        openai_model = os.getenv("MODEL", "gpt-4o-mini")
+        client = ChatOpenAI(
+            model=openai_model,
+            temperature=0.3,
+            api_key=openai_api_key,
+        )
+        candidates.append(
+            {
+                "name": "openai",
+                "type": "langchain",
+                "client": client,
+                "model": openai_model,
+            }
+        )
+        logger.info(f"OpenAI LLM candidate ready: {openai_model}")
+    except Exception as exc:
+        logger.warning(f"Failed to initialize OpenAI LLM candidate: {exc}")
+
+
+def invoke_candidate_text(candidate: Dict[str, Any], prompt: str, temperature: float = 0.7) -> str:
+    """Invoke one LLM candidate and return plain text."""
+    candidate_type = candidate.get("type")
+    if candidate_type == "langchain":
+        client = candidate.get("client")
+        if client is None:
+            raise RuntimeError(f"LLM candidate '{candidate.get('name')}' has no client")
+        response = client.invoke(prompt)
+        return response.content if hasattr(response, "content") else str(response)
+
+    if candidate_type == "gemini":
+        import google.generativeai as genai
+
+        genai.configure(api_key=candidate["api_key"])
+        model = genai.GenerativeModel(candidate["model"])
+        response = model.generate_content(
+            prompt,
+            generation_config={
+                "temperature": temperature,
+            },
+        )
+        text = getattr(response, "text", None)
+        if text:
+            return text
+        raise RuntimeError("Gemini returned empty text response")
+
+    raise RuntimeError(f"Unsupported LLM candidate type: {candidate_type}")
+
+
+def invoke_candidate_structured(candidate: Dict[str, Any], prompt: str, schema_model: Any) -> Any:
+    """Invoke one LLM candidate and validate against a Pydantic schema."""
+    candidate_type = candidate.get("type")
+    if candidate_type == "langchain":
+        client = candidate.get("client")
+        if client is None:
+            raise RuntimeError(f"LLM candidate '{candidate.get('name')}' has no client")
+        if not hasattr(client, "with_structured_output"):
+            raise RuntimeError(
+                f"LLM candidate '{candidate.get('name')}' does not support structured output"
+            )
+        structured_llm = client.with_structured_output(schema_model)
+        result = structured_llm.invoke(prompt)
+        if isinstance(result, schema_model):
+            return result
+        return schema_model.model_validate(result)
+
+    if candidate_type == "gemini":
+        import google.generativeai as genai
+
+        schema_json = json.dumps(schema_model.model_json_schema(), ensure_ascii=False)
+        gemini_prompt = (
+            f"{prompt}\n\n"
+            "Tra ve DUY NHAT mot JSON hop le, khong them markdown fence.\n"
+            f"Schema Pydantic can tuan thu:\n{schema_json}"
+        )
+        genai.configure(api_key=candidate["api_key"])
+        model = genai.GenerativeModel(candidate["model"])
+        response = model.generate_content(
+            gemini_prompt,
+            generation_config={
+                "temperature": 0.2,
+                "response_mime_type": "application/json",
+            },
+        )
+        payload = _extract_json_payload(getattr(response, "text", "") or "")
+        return schema_model.model_validate(payload)
+
+    raise RuntimeError(f"Unsupported LLM candidate type: {candidate_type}")
+
+
+def _extract_json_payload(raw_text: str) -> Any:
+    """Parse JSON even if the provider wraps it in markdown fences."""
+    text = (raw_text or "").strip()
+    if text.startswith("```"):
+        lines = text.splitlines()
+        if lines and lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].startswith("```"):
+            lines = lines[:-1]
+        text = "\n".join(lines).strip()
+    return json.loads(text)
 
 
 class PlanningTools:

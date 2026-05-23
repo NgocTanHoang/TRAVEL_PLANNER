@@ -21,7 +21,7 @@ if str(BASE_DIR) not in sys.path:
 # Load environment variables from .env file
 # Try loading with UTF-8 first, fallback to other encodings if needed
 try:
-    load_dotenv(PROJECT_ROOT / '.env', encoding='utf-8')  # Load from project root
+    load_dotenv(PROJECT_ROOT / '.env', encoding='utf-8-sig')  # Load from project root
 except (UnicodeDecodeError, Exception):
     # If UTF-8 fails, try with error handling
     try:
@@ -30,7 +30,7 @@ except (UnicodeDecodeError, Exception):
         pass  # Continue if .env can't be loaded
 
 try:
-    load_dotenv(BASE_DIR / '.env', encoding='utf-8')  # Also try vivu_backend/.env (fallback)
+    load_dotenv(BASE_DIR / '.env', encoding='utf-8-sig')  # Also try vivu_backend/.env (fallback)
 except (UnicodeDecodeError, Exception):
     try:
         load_dotenv(BASE_DIR / '.env', encoding='latin-1')

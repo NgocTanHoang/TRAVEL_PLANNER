@@ -20,7 +20,8 @@ from .serializers import (
 # Import travel plan views
 from .travel_plan_views import (
     TravelPlanPreviewView,
-    TravelPlanCreateView
+    TravelPlanCreateView,
+    SaveTravelPlanView,
 )
 # Import 4-step workflow views
 from .travel_plan_step_views import (

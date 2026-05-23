@@ -10,6 +10,7 @@ import logging
 from typing import Dict, Any, Optional, List
 from ..base_agent import BaseAgent
 from tools.accommodation_tools import get_accommodation_tools
+from utils.location_resolver import resolve_best_province, text_matches_province
 
 logger = logging.getLogger(__name__)
 
@@ -57,10 +58,19 @@ class AccommodationAgent(BaseAgent):
             if not destination:
                 state['accommodation_error'] = 'Missing destination'
                 return state
+
+            resolved_province = await self._resolve_destination_province(destination)
+            if not resolved_province:
+                state['accommodation_error'] = f"Khong the map destination '{destination}' vao TINHTHANH."
+                state['hotels'] = []
+                return state
+            state['resolved_destination_province'] = resolved_province
             
-            # Tìm kiếm khách sạn
-            hotels = self.accommodation_tools.search_hotels(
-                city=destination,
+            hotels = await self._query_hotels_from_db(resolved_province)
+
+            # Tìm kiếm khách sạn từ tools nhưng vẫn khóa cứng theo tỉnh thành
+            tool_hotels = self.accommodation_tools.search_hotels(
+                city=resolved_province['tenTinhThanh'],
                 check_in=check_in,
                 check_out=check_out,
                 guests=guests,
@@ -69,6 +79,7 @@ class AccommodationAgent(BaseAgent):
                 max_price=max_price,
                 stars=stars
             )
+            hotels = self._merge_hotel_results(hotels, tool_hotels, resolved_province)
             
             # Tính tổng chi phí nếu đã chọn khách sạn
             selected_hotel = state.get('selected_hotel')
@@ -170,6 +181,116 @@ class AccommodationAgent(BaseAgent):
             state['accommodation_error'] = str(e)
             state['hotels'] = []
             return state
+
+    async def _resolve_destination_province(self, destination: str) -> Optional[Dict[str, Any]]:
+        """Resolve destination ve tinh thanh chuan trong DB."""
+        try:
+            from asgiref.sync import sync_to_async
+            from apps.places.models import TinhThanh
+
+            def _resolve_sync(dest: str) -> Optional[Dict[str, Any]]:
+                provinces = list(TinhThanh.objects.values_list("maTinhThanh", "tenTinhThanh"))
+                match = resolve_best_province(dest, provinces)
+                if not match:
+                    return None
+                return {
+                    "maTinhThanh": int(match[0]),
+                    "tenTinhThanh": str(match[1]),
+                    "match_score": float(match[2]),
+                }
+
+            return await sync_to_async(_resolve_sync)(destination)
+        except Exception as e:
+            logger.warning(f"Failed to resolve destination province for accommodation search: {e}")
+            return None
+
+    async def _query_hotels_from_db(self, resolved_province: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Lay khách sạn ground truth từ SQLite/Django ORM."""
+        try:
+            from asgiref.sync import sync_to_async
+            from apps.places.models import DiaDiem
+            import json
+
+            def _query_sync(province: Dict[str, Any]) -> List[Dict[str, Any]]:
+                province_id = province["maTinhThanh"]
+                province_name = province["tenTinhThanh"]
+                queryset = (
+                    DiaDiem.objects.filter(
+                        maTinhThanh_id=province_id,
+                        trangThai='active',
+                        loaiDiaDiem='khach_san',
+                    )
+                    .order_by('-danhGiaTrungBinh', '-soLuotDanhGia')[:20]
+                )
+
+                hotels: List[Dict[str, Any]] = []
+                for dia_diem in queryset:
+                    try:
+                        dac_diem = json.loads(dia_diem.dacDiem) if dia_diem.dacDiem else {}
+                    except (json.JSONDecodeError, TypeError):
+                        dac_diem = {}
+
+                    hotels.append({
+                        'maDiaDiem': dia_diem.maDiaDiem,
+                        'name': dia_diem.tenDiaDiem or '',
+                        'description': dia_diem.moTa or '',
+                        'address': dia_diem.diaChi or province_name,
+                        'city': province_name,
+                        'province': province_name,
+                        'rating': float(dia_diem.danhGiaTrungBinh or 0),
+                        'price_per_night': float(dia_diem.giaVe or 0),
+                        'price': float(dia_diem.giaVe or 0),
+                        'latitude': float(dia_diem.viDo) if dia_diem.viDo is not None else None,
+                        'longitude': float(dia_diem.kinhDo) if dia_diem.kinhDo is not None else None,
+                        'amenities': dac_diem.get('amenities', []),
+                        'source': 'database',
+                    })
+
+                return hotels
+
+            hotels = await sync_to_async(_query_sync)(resolved_province)
+            if hotels:
+                logger.info(f"Found {len(hotels)} hotels from database for {resolved_province['tenTinhThanh']}")
+            return hotels
+        except Exception as e:
+            logger.warning(f"Failed to query hotels from database: {e}")
+            return []
+
+    def _hotel_belongs_to_province(self, hotel: Dict[str, Any], resolved_province: Dict[str, Any]) -> bool:
+        province_name = resolved_province.get("tenTinhThanh", "")
+        candidates = [
+            hotel.get("province"),
+            hotel.get("city"),
+            hotel.get("address"),
+            hotel.get("description"),
+            hotel.get("location"),
+        ]
+        return text_matches_province(candidates, province_name)
+
+    def _merge_hotel_results(
+        self,
+        db_hotels: List[Dict[str, Any]],
+        tool_hotels: List[Dict[str, Any]],
+        resolved_province: Dict[str, Any],
+    ) -> List[Dict[str, Any]]:
+        """Ghep DB-first voi tool results da qua filter tỉnh thành."""
+        merged: List[Dict[str, Any]] = list(db_hotels)
+        existing_names = {str(hotel.get('name', '')).strip().lower() for hotel in merged}
+
+        for hotel in tool_hotels or []:
+            hotel_name = str(hotel.get('name', '')).strip()
+            if not hotel_name:
+                continue
+            if hotel_name.lower() in existing_names:
+                continue
+            if not self._hotel_belongs_to_province(hotel, resolved_province):
+                continue
+            hotel['city'] = hotel.get('city') or resolved_province['tenTinhThanh']
+            hotel['province'] = hotel.get('province') or resolved_province['tenTinhThanh']
+            merged.append(hotel)
+            existing_names.add(hotel_name.lower())
+
+        return merged
     
     def _estimate_accommodation_cost(
         self,

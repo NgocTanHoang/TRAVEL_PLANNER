@@ -483,63 +483,19 @@ def generate_itinerary_description(
     if llm is None:
         # Luôn force enable LLM cho description generation
         if force_llm:
-            import os
-            
-            # Priority 1: Try Groq with openai/gpt-oss-120b
-            GROQ_API_KEY = os.getenv('GROQ_API_KEY')
-            if GROQ_API_KEY:
-                try:
-                    from langchain_groq import ChatGroq
-                    GROQ_MODEL = os.getenv('GROQ_MODEL', 'openai/gpt-oss-120b')  # Default to openai/gpt-oss-120b for Groq (with prefix)
-                    llm = ChatGroq(
-                        temperature=0.7,  # Higher temperature for more creative descriptions
-                        groq_api_key=GROQ_API_KEY,
-                        model_name=GROQ_MODEL
-                    )
-                    logger.info(f"Using Groq LLM for description generation: {GROQ_MODEL}")
-                except ImportError:
-                    logger.warning("langchain-groq not installed, trying OpenAI")
-                    llm = None
-                except Exception as e:
-                    logger.warning(f"Failed to initialize Groq LLM: {e}, trying OpenAI")
-                    llm = None
-            
-            # Priority 2: Try OpenAI with gpt-4o-mini (fallback)
-            if llm is None:
-                OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-                if OPENAI_API_KEY:
-                    try:
-                        from langchain_openai import ChatOpenAI
-                        OPENAI_MODEL = os.getenv('MODEL', 'gpt-4o-mini')  # Default to gpt-4o-mini for OpenAI
-                        llm = ChatOpenAI(
-                            model=OPENAI_MODEL,
-                            temperature=0.7,  # Higher temperature for more creative descriptions
-                            api_key=OPENAI_API_KEY
-                        )
-                        logger.info(f"Using OpenAI LLM for description generation: {OPENAI_MODEL}")
-                    except Exception as e:
-                        logger.warning(f"Failed to initialize OpenAI LLM: {e}, falling back to planning_tools")
-                        llm = None
-            
-            # Fallback to planning_tools if both not available
-            if llm is None:
-                import tools.planning_tools
-                # Tạm thời enable LLM
-                original_enabled = tools.planning_tools._llm_enabled
-                tools.planning_tools._llm_enabled = True
-                try:
-                    from tools.planning_tools import get_llm
-                    # Clear cached LLM để force reinitialize
-                    tools.planning_tools._llm = None
-                    llm = get_llm()
-                finally:
-                    # Restore original state
-                    tools.planning_tools._llm_enabled = original_enabled
-                    # Clear cached LLM again
-                    tools.planning_tools._llm = None
+            from tools.planning_tools import get_llm_candidates
+
+            candidates = get_llm_candidates()
         else:
             from tools.planning_tools import get_llm
             llm = get_llm()
+            candidates = []
+    else:
+        if force_llm:
+            from tools.planning_tools import get_llm_candidates
+            candidates = get_llm_candidates()
+        else:
+            candidates = []
     
     if llm is None:
         logger.warning("LLM not available, returning basic description")
@@ -649,14 +605,44 @@ Không được bịa dữ liệu ngoài những gì đã cung cấp (ngoại tr
 
 Bắt đầu tạo hướng dẫn lịch trình chi tiết."""
     
-    try:
-        response = llm.invoke(prompt)
-        description = response.content if hasattr(response, 'content') else str(response)
-        logger.info("Generated itinerary description using LLM")
-        return description
-    except Exception as e:
-        logger.error(f"Error generating description with LLM: {e}")
+    try_candidates: List[Dict[str, Any]] = []
+    if llm is not None:
+        try_candidates.append({"name": "provided", "type": "langchain", "client": llm})
+    try_candidates.extend(candidates)
+
+    deduped_candidates: List[Dict[str, Any]] = []
+    seen_signatures = set()
+    for candidate in try_candidates:
+        signature = (
+            candidate.get("name"),
+            candidate.get("type"),
+            candidate.get("model"),
+        )
+        if signature in seen_signatures:
+            continue
+        seen_signatures.add(signature)
+        deduped_candidates.append(candidate)
+    try_candidates = deduped_candidates
+
+    if not try_candidates:
+        logger.warning("LLM not available, returning basic description")
         return _generate_basic_description(json_data)
+
+    from tools.planning_tools import invoke_candidate_text
+
+    errors: List[str] = []
+    for candidate in try_candidates:
+        candidate_name = candidate.get("name", "unknown")
+        try:
+            description = invoke_candidate_text(candidate, prompt, temperature=0.7)
+            logger.info("Generated itinerary description using provider: %s", candidate_name)
+            return description
+        except Exception as e:
+            logger.warning("Description generation failed with provider %s: %s", candidate_name, e)
+            errors.append(f"{candidate_name}: {e}")
+
+    logger.error("All itinerary description providers failed: %s", " | ".join(errors))
+    return _generate_basic_description(json_data)
 
 
 def _generate_basic_description(json_data: Dict[str, Any]) -> str:

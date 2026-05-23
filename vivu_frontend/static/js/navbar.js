@@ -1,206 +1,224 @@
 /**
  * Shared Navbar JavaScript
- * Handles dropdown menus, mobile menu, and logout modal
+ * Handles mobile drawer, dropdown menus, logout modal, and theme switching.
  */
 
-(function() {
-    'use strict';
+(function () {
+    "use strict";
 
-    // Navbar scroll effect
-    const navbar = document.getElementById('navbar');
-    if (navbar) {
-        window.addEventListener('scroll', () => {
-            const currentScroll = window.pageYOffset;
-            if (currentScroll > 50) {
-                navbar.classList.add('scrolled');
-            } else {
-                navbar.classList.remove('scrolled');
+    const storageKey = "vivu-theme";
+    const root = document.documentElement;
+    const body = document.body;
+    const navbar = document.getElementById("navbar");
+    const mobileToggle = document.getElementById("mobile-menu-toggle");
+    const mobileClose = document.getElementById("mobile-menu-close");
+    const mobileOverlay = document.getElementById("mobile-menu-overlay");
+    const mobileDrawer = document.getElementById("mobile-drawer");
+    const userAvatarBtn = document.getElementById("user-avatar-btn");
+    const userDropdownMenu = document.getElementById("user-dropdown-menu");
+    const dropdownLogoutLink = document.getElementById("dropdown-logout-link");
+    const drawerLogoutLink = document.getElementById("drawer-logout-link");
+    const logoutModal = document.getElementById("logout-modal-overlay");
+    const logoutCancel = document.getElementById("logout-cancel");
+    const logoutModalCancel = document.getElementById("logout-modal-cancel");
+    const logoutForm = document.getElementById("logout-form");
+    const themeToggleButtons = document.querySelectorAll("#theme-toggle-desktop, #theme-toggle-mobile-top, #theme-toggle-drawer");
+
+    function currentTheme() {
+        return root.getAttribute("data-theme") === "dark" ? "dark" : "light";
+    }
+
+    function applyTheme(theme) {
+        root.setAttribute("data-theme", theme);
+        if (theme === "dark") {
+            root.classList.add("dark");
+        } else {
+            root.classList.remove("dark");
+        }
+        localStorage.setItem(storageKey, theme);
+        syncThemeIcons(theme);
+    }
+
+    function syncThemeIcons(theme) {
+        themeToggleButtons.forEach((button) => {
+            const icon = button.querySelector(".theme-toggle-icon");
+            if (!icon) {
+                return;
             }
+            icon.className = theme === "dark"
+                ? "fa-solid fa-sun theme-toggle-icon"
+                : "fa-solid fa-moon theme-toggle-icon";
+            button.setAttribute("aria-label", theme === "dark" ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối");
         });
     }
 
-    // Mobile menu toggle
-    const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
-    const navMenu = document.querySelector('.nav-menu');
-    
-    if (mobileMenuToggle && navMenu) {
-        mobileMenuToggle.addEventListener('click', () => {
-            navMenu.classList.toggle('mobile-open');
-            const isExpanded = navMenu.classList.contains('mobile-open');
-            mobileMenuToggle.setAttribute('aria-expanded', isExpanded);
-        });
+    function toggleTheme() {
+        applyTheme(currentTheme() === "dark" ? "light" : "dark");
     }
 
-    // Search Dropdown Toggle (click và hover)
-    const searchDropdown = document.querySelector('.search-dropdown');
-    const searchToggle = document.querySelector('.search-toggle');
-    const searchDropdownMenu = document.querySelector('.search-dropdown-menu');
-    
-    if (searchToggle && searchDropdownMenu) {
-        // Click để toggle dropdown
-        searchToggle.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            searchDropdown.classList.toggle('active');
-        });
-        
-        // Đóng dropdown khi click bên ngoài
-        document.addEventListener('click', function(e) {
-            if (searchDropdown && !searchDropdown.contains(e.target)) {
-                searchDropdown.classList.remove('active');
-            }
-        });
-        
-        // Hover vào dropdown để giữ mở
-        searchDropdown.addEventListener('mouseenter', function() {
-            searchDropdown.classList.add('active');
-        });
-        
-        searchDropdown.addEventListener('mouseleave', function() {
-            // Chỉ đóng khi không hover (hover tự động được CSS xử lý)
-            setTimeout(() => {
-                if (!searchDropdown.matches(':hover')) {
-                    searchDropdown.classList.remove('active');
-                }
-            }, 200);
-        });
+    function setNavbarScrolled() {
+        if (!navbar) {
+            return;
+        }
+        if (window.pageYOffset > 16) {
+            navbar.classList.add("shadow-lg");
+            navbar.style.boxShadow = "var(--surface-shadow)";
+        } else {
+            navbar.classList.remove("shadow-lg");
+            navbar.style.boxShadow = "none";
+        }
     }
 
-    // User Avatar Dropdown Toggle
-    const userAvatarBtn = document.getElementById('user-avatar-btn');
-    const userDropdownMenu = document.getElementById('user-dropdown-menu');
-    
-    if (userAvatarBtn && userDropdownMenu) {
-        userAvatarBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const isExpanded = userDropdownMenu.classList.contains('show');
-            
-            if (isExpanded) {
-                userDropdownMenu.classList.remove('show');
-                userAvatarBtn.setAttribute('aria-expanded', 'false');
-            } else {
-                userDropdownMenu.classList.add('show');
-                userAvatarBtn.setAttribute('aria-expanded', 'true');
-            }
-        });
-        
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!userAvatarBtn.contains(e.target) && !userDropdownMenu.contains(e.target)) {
-                userDropdownMenu.classList.remove('show');
-                userAvatarBtn.setAttribute('aria-expanded', 'false');
-            }
-        });
-        
-        // Close dropdown when clicking on menu items
-        const dropdownItems = userDropdownMenu.querySelectorAll('.dropdown-item');
-        dropdownItems.forEach(item => {
-            if (!item.id.includes('logout')) {
-                item.addEventListener('click', function() {
-                    userDropdownMenu.classList.remove('show');
-                    userAvatarBtn.setAttribute('aria-expanded', 'false');
-                });
-            }
-        });
+    function openDrawer() {
+        if (!mobileDrawer || !mobileOverlay) {
+            return;
+        }
+        mobileDrawer.classList.remove("translate-x-full");
+        mobileOverlay.classList.remove("pointer-events-none", "opacity-0");
+        mobileOverlay.classList.add("pointer-events-auto", "opacity-100");
+        body.classList.add("drawer-open");
+        if (mobileToggle) {
+            mobileToggle.setAttribute("aria-expanded", "true");
+        }
     }
-    
-    // Logout modal logic
-    const dropdownLogoutLink = document.getElementById('dropdown-logout-link');
-    const logoutModal = document.getElementById('logout-modal');
-    const logoutModalOverlay = document.getElementById('logout-modal-overlay');
-    const logoutCancel = document.getElementById('logout-cancel');
-    const logoutModalCancel = document.getElementById('logout-modal-cancel');
-    const logoutForm = document.getElementById('logout-form');
-    
-    // Function to show logout modal
+
+    function closeDrawer() {
+        if (!mobileDrawer || !mobileOverlay) {
+            return;
+        }
+        mobileDrawer.classList.add("translate-x-full");
+        mobileOverlay.classList.add("pointer-events-none", "opacity-0");
+        mobileOverlay.classList.remove("pointer-events-auto", "opacity-100");
+        body.classList.remove("drawer-open");
+        if (mobileToggle) {
+            mobileToggle.setAttribute("aria-expanded", "false");
+        }
+    }
+
+    function toggleUserDropdown(forceOpen) {
+        if (!userAvatarBtn || !userDropdownMenu) {
+            return;
+        }
+        const shouldOpen = typeof forceOpen === "boolean"
+            ? forceOpen
+            : userDropdownMenu.classList.contains("hidden") || userDropdownMenu.classList.contains("invisible");
+
+        if (shouldOpen) {
+            userDropdownMenu.classList.remove("hidden", "invisible", "opacity-0", "translate-y-2");
+            userDropdownMenu.classList.add("opacity-100", "translate-y-0");
+            userAvatarBtn.setAttribute("aria-expanded", "true");
+        } else {
+            userDropdownMenu.classList.add("invisible", "opacity-0", "translate-y-2");
+            userDropdownMenu.classList.remove("opacity-100", "translate-y-0");
+            userAvatarBtn.setAttribute("aria-expanded", "false");
+        }
+    }
+
     function showLogoutModal() {
-        // Try logout-modal-overlay first (index.html style)
-        const modalOverlay = document.getElementById('logout-modal-overlay');
-        // Try logout-modal (base.html style)
-        const modal = document.getElementById('logout-modal');
-        
-        if (modalOverlay) {
-            modalOverlay.style.display = 'flex';
-            modalOverlay.classList.add('show');
-        } else if (modal) {
-            modal.style.display = 'flex';
+        if (!logoutModal) {
+            return;
         }
-        
-        // Close dropdown menu when opening modal
-        if (userDropdownMenu) {
-            userDropdownMenu.classList.remove('show');
-        }
-        if (userAvatarBtn) {
-            userAvatarBtn.setAttribute('aria-expanded', 'false');
-        }
+        logoutModal.classList.remove("hidden");
+        logoutModal.classList.add("flex");
+        toggleUserDropdown(false);
+        closeDrawer();
     }
-    
-    // Function to hide logout modal
+
     function hideLogoutModal() {
-        const modalOverlay = document.getElementById('logout-modal-overlay');
-        const modal = document.getElementById('logout-modal');
-        
-        if (modalOverlay) {
-            modalOverlay.style.display = 'none';
-            modalOverlay.classList.remove('show');
-        } else if (modal) {
-            modal.style.display = 'none';
+        if (!logoutModal) {
+            return;
         }
+        logoutModal.classList.add("hidden");
+        logoutModal.classList.remove("flex");
     }
-    
-    // Make showLogoutModal globally available
+
     window.showLogoutModal = showLogoutModal;
     window.hideLogoutModal = hideLogoutModal;
-    
-    // Handle logout link click
+
+    syncThemeIcons(currentTheme());
+    setNavbarScrolled();
+    window.addEventListener("scroll", setNavbarScrolled);
+
+    themeToggleButtons.forEach((button) => {
+        button.addEventListener("click", toggleTheme);
+    });
+
+    if (window.matchMedia) {
+        const media = window.matchMedia("(prefers-color-scheme: dark)");
+        media.addEventListener("change", function (event) {
+            if (!localStorage.getItem(storageKey)) {
+                applyTheme(event.matches ? "dark" : "light");
+            }
+        });
+    }
+
+    if (mobileToggle) {
+        mobileToggle.addEventListener("click", openDrawer);
+    }
+    if (mobileClose) {
+        mobileClose.addEventListener("click", closeDrawer);
+    }
+    if (mobileOverlay) {
+        mobileOverlay.addEventListener("click", closeDrawer);
+    }
+
+    document.querySelectorAll(".mobile-drawer-link").forEach((link) => {
+        link.addEventListener("click", closeDrawer);
+    });
+
+    if (userAvatarBtn && userDropdownMenu) {
+        userAvatarBtn.addEventListener("click", function (event) {
+            event.stopPropagation();
+            toggleUserDropdown();
+        });
+
+        document.addEventListener("click", function (event) {
+            if (!userAvatarBtn.contains(event.target) && !userDropdownMenu.contains(event.target)) {
+                toggleUserDropdown(false);
+            }
+        });
+    }
+
     if (dropdownLogoutLink) {
-        dropdownLogoutLink.addEventListener('click', function(e) {
-            e.preventDefault();
+        dropdownLogoutLink.addEventListener("click", function (event) {
+            event.preventDefault();
             showLogoutModal();
         });
     }
-    
-    // Handle logout cancel button (support both ID styles)
-    if (logoutCancel) {
-        logoutCancel.addEventListener('click', function() {
-            hideLogoutModal();
+
+    if (drawerLogoutLink) {
+        drawerLogoutLink.addEventListener("click", function (event) {
+            event.preventDefault();
+            showLogoutModal();
         });
+    }
+
+    if (logoutCancel) {
+        logoutCancel.addEventListener("click", hideLogoutModal);
     }
     if (logoutModalCancel) {
-        logoutModalCancel.addEventListener('click', function() {
-            hideLogoutModal();
-        });
+        logoutModalCancel.addEventListener("click", hideLogoutModal);
     }
-    
-    // Close modal when clicking overlay
-    if (logoutModalOverlay) {
-        logoutModalOverlay.addEventListener('click', function(e) {
-            if (e.target === logoutModalOverlay) {
-                hideLogoutModal();
-            }
-        });
-    }
+
     if (logoutModal) {
-        logoutModal.addEventListener('click', function(e) {
-            if (e.target === logoutModal) {
+        logoutModal.addEventListener("click", function (event) {
+            if (event.target === logoutModal) {
                 hideLogoutModal();
             }
         });
     }
-    
-    // Close modal with ESC key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            closeDrawer();
             hideLogoutModal();
+            toggleUserDropdown(false);
         }
     });
-    
-    // Submit logout form when confirm button is clicked
+
     if (logoutForm) {
-        logoutForm.addEventListener('submit', function(e) {
-            // Form will submit naturally with POST method and CSRF token
-            // This ensures proper logout and redirect to homepage
+        logoutForm.addEventListener("submit", function () {
+            hideLogoutModal();
         });
     }
 })();
-

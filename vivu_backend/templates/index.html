@@ -1,179 +1,133 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Vi Vu - AI Travel Planner | Plan in Minutes, Vibe for Months.{% endblock %}
-
-{% block extra_styles %}
-    <link rel="stylesheet" href="{% static 'css/index.css' %}">
-{% endblock %}
+{% block title %}Vi Vu | Lập kế hoạch thông minh, trọn vẹn hành trình{% endblock %}
 
 {% block content %}
-    <!-- HERO BANNER -->
-    <section class="hero-banner home-hero" id="home">
-        <div class="home-hero-container">
-            <div class="home-hero-badge">
-                <span>ĐÃ CÓ MẶT TRÊN 100 QUỐC GIA</span>
-            </div>
-            <h1 class="home-hero-title">
-                Lên Kế Hoạch Chuyến Đi Hoàn Hảo
-                <span class="home-hero-title-accent">Chỉ Trong Vài Phút</span>
+<section class="relative overflow-hidden">
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(20,184,166,0.14),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(16,185,129,0.10),transparent_24%)]"></div>
+    <div class="relative mx-auto grid max-w-7xl gap-10 px-4 pb-16 pt-12 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:pb-24 lg:pt-20">
+        <div class="flex flex-col justify-center">
+            <span class="theme-badge inline-flex w-fit items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] shadow-sm">
+                <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+                Cổng thông tin du lịch tương tác
+            </span>
+            <h1 class="mt-6 max-w-3xl font-heading text-4xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
+                Khám phá điểm đến, xem bản đồ trực quan và dựng hành trình bằng AI trong một không gian duy nhất.
             </h1>
-            <p class="home-hero-subtitle">
-                Sử dụng công nghệ AI để tạo lịch trình chi tiết, quản lý ngân sách và đặt phòng một cách thông minh,
-                giúp Bệ hạ tận hưởng trọn vẹn hành trình của mình.
+            <p class="theme-text-muted mt-6 max-w-2xl text-base leading-7 md:text-lg">
+                Sử dụng công nghệ AI để tạo lịch trình chi tiết, quản lý ngân sách thông minh, giúp bạn tận hưởng trọn vẹn hành trình của mình.
             </p>
-            <div class="home-hero-actions">
-                <a href="/travel-plan/" class="home-hero-btn home-hero-btn-primary">
-                    Bắt đầu lập kế hoạch ngay
+            <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+                <a href="/places/search/" class="theme-btn-primary inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold shadow-soft">
+                    Khám phá điểm đến
                 </a>
-                <a href="#how-it-works" class="home-hero-btn home-hero-btn-secondary">
-                    Xem tính năng
+                <a href="/travel-plan/" class="theme-btn-secondary inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold">
+                    Tạo lịch trình ngay
                 </a>
             </div>
-
-            <div class="home-hero-media">
-                <img
-                    src="https://placehold.co/1200x600/153D68/FFFFFF?text=Giao+dien+Vi+Vu+AI+Travel+Planner"
-                    alt="Mockup giao diện Vi Vu AI Travel Planner"
-                    class="home-hero-image"
-                    onerror="this.onerror=null; this.src='https://placehold.co/1200x600/153D68/FFFFFF?text=Vi+Vu+AI+Travel+Planner';"
-                >
-            </div>
-        </div>
-    </section>
-
-    <!-- FEATURE HIGHLIGHTS -->
-    <section class="feature-highlights" id="how-it-works">
-        <div class="section-container">
-            <div class="section-header">
-                <h2>Mọi thứ bạn cần để du lịch thông minh hơn</h2>
-                <p class="section-subtitle">Những công cụ mạnh mẽ giúp biến ý tưởng du lịch thành hiện thực dễ dàng.</p>
-            </div>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <span class="feature-icon">🧭</span>
-                    <h3>AI lập lịch trình tức thì</h3>
-                    <p>Nhập điểm đến và sở thích, Vi Vu AI sẽ tạo lịch trình chi tiết theo ngày, tối ưu hóa tuyến đường và thời gian di chuyển chỉ trong vài giây.</p>
+            <div class="mt-10 grid gap-4 sm:grid-cols-3">
+                <div class="glass-panel rounded-3xl p-5">
+                    <p class="text-2xl font-bold" style="color: rgb(var(--primary));">500+</p>
+                    <p class="theme-text-muted mt-2 text-sm leading-6">Địa điểm được đồng bộ để tìm kiếm, lọc và so sánh theo nhu cầu thực tế.</p>
                 </div>
-                <div class="feature-card">
-                    <span class="feature-icon">💰</span>
-                    <h3>Quản lý ngân sách thông minh</h3>
-                    <p>Theo dõi mọi khoản chi theo thời gian thực, nhận cảnh báo khi gần vượt ngân sách và xem báo cáo chi tiêu theo danh mục.</p>
+                <div class="glass-panel rounded-3xl p-5">
+                    <p class="text-2xl font-bold" style="color: rgb(var(--primary));">3 lớp</p>
+                    <p class="theme-text-muted mt-2 text-sm leading-6">Bản đồ, thông tin bản địa và gợi ý AI được gắn kết trên cùng một màn hình.</p>
                 </div>
-                <div class="feature-card">
-                    <span class="feature-icon">👥</span>
-                    <h3>Chia sẻ & cộng tác dễ dàng</h3>
-                    <p>Chia sẻ kế hoạch với bạn đồng hành, cho phép họ chỉnh sửa và thêm gợi ý theo thời gian thực. Du lịch nhóm chưa bao giờ đơn giản đến thế.</p>
+                <div class="glass-panel rounded-3xl p-5">
+                    <p class="text-2xl font-bold" style="color: rgb(var(--primary));">Mobile-first</p>
+                    <p class="theme-text-muted mt-2 text-sm leading-6">Tối ưu hiển thị để bạn có thể lên kế hoạch ngay trên điện thoại khi đang di chuyển.</p>
                 </div>
             </div>
         </div>
-    </section>
 
-    <section class="pricing-section" id="pricing">
-        <div class="section-container">
-            <div class="section-header">
-                <h2>Bắt đầu chuyến phiêu lưu của bạn</h2>
-                <p class="section-subtitle">Chọn gói phù hợp với nhu cầu du lịch của bạn.</p>
-            </div>
-            <div class="pricing-grid">
-                <div class="pricing-card">
-                    <h3>Gói cơ bản (miễn phí)</h3>
-                    <p class="pricing-tagline">Hoàn hảo cho những chuyến đi đơn giản.</p>
-                    <div class="pricing-price">
-                        <span class="pricing-amount">0đ</span>
-                        <span class="pricing-period">/ mãi mãi</span>
+        <div class="relative">
+            <div class="glass-panel rounded-[2rem] p-4">
+                <div class="overflow-hidden rounded-[1.5rem] border shadow-soft theme-divider" style="background: linear-gradient(180deg, rgba(var(--ocean), 0.98) 0%, rgba(var(--ocean-soft), 0.92) 100%);">
+                    <div class="flex items-center justify-between border-b border-white/10 px-5 py-4 text-sm text-slate-300">
+                        <div>
+                            <p class="font-semibold text-white">Portal khám phá thông minh</p>
+                            <p class="text-xs text-slate-400">Bản đồ, thời tiết và danh sách địa điểm đồng bộ theo điểm đến</p>
+                        </div>
+                        <span class="rounded-full px-3 py-1 text-xs font-semibold" style="background: rgba(var(--accent), 0.18); color: rgb(167 243 208);">Live Search</span>
                     </div>
-                    <ul class="pricing-features">
-                        <li>Lập kế hoạch 1 chuyến đi/tháng</li>
-                        <li>Lập lịch trình cơ bản</li>
-                        <li>Hỗ trợ cộng tác 1 người</li>
-                        <li class="pricing-feature-disabled">Không bao gồm quản lý ngân sách nâng cao</li>
-                    </ul>
-                    <a href="/accounts/register/" class="pricing-cta">Bắt đầu miễn phí</a>
-                </div>
-
-                <div class="pricing-card pricing-card-featured">
-                    <div class="pricing-badge">Phổ biến nhất</div>
-                    <h3>Gói cao cấp</h3>
-                    <p class="pricing-tagline">Mở khóa toàn bộ sức mạnh lập kế hoạch.</p>
-                    <div class="pricing-price">
-                        <span class="pricing-amount">49.000đ</span>
-                        <span class="pricing-period">/ tháng</span>
+                    <div class="grid gap-4 p-4 sm:grid-cols-[0.95fr_1.05fr]" style="background: rgba(var(--ocean), 0.88);">
+                        <div class="theme-surface rounded-[1.25rem] p-4">
+                            <div class="theme-muted-surface rounded-full px-4 py-3 text-sm theme-text-muted">Tìm kiếm “Hạ Long” hoặc “ẩm thực biển”</div>
+                            <div class="mt-4 space-y-3">
+                                <div class="theme-warning-surface rounded-2xl p-4">
+                                    <p class="text-xs font-semibold uppercase tracking-[0.24em]">Lưu ý bản địa</p>
+                                    <ul class="mt-3 space-y-2 text-sm">
+                                        <li>Ưu tiên trang phục lịch sự khi ghé đền chùa hoặc không gian tâm linh.</li>
+                                        <li>Chủ động hỏi giá trước với dịch vụ tàu, xe điện hoặc hải sản theo cân.</li>
+                                    </ul>
+                                </div>
+                                <div class="theme-muted-surface rounded-2xl p-4">
+                                    <div class="flex items-center justify-between">
+                                        <p class="font-semibold">Bãi Cháy</p>
+                                        <span class="text-sm text-amber-500">4.7 ★</span>
+                                    </div>
+                                    <p class="theme-text-muted mt-2 text-sm">Khung biển, giải trí và cụm dịch vụ đông khách nhất Hạ Long.</p>
+                                </div>
+                                <div class="theme-muted-surface rounded-2xl p-4">
+                                    <div class="flex items-center justify-between">
+                                        <p class="font-semibold">Bảo tàng Quảng Ninh</p>
+                                        <span class="text-sm text-amber-500">4.8 ★</span>
+                                    </div>
+                                    <p class="theme-text-muted mt-2 text-sm">Điểm indoor đẹp, phù hợp làm phương án dự phòng khi mưa.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="rounded-[1.25rem] p-4 text-white" style="background: linear-gradient(180deg, rgba(var(--ocean), 0.92) 0%, rgba(var(--primary), 0.78) 100%);">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-slate-200">Bản đồ tương tác</p>
+                                    <p class="text-lg font-semibold">Quảng Ninh</p>
+                                </div>
+                                <span class="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-slate-100">OpenStreetMap</span>
+                            </div>
+                            <div class="mt-4 h-72 rounded-[1.25rem] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.18),transparent_35%),linear-gradient(135deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] p-4">
+                                <div class="grid h-full place-items-center rounded-[1rem] border border-dashed border-white/15">
+                                    <div class="text-center">
+                                        <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/10">
+                                            <i class="fas fa-map-location-dot text-2xl text-white"></i>
+                                        </div>
+                                        <p class="mt-4 text-sm text-slate-200">Marker địa điểm, lớp thời tiết và tuyến đường sẽ được đồng bộ trực tiếp trên bản đồ.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <ul class="pricing-features">
-                        <li>Kế hoạch du lịch không giới hạn</li>
-                        <li>AI lập lịch trình nâng cao</li>
-                        <li>Quản lý ngân sách nâng cao</li>
-                        <li>Hỗ trợ cộng tác tới 5 người</li>
-                    </ul>
-                    <a href="/accounts/register/" class="pricing-cta pricing-cta-primary">Nâng cấp ngay</a>
-                </div>
-
-                <div class="pricing-card">
-                    <h3>Gói doanh nghiệp</h3>
-                    <p class="pricing-tagline">Dành cho công ty du lịch và đội nhóm lớn.</p>
-                    <div class="pricing-price">
-                        <span class="pricing-amount">Liên hệ</span>
-                        <span class="pricing-period">/ năm</span>
-                    </div>
-                    <ul class="pricing-features">
-                        <li>Tất cả tính năng của gói cao cấp</li>
-                        <li>Hỗ trợ cộng tác không giới hạn</li>
-                        <li>Phân tích dữ liệu nhóm chuyên sâu</li>
-                        <li>Hỗ trợ ưu tiên 24/7</li>
-                    </ul>
-                    <a href="/accounts/profile/" class="pricing-cta">Yêu cầu báo giá</a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Place Info Modal (used by index.js when showing place details) -->
-    <div class="place-info-modal-overlay" id="place-info-modal-overlay">
-        <div class="place-info-modal">
-            <div class="place-info-modal-header">
-                <h2 id="place-info-title">Thông tin địa điểm</h2>
-                <button class="place-info-modal-close" id="place-info-close" aria-label="Close">&times;</button>
-            </div>
-            <div class="place-info-modal-body">
-                <div class="place-info-loading" id="place-info-loading">
-                    <p>Đang tải thông tin...</p>
-                    <p style="font-size: 0.9rem; opacity: 0.7; margin-top: 0.5rem;">Đang tìm kiếm thông tin trên mạng...</p>
-                </div>
-                <div class="place-info-content" id="place-info-content">
-                    <!-- Content will be populated by JavaScript -->
                 </div>
             </div>
         </div>
     </div>
+</section>
 
-    <!-- Legacy logout overlay used by index.js on the home page -->
-    <div class="logout-modal-overlay" id="logout-modal-overlay">
-        <div class="logout-modal">
-            <div class="logout-modal-header">
-                <div class="logout-modal-icon">
-                    <i class="fas fa-sign-out-alt"></i>
-                </div>
-                <h3>Xác nhận đăng xuất</h3>
+<section class="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8 lg:pb-24">
+    <div class="grid gap-6 lg:grid-cols-3">
+        <div class="glass-panel rounded-[1.75rem] p-6">
+            <div class="theme-icon-badge flex h-12 w-12 items-center justify-center rounded-2xl">
+                <i class="fas fa-cloud-sun text-lg"></i>
             </div>
-            <div class="logout-modal-body">
-                <p>Bạn có chắc chắn muốn đăng xuất khỏi tài khoản của mình không?</p>
+            <h2 class="mt-5 text-xl font-semibold">Thời tiết gắn với hành trình</h2>
+            <p class="theme-text-muted mt-3 text-sm leading-7">Theo dõi nhiệt độ hiện tại và dự báo ngắn hạn ngay cạnh danh sách điểm đến để ra quyết định nhanh hơn.</p>
+        </div>
+        <div class="glass-panel rounded-[1.75rem] p-6">
+            <div class="theme-icon-badge flex h-12 w-12 items-center justify-center rounded-2xl">
+                <i class="fas fa-sliders text-lg"></i>
             </div>
-            <div class="logout-modal-actions">
-                <button class="logout-modal-btn logout-modal-btn-cancel" id="logout-modal-cancel">Không</button>
-                <form id="logout-form" method="post" action="/accounts/logout/" style="display: inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="logout-modal-btn logout-modal-btn-confirm" id="logout-modal-confirm">Đăng xuất</button>
-                </form>
+            <h2 class="mt-5 text-xl font-semibold">Bộ lọc sâu, thao tác gọn</h2>
+            <p class="theme-text-muted mt-3 text-sm leading-7">Lọc nhanh theo loại địa điểm, mức vé, đánh giá và nhu cầu chuyến đi với giao diện thân thiện trên cả mobile lẫn desktop.</p>
+        </div>
+        <div class="glass-panel rounded-[1.75rem] p-6">
+            <div class="theme-icon-badge flex h-12 w-12 items-center justify-center rounded-2xl">
+                <i class="fas fa-sparkles text-lg"></i>
             </div>
+            <h2 class="mt-5 text-xl font-semibold">AI hỗ trợ ra quyết định</h2>
+            <p class="theme-text-muted mt-3 text-sm leading-7">Từ dữ liệu địa điểm đến lịch trình hoàn chỉnh, Vi Vu giữ cho trải nghiệm khám phá và lên kế hoạch diễn ra liền mạch.</p>
         </div>
     </div>
-{% endblock %}
-
-{% block footer %}
-    {% include 'includes/footer.html' %}
-{% endblock %}
-
-{% block extra_scripts %}
-    <script src="{% static 'js/index.js' %}"></script>
+</section>
 {% endblock %}

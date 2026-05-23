@@ -5,15 +5,16 @@ Agent quản lý Vector Database cho semantic search
 Sử dụng ChromaDB + OpenAI Embeddings
 """
 
-import pandas as pd
-from typing import List, Dict, Any, Optional
 import os
-from pathlib import Path
+import asyncio
 import json
-import unicodedata
 import logging
 import threading
-import asyncio
+import unicodedata
+from pathlib import Path
+from typing import List, Dict, Any, Optional
+
+import pandas as pd
 
 from ..base_agent import BaseAgent
 
@@ -29,6 +30,23 @@ except Exception as e:
     chromadb = None
     Settings = None
     CHROMADB_AVAILABLE = False
+
+
+def _build_chroma_client(persist_directory: str):
+    """Use HttpClient inside Docker when CHROMA_HOST is configured, else local PersistentClient."""
+    chroma_host = os.getenv("CHROMA_HOST")
+    if chroma_host:
+        chroma_port = int(os.getenv("CHROMA_PORT", "8000"))
+        logger.info(f"Initializing ChromaDB HttpClient at {chroma_host}:{chroma_port}")
+        return chromadb.HttpClient(host=chroma_host, port=chroma_port)
+
+    persist_dir = Path(persist_directory)
+    persist_dir.mkdir(exist_ok=True)
+    logger.info(f"Initializing ChromaDB PersistentClient at {persist_dir}")
+    return chromadb.PersistentClient(
+        path=str(persist_dir),
+        settings=Settings(anonymized_telemetry=False)
+    )
 
 
 class VectorDatabaseAgent(BaseAgent):
@@ -154,7 +172,6 @@ class VectorDatabaseAgent(BaseAgent):
             description="Vector database agent for semantic search"
         )
         self.persist_dir = Path(persist_directory)
-        self.persist_dir.mkdir(exist_ok=True)
         
         # Initialize ChromaDB client (lazy)
         self.client = None
@@ -162,10 +179,7 @@ class VectorDatabaseAgent(BaseAgent):
         
         if CHROMADB_AVAILABLE:
             try:
-                self.client = chromadb.PersistentClient(
-                    path=str(self.persist_dir),
-                    settings=Settings(anonymized_telemetry=False)
-                )
+                self.client = _build_chroma_client(str(self.persist_dir))
             except Exception as e:
                 logger.error(f"Failed to initialize ChromaDB client: {e}")
                 self.client = None

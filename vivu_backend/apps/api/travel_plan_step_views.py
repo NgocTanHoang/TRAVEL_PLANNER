@@ -15,6 +15,10 @@ from django.utils import timezone
 from django.core.cache import cache
 import logging
 import asyncio
+import traceback
+
+from apps.analytics.models import YeuCauLoTrinh
+from apps.analytics.services import ghi_nhan_yeu_cau_lo_trinh_async
 
 # Add backend directory to path for agents, tools, utils, etc.
 # BASE_DIR (vivu_backend) is already added in settings.py, but adding here for safety
@@ -477,12 +481,59 @@ class Step4ConfirmAndPlanView(APIView):
             
             # Cache result for 3 hours (itinerary generation is expensive, but user might want fresh data)
             cache_set(cache_key, response_data, ttl=10800)
+
+            # Luồng 4 bước là một entrypoint riêng nên cũng cần ghi analytics riêng.
+            ghi_nhan_yeu_cau_lo_trinh_async(
+                user_id=request.user.pk if request.user.is_authenticated else None,
+                loai_yeu_cau=YeuCauLoTrinh.LoaiYeuCau.BUOC_4,
+                trang_thai=YeuCauLoTrinh.TrangThaiXuLy.THANH_CONG,
+                diem_di=origin,
+                diem_den=destination,
+                so_ngay_di=days,
+                so_nguoi=travelers,
+                ngan_sach_du_kien=request.data.get('budget') or response_data.get('costs', {}).get('total'),
+                ngay_khoi_hanh_du_kien=start_date,
+                du_lieu_phan_hoi={
+                    'transport': result_state.get('transport', {}),
+                    'transport_breakdown': result_state.get('transport_breakdown'),
+                    'budget': result_state.get('budget', {}),
+                    'costs': response_data.get('costs', {}),
+                    'selected_hotel': result_state.get('selected_hotel'),
+                    'activities_count': len(result_state.get('activities', [])),
+                    'restaurants_count': len(result_state.get('restaurants', [])),
+                    'travel_style': travel_style,
+                    'interests': interests,
+                    'from_step4': True,
+                },
+            )
             
             return Response(response_data, status=status.HTTP_201_CREATED)
             
         except ValidationError as e:
             return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
+            try:
+                request_data = request.data if hasattr(request, 'data') else {}
+                ghi_nhan_yeu_cau_lo_trinh_async(
+                    user_id=request.user.pk if request.user.is_authenticated else None,
+                    loai_yeu_cau=YeuCauLoTrinh.LoaiYeuCau.BUOC_4,
+                    trang_thai=YeuCauLoTrinh.TrangThaiXuLy.THAT_BAI,
+                    diem_di=locals().get('origin') or request_data.get('origin', ''),
+                    diem_den=locals().get('destination') or request_data.get('destination', ''),
+                    so_ngay_di=locals().get('days') or int(request_data.get('days', 1) or 1),
+                    so_nguoi=locals().get('travelers') or int(request_data.get('travelers', 1) or 1),
+                    ngan_sach_du_kien=request_data.get('budget'),
+                    ngay_khoi_hanh_du_kien=locals().get('start_date') or request_data.get('start_date'),
+                    du_lieu_phan_hoi={
+                        'error_message': str(e),
+                        'traceback': traceback.format_exc(),
+                        'travel_style': locals().get('travel_style') or request_data.get('travel_style', 'standard'),
+                        'interests': locals().get('interests') or request_data.get('interests', []),
+                        'from_step4': True,
+                    },
+                )
+            except Exception:
+                logger.exception("Không thể ghi analytics lỗi cho step4 request")
             logger.error(f"Error in Step 4: {e}", exc_info=True)
             return Response({
                 'error': str(e)

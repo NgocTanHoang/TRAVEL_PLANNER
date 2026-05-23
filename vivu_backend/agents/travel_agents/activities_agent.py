@@ -14,6 +14,7 @@ import re
 from typing import Dict, Any, Optional, List
 from ..base_agent import BaseAgent
 from tools.activities_tools import get_activities_tools
+from utils.location_resolver import resolve_best_province, text_matches_province
 from utils.semantic_place_classifier import (
     understand_place_semantics,
     is_suitable_for_travel_style,
@@ -174,6 +175,12 @@ class ActivitiesAgent(BaseAgent):
                 logger.info(f"Normalized destination: '{destination}' -> '{destination_normalized}'")
                 destination = destination_normalized
                 state['destination'] = destination  # Update state với normalized destination
+
+            resolved_province = await self._resolve_destination_province(destination)
+            if not resolved_province:
+                state['activities_error'] = f"Khong the map destination '{destination}' vao TINHTHANH."
+                return state
+            state['resolved_destination_province'] = resolved_province
             
             # Tìm kiếm hoạt động - Ưu tiên Database, sau đó Tools, cuối cùng Vector DB (nếu cần)
             activities = []
@@ -183,7 +190,7 @@ class ActivitiesAgent(BaseAgent):
             dest_tokens = _tokenize_normalized_name(dest_normalized)
             
             # Bước 1: Query từ database (ưu tiên cao nhất)
-            db_activities = await self._query_fallback_activities_from_db(destination)
+            db_activities = await self._query_fallback_activities_from_db(destination, resolved_province)
             if db_activities:
                 # Filter activities: loại bỏ những activity có tên giống destination
                 filtered_db_activities = []
@@ -231,6 +238,8 @@ class ActivitiesAgent(BaseAgent):
                         act_name = act.get('name', '')
                         if not act_name or act_name.lower() in existing_names:
                             continue
+                        if not self._belongs_to_province(act, resolved_province):
+                            continue
                         
                         # Filter: bỏ qua nếu tên quá dài hoặc giống destination
                         if len(act_name) > 100:
@@ -263,7 +272,7 @@ class ActivitiesAgent(BaseAgent):
                     vector_results = await self.vector_db.semantic_search_async(
                         query=query,
                         n_results=10,
-                        city_filter=destination
+                        city_filter=resolved_province['tenTinhThanh']
                     )
                     
                     # Chuyển đổi format từ vector DB sang format của activities
@@ -271,6 +280,8 @@ class ActivitiesAgent(BaseAgent):
                     for result in vector_results:
                         name = result.get('name', '')
                         if not name or name.lower() in existing_names:
+                            continue
+                        if not self._belongs_to_province(result, resolved_province):
                             continue
                         
                         # Filter: bỏ qua nếu tên quá dài hoặc giống destination
@@ -391,6 +402,8 @@ class ActivitiesAgent(BaseAgent):
                     rest_name = rest.get('name', '')
                     if not rest_name:
                         continue
+                    if not self._belongs_to_province(rest, resolved_province):
+                        continue
                     
                     # Bỏ qua nếu tên quá dài (có thể là địa chỉ đầy đủ)
                     if len(rest_name) > 100:
@@ -425,13 +438,15 @@ class ActivitiesAgent(BaseAgent):
                     vector_results = await self.vector_db.semantic_search_async(
                         query=query,
                         n_results=10,
-                        city_filter=destination
+                        city_filter=resolved_province['tenTinhThanh']
                     )
                     
                     existing_names = {r.get('name', '').lower() for r in restaurants}
                     for result in vector_results:
                         name = result.get('name', '')
                         if not name or name.lower() in existing_names:
+                            continue
+                        if not self._belongs_to_province(result, resolved_province):
                             continue
                         
                         # Filter: bỏ qua nếu tên quá dài hoặc giống destination
@@ -513,72 +528,71 @@ class ActivitiesAgent(BaseAgent):
             state['activities_error'] = str(e)
             return state
     
-    async def _query_fallback_activities_from_db(self, destination: str) -> List[Dict[str, Any]]:
+    async def _resolve_destination_province(self, destination: str) -> Optional[Dict[str, Any]]:
+        """Resolve destination ve tinh thanh chuan trong DB."""
+        try:
+            from asgiref.sync import sync_to_async
+            from apps.places.models import TinhThanh
+
+            def _resolve_sync(dest: str) -> Optional[Dict[str, Any]]:
+                provinces = list(
+                    TinhThanh.objects.values_list("maTinhThanh", "tenTinhThanh")
+                )
+                match = resolve_best_province(dest, provinces)
+                if not match:
+                    return None
+                return {
+                    "maTinhThanh": int(match[0]),
+                    "tenTinhThanh": str(match[1]),
+                    "match_score": float(match[2]),
+                }
+
+            return await sync_to_async(_resolve_sync)(destination)
+        except Exception as e:
+            logger.warning(f"Failed to resolve destination province for {destination}: {e}")
+            return None
+
+    def _belongs_to_province(self, place: Dict[str, Any], resolved_province: Dict[str, Any]) -> bool:
+        """Chi giu ket qua nam trong dung tinh thanh da resolve."""
+        province_name = resolved_province.get("tenTinhThanh", "")
+        candidates = [
+            place.get("province"),
+            place.get("city"),
+            place.get("address"),
+            place.get("diaChi"),
+            place.get("description"),
+        ]
+        if isinstance(place.get("maTinhThanh"), dict):
+            candidates.append(place["maTinhThanh"].get("tenTinhThanh"))
+        return text_matches_province(candidates, province_name)
+
+    async def _query_fallback_activities_from_db(
+        self,
+        destination: str,
+        resolved_province: Optional[Dict[str, Any]] = None,
+    ) -> List[Dict[str, Any]]:
         """
         Query fallback activities từ database (sync_to_async)
         Không hardcode tên thành phố, query động từ database
         """
         try:
             from asgiref.sync import sync_to_async
-            from apps.places.models import DiaDiem, TinhThanh
-            from django.db.models import Q
+            from apps.places.models import DiaDiem
             import json
             
             # Sync function để query database
-            def _query_sync(dest: str):
-                """Sync function để query database - không hardcode.
-
-                Thay vì dựa vào một filter OR đơn giản (dễ match sai thành phố
-                như Hồ Chí Minh khi người dùng chọn Đà Nẵng), hàm này sẽ
-                normalize tên và sử dụng token-based similarity để chọn
-                TinhThanh phù hợp nhất.
-                """
-                dest_norm = _normalize_location_name(dest)
-                if not dest_norm:
-                    logger.debug(f"Empty normalized destination for {dest!r}, returning empty list")
+            def _query_sync(dest: str, province: Optional[Dict[str, Any]]):
+                if not province:
                     return []
-
-                dest_tokens = _tokenize_normalized_name(dest_norm)
-                if not dest_tokens:
-                    logger.debug(f"No meaningful tokens for destination {dest!r}, returning empty list")
-                    return []
-
-                # Lấy toàn bộ TinhThanh và chọn match tốt nhất bằng Jaccard similarity
-                all_tinh_thanhs = list(TinhThanh.objects.all())
-                best_tinh_thanh = None
-                best_score = 0.0
-
-                for tt in all_tinh_thanhs:
-                    tt_norm = _normalize_location_name(tt.tenTinhThanh)
-                    tt_tokens = _tokenize_normalized_name(tt_norm)
-                    if not tt_tokens:
-                        continue
-                    common = dest_tokens & tt_tokens
-                    if not common:
-                        continue
-                    union = dest_tokens | tt_tokens
-                    if not union:
-                        continue
-                    score = len(common) / len(union)
-                    if score > best_score:
-                        best_score = score
-                        best_tinh_thanh = tt
-
-                # Ngưỡng để tránh match sai tỉnh thành
-                if not best_tinh_thanh or best_score < 0.4:
-                    logger.debug(
-                        f"No suitable TinhThanh match for {dest!r} (best_score={best_score:.2f}), returning empty list"
-                    )
-                    return []
-
-                tinh_thanh = best_tinh_thanh
+                province_id = province["maTinhThanh"]
+                province_name = province["tenTinhThanh"]
                 
                 # Query fallback activities từ database - động, không hardcode
                 # Loại bỏ tất cả các loại lưu trú, nhà hàng, và các địa điểm không phù hợp du lịch
                 # Lọc các từ khóa không phù hợp: store, shop, cửa hàng, siêu thị, bệnh viện, trường học, ngân hàng
                 fallback_dia_diems = list(
                     DiaDiem.objects.filter(
-                        maTinhThanh=tinh_thanh,
+                        maTinhThanh_id=province_id,
                         trangThai='active',
                         loaiDiaDiem__in=['dia_danh', 'giai_tri']
                     )
@@ -606,7 +620,7 @@ class ActivitiesAgent(BaseAgent):
                     .order_by('-danhGiaTrungBinh', '-soLuotDanhGia')[:20]
                 )
                 
-                logger.debug(f"Found {len(fallback_dia_diems)} DiaDiem for {tinh_thanh.tenTinhThanh}")
+                logger.debug(f"Found {len(fallback_dia_diems)} DiaDiem for {province_name}")
                 
                 # Chuyển đổi format
                 fallback_activities = []
@@ -650,6 +664,8 @@ class ActivitiesAgent(BaseAgent):
                                 'longitude': float(dia_diem.kinhDo) if dia_diem.kinhDo else None,
                                 'source': 'database',  # Luôn là database, không phải fallback
                                 'maDiaDiem': dia_diem.maDiaDiem,  # Lưu ID để reference
+                                'province': province_name,
+                                'city': province_name,
                                 'tags': dac_diem.get('tags', [])
                             })
                     except (json.JSONDecodeError, AttributeError, ValueError, TypeError) as e:
@@ -659,13 +675,13 @@ class ActivitiesAgent(BaseAgent):
                 # KHÔNG tạo generic activities - chỉ lấy từ database
                 # Nếu không có địa điểm trong database, trả về empty list
                 if not fallback_activities:
-                    logger.warning(f"No activities found in database for {tinh_thanh.tenTinhThanh if tinh_thanh else destination}. Returning empty list to avoid fake data.")
+                    logger.warning(f"No activities found in database for {province_name}. Returning empty list to avoid fake data.")
                     return []
                 
                 return fallback_activities
             
             # Chạy sync function trong async context
-            fallback_activities = await sync_to_async(_query_sync)(destination)
+            fallback_activities = await sync_to_async(_query_sync)(destination, resolved_province)
             
             if fallback_activities:
                 logger.info(f"Found {len(fallback_activities)} fallback activities from database for {destination}")

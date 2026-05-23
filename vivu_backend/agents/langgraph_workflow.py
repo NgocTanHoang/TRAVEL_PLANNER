@@ -188,12 +188,15 @@ class LangGraphTravelWorkflow:
             )
             state['current_step'] = 'accommodation'
             
-            # Set check_in and check_out dates
+            # Đồng bộ logic với custom orchestrator:
+            # nights = max(1, days - 1) để tránh lệch chi phí lưu trú.
             state['check_in'] = state.get('start_date')
             if state.get('start_date') and state.get('days'):
                 from datetime import datetime, timedelta
                 start = datetime.strptime(state['start_date'], '%Y-%m-%d')
-                end = start + timedelta(days=state['days'])
+                nights = max(1, int(state['days']) - 1)
+                state['nights'] = nights
+                end = start + timedelta(days=nights)
                 state['check_out'] = end.strftime('%Y-%m-%d')
             
             result = await self.accommodation_agent.execute(state)
@@ -204,7 +207,7 @@ class LangGraphTravelWorkflow:
                 from tools.accommodation_tools import get_accommodation_tools
                 start = datetime.strptime(result['check_in'], '%Y-%m-%d')
                 end = datetime.strptime(result['check_out'], '%Y-%m-%d')
-                nights = (end - start).days
+                nights = max(1, (end - start).days)
                 acc_tools = get_accommodation_tools()
                 result['accommodation_cost'] = acc_tools.calculate_total_accommodation_cost(
                     price_per_night=result['selected_hotel'].get('price_per_night', 0),
@@ -218,7 +221,7 @@ class LangGraphTravelWorkflow:
                     acc_tools = get_accommodation_tools()
                     result['accommodation_cost'] = acc_tools.calculate_total_accommodation_cost(
                         price_per_night=hotel.get('price_per_night', 0),
-                        nights=result['days'],
+                        nights=result.get('nights', max(1, int(result['days']) - 1)),
                         rooms=result.get('rooms', 1)
                     )
             

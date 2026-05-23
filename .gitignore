@@ -87,3 +87,11 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
+# Vi Vu Temporary Logs & Artifacts
+scrape_log.txt
+scrape_*.txt
+agent_output_test.json
+test_page_structure.html
+output.txt
+test_output.txt
+*_test_result.txt
