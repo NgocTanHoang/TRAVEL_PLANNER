@@ -28,6 +28,7 @@ urlpatterns = [
     # Location suggestions
     path('locations/suggestions/', views.LocationSuggestionsView.as_view(), name='location-suggestions'),
     path('locations/reverse-geocode/', views.ReverseGeocodeView.as_view(), name='reverse-geocode'),
+    path('weather/', views.WeatherProxyView.as_view(), name='weather-proxy'),
     
     # AI Features (Legacy - for backward compatibility)
     path('chat/', views.ChatView.as_view(), name='chat'),

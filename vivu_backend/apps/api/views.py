@@ -31,6 +31,7 @@ from .travel_plan_step_views import (
     Step4ConfirmAndPlanView,
     Step4SaveItineraryView
 )
+from .weather_views import WeatherProxyView
 
 logger = logging.getLogger(__name__)
 

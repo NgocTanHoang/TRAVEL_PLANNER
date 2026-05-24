@@ -1,1487 +1,1744 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Tạo lịch trình du lịch - Vi Vu{% endblock %}
+{% block title %}Tạo lịch trình thông minh - Vi Vu{% endblock %}
 
-{% block nav_items %}
-    <li role="none">
-        <a href="/" class="nav-link" role="menuitem">Trang chủ</a>
-    </li>
-    <li role="none" class="search-dropdown">
-        <a href="#" class="nav-link search-toggle" role="menuitem" onclick="event.preventDefault(); return false;">🔍 Tìm kiếm</a>
-        <div class="search-dropdown-menu" role="menu">
-            <div class="search-dropdown-header">Tìm kiếm du lịch</div>
-            
-            <div class="search-dropdown-category">
-                <div class="search-dropdown-category-title">📍 Địa điểm & Tham quan</div>
-                <div class="search-dropdown-items">
-                    <a href="/places/search/" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🗺️</span>
-                        <span>Tìm kiếm địa điểm</span>
-                    </a>
-                    <a href="/places/search/?loai_dia_diem=di_tich_lich_su" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🏛️</span>
-                        <span>Di tích lịch sử</span>
-                    </a>
-                    <a href="/places/search/?loai_dia_diem=thang_canh" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🏞️</span>
-                        <span>Thắng cảnh</span>
-                    </a>
-                    <a href="/places/search/?loai_dia_diem=giai_tri" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🎢</span>
-                        <span>Khu vui chơi</span>
-                    </a>
-                </div>
-            </div>
-            
-            <div class="search-dropdown-category">
-                <div class="search-dropdown-category-title">🏨 Lưu trú</div>
-                <div class="search-dropdown-items">
-                    <a href="/places/search/?loai_dia_diem=khach_san" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🏨</span>
-                        <span>Tìm khách sạn</span>
-                    </a>
-                    <a href="/places/search/?loai_dia_diem=homestay" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🏡</span>
-                        <span>Homestay</span>
-                    </a>
-                    <a href="/places/search/?loai_dia_diem=resort" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🏖️</span>
-                        <span>Resort</span>
-                    </a>
-                </div>
-            </div>
-            
-            <div class="search-dropdown-category">
-                <div class="search-dropdown-category-title">🍽️ Ăn uống</div>
-                <div class="search-dropdown-items">
-                    <a href="/places/search/?loai_dia_diem=nha_hang" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🍜</span>
-                        <span>Nhà hàng</span>
-                    </a>
-                    <a href="/places/search/?loai_dia_diem=cafe" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">☕</span>
-                        <span>Quán cafe</span>
-                    </a>
-                    <a href="/places/search/?loai_dia_diem=bar" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🍻</span>
-                        <span>Bar & Pub</span>
-                    </a>
-                    <a href="/places/search/?loai_dia_diem=dac_san" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🥘</span>
-                        <span>Đặc sản địa phương</span>
-                    </a>
-                </div>
-            </div>
-            
-            <div class="search-dropdown-category">
-                <div class="search-dropdown-category-title">🛍️ Mua sắm</div>
-                <div class="search-dropdown-items">
-                    <a href="/places/search/?loai_dia_diem=trung_tam_thuong_mai" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🏬</span>
-                        <span>Trung tâm thương mại</span>
-                    </a>
-                    <a href="/places/search/?loai_dia_diem=cho" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🛒</span>
-                        <span>Chợ địa phương</span>
-                    </a>
-                    <a href="/places/search/?loai_dia_diem=qua_luu_niem" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🎁</span>
-                        <span>Quà lưu niệm</span>
-                    </a>
-                </div>
-            </div>
-            
-            <div class="search-dropdown-category">
-                <div class="search-dropdown-category-title">✈️ Di chuyển</div>
-                <div class="search-dropdown-items">
-                    <a href="/travel-plan/" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">✈️</span>
-                        <span>Tìm chuyến bay</span>
-                    </a>
-                    <a href="/travel-plan/" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🚂</span>
-                        <span>Vé tàu hỏa</span>
-                    </a>
-                    <a href="/travel-plan/" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🚌</span>
-                        <span>Vé xe khách</span>
-                    </a>
-                    <a href="/travel-plan/" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🚗</span>
-                        <span>Thuê xe</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </li>
-    <li role="none">
-        <a href="/travel-plan/" class="nav-link active" role="menuitem">✈️ Tạo lịch trình</a>
-    </li>
-    <li role="none">
-        <a href="/ai-chat/" class="nav-link" role="menuitem">🤖 AI Chat Assistant</a>
-    </li>
-{% endblock %}
-
-{% block content %}
+{% block extra_styles %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
-    /* ===================================
-     * 4-STEP WORKFLOW STYLES
-     * =================================== */
-    .workflow-container {
-        min-height: calc(100vh - 200px); /* Account for footer height */
-        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-        padding: 2rem 1rem;
-        padding-top: calc(2rem + 80px); /* Account for sticky navbar height */
-        margin-top: 0;
-        padding-bottom: 3rem; /* Add bottom padding for footer spacing */
-    }
-    
-    @media (max-width: 768px) {
-        .workflow-container {
-            padding-top: calc(1.5rem + 80px);
-        }
-    }
-    
-    .workflow-wrapper {
-        max-width: 1000px;
-        margin: 0 auto;
-        background: var(--color-white);
-        border-radius: 20px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    .travel-plan-page {
+        position: relative;
+        padding: 7rem 1rem 3rem;
         overflow: hidden;
-        position: relative;
-        z-index: 1;
     }
-    
-    /* Progress Steps */
-    .workflow-progress {
-        background: var(--color-gray-100);
-        padding: 2rem;
-        border-bottom: 2px solid var(--color-gray-200);
-    }
-    
-    .steps-indicator {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        position: relative;
-        margin-bottom: 2rem;
-        padding: 0 1rem;
-        gap: 0.5rem;
-    }
-    
-    @media (max-width: 640px) {
-        .steps-indicator {
-            padding: 0 0.5rem;
-            gap: 0.25rem;
-            margin-bottom: 1.5rem;
-        }
-    }
-    
-    .steps-indicator::before {
-        content: '';
+
+    .travel-plan-page::before {
+        content: "";
         position: absolute;
-        top: 25px;
-        left: 1rem;
-        right: 1rem;
-        height: 3px;
-        background: var(--color-gray-300);
+        inset: 0;
+        pointer-events: none;
+        background:
+            radial-gradient(circle at top left, rgba(var(--primary), 0.12) 0%, transparent 28%),
+            radial-gradient(circle at bottom right, rgba(var(--accent), 0.08) 0%, transparent 22%),
+            linear-gradient(180deg, rgba(var(--background), 0.98) 0%, rgba(var(--muted), 1) 100%);
         z-index: 0;
     }
-    
-    .step-item {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
+
+    .travel-plan-page,
+    .travel-plan-page * {
+        font-family: Inter, "Segoe UI", sans-serif;
+    }
+
+    .workflow-shell {
         position: relative;
         z-index: 1;
-        min-width: 0;
     }
-    
-    @media (max-width: 480px) {
-        .step-item {
-            flex: 1 1 auto;
+
+    .tp-card {
+        background: rgba(var(--card), 0.88);
+        border: 1px solid rgba(var(--border), 0.92);
+        box-shadow: var(--surface-shadow);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+    }
+
+    .tp-card-strong {
+        background: rgba(var(--card), 0.94);
+        border: 1px solid rgba(var(--border), 0.96);
+        box-shadow: var(--surface-shadow-strong);
+        backdrop-filter: blur(22px);
+        -webkit-backdrop-filter: blur(22px);
+    }
+
+    .tp-soft {
+        background: rgba(var(--muted), 0.82);
+        border: 1px solid rgba(var(--border), 0.82);
+    }
+
+    .tp-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        border-radius: 9999px;
+        padding: 0.5rem 0.9rem;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+    }
+
+    .tp-badge-primary {
+        color: rgb(var(--primary));
+        background: rgba(var(--emerald-soft), 0.95);
+        border: 1px solid rgba(var(--primary), 0.16);
+    }
+
+    .tp-badge-accent {
+        color: rgb(var(--secondary-foreground));
+        background: rgba(var(--secondary), 0.82);
+        border: 1px solid rgba(var(--secondary-foreground), 0.12);
+    }
+
+    .workflow-hero {
+        display: grid;
+        gap: 1.5rem;
+    }
+
+    @media (min-width: 1024px) {
+        .workflow-hero {
+            grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.65fr);
         }
     }
-    
-    .step-circle {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        background: var(--color-white);
-        border: 3px solid var(--color-gray-300);
+
+    .workflow-main {
+        display: grid;
+        gap: 1.5rem;
+        align-items: start;
+    }
+
+    @media (min-width: 1024px) {
+        .workflow-main {
+            grid-template-columns: 296px minmax(0, 1fr);
+        }
+    }
+
+    .workflow-sidebar {
+        display: grid;
+        gap: 1rem;
+    }
+
+    @media (min-width: 1024px) {
+        .workflow-sidebar {
+            position: sticky;
+            top: 6.75rem;
+        }
+    }
+
+    .workflow-progress {
+        padding: 1rem;
+    }
+
+    .steps-indicator {
+        display: grid;
+        gap: 0.85rem;
+    }
+
+    .step-item {
+        position: relative;
         display: flex;
+        gap: 0.9rem;
+        align-items: flex-start;
+        border-radius: 1.25rem;
+        padding: 0.95rem;
+        border: 1px solid rgba(var(--border), 0.85);
+        background: rgba(var(--muted), 0.6);
+        transition: all 0.25s ease;
+    }
+
+    .step-item.active {
+        background: rgba(var(--emerald-soft), 0.88);
+        border-color: rgba(var(--primary), 0.35);
+        box-shadow: 0 16px 36px rgba(4, 120, 87, 0.12);
+        transform: translateY(-1px);
+    }
+
+    :root[data-theme="dark"] .step-item.active {
+        background: rgba(var(--emerald-soft), 0.38);
+    }
+
+    .step-item.completed {
+        background: rgba(var(--secondary), 0.52);
+        border-color: rgba(var(--primary), 0.22);
+    }
+
+    .step-item.active::before,
+    .step-item.completed::before {
+        content: "";
+        position: absolute;
+        left: 24px;
+        top: 64px;
+        width: 2px;
+        height: calc(100% + 0.85rem);
+        background: linear-gradient(180deg, rgba(var(--primary), 0.65), rgba(var(--primary), 0.08));
+    }
+
+    .step-item:last-child::before {
+        display: none;
+    }
+
+    .step-circle {
+        width: 3rem;
+        height: 3rem;
+        flex: 0 0 3rem;
+        border-radius: 9999px;
+        border: 2px solid rgba(var(--border), 1);
+        background: rgba(var(--card), 0.95);
+        color: rgb(var(--muted-foreground));
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-weight: 700;
-        font-size: 1.2rem;
-        color: var(--color-gray-400);
-        transition: all 0.3s;
-        margin-bottom: 0.5rem;
-        position: relative;
-        z-index: 2;
+        font-weight: 800;
+        box-shadow: 0 10px 18px rgba(15, 23, 42, 0.08);
+        transition: all 0.25s ease;
     }
-    
+
     .step-item.active .step-circle {
-        background: var(--color-secondary);
-        border-color: var(--color-secondary);
-        color: var(--color-white);
-        box-shadow: 0 4px 12px rgba(0, 131, 143, 0.3);
+        color: rgb(var(--primary-foreground));
+        background: rgb(var(--primary));
+        border-color: rgba(var(--primary), 0.75);
+        box-shadow: 0 12px 28px rgba(4, 120, 87, 0.24);
     }
-    
+
     .step-item.completed .step-circle {
-        background: var(--color-accent);
-        border-color: var(--color-accent);
-        color: var(--color-white);
+        color: rgb(var(--primary-foreground));
+        background: rgb(var(--accent));
+        border-color: rgba(var(--accent), 0.7);
     }
-    
+
     .step-item.completed .step-circle::after {
-        content: '✓';
-        font-size: 1.5rem;
+        content: "✓";
+        font-size: 1.2rem;
     }
-    
+
+    .step-item.completed .step-circle {
+        font-size: 0;
+    }
+
+    .step-meta {
+        min-width: 0;
+    }
+
+    .step-kicker {
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgb(var(--muted-foreground));
+    }
+
+    .step-item.active .step-kicker,
+    .step-item.active .step-label {
+        color: rgb(var(--primary));
+    }
+
+    .step-item.completed .step-kicker,
+    .step-item.completed .step-label {
+        color: rgb(var(--accent));
+    }
+
     .step-label {
-        font-size: 0.9rem;
-        color: var(--color-gray-600);
-        text-align: center;
+        display: block;
+        margin-top: 0.15rem;
+        font-family: "Plus Jakarta Sans", Inter, sans-serif;
+        font-size: 1rem;
+        font-weight: 700;
+        color: rgb(var(--foreground));
+    }
+
+    .step-description {
+        margin-top: 0.35rem;
+        font-size: 0.82rem;
+        line-height: 1.5;
+        color: rgb(var(--muted-foreground));
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .concierge-status {
+        display: grid;
+        gap: 0.95rem;
+    }
+
+    .assistant-orb {
+        width: 3rem;
+        height: 3rem;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, rgba(var(--primary), 1), rgba(var(--accent), 0.85));
+        color: white;
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.3);
+        animation: atlasPulse 2.4s ease-in-out infinite;
+    }
+
+    @keyframes atlasPulse {
+        0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.28); }
+        70% { box-shadow: 0 0 0 16px rgba(16, 185, 129, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    .summary-list {
+        display: grid;
+        gap: 0.75rem;
+    }
+
+    .summary-item {
+        display: flex;
+        gap: 0.85rem;
+        align-items: center;
+        border-radius: 1rem;
+        padding: 0.9rem 1rem;
+        background: rgba(var(--muted), 0.7);
+        border: 1px solid rgba(var(--border), 0.8);
+    }
+
+    .summary-item i {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(var(--secondary), 0.78);
+        color: rgb(var(--secondary-foreground));
+        flex: 0 0 2rem;
+    }
+
+    .summary-label {
+        font-size: 0.76rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgb(var(--muted-foreground));
+        font-weight: 700;
+    }
+
+    .summary-value {
+        display: block;
+        margin-top: 0.15rem;
+        font-size: 0.96rem;
+        line-height: 1.45;
+        color: rgb(var(--foreground));
         font-weight: 600;
     }
-    
-    .step-item.active .step-label {
-        color: var(--color-secondary);
-    }
-    
-    .step-item.completed .step-label {
-        color: var(--color-accent);
-    }
-    
-    /* Step Content */
-    .workflow-content {
-        padding: 2rem 2.5rem;
-        min-height: 400px;
+
+    .workflow-stage {
+        overflow: hidden;
         position: relative;
-        z-index: 1;
     }
-    
-    /* Ensure content doesn't overlap with navbar when zoomed */
-    @media (max-width: 1200px) {
-        .workflow-content {
-            padding: 2rem;
-        }
+
+    .workflow-stage-progress {
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 6px;
+        background: rgba(var(--border), 0.55);
+        z-index: 2;
     }
-    
-    @media (max-width: 768px) {
-        .workflow-content {
-            padding: 1.5rem;
-        }
+
+    .workflow-stage-progress-bar {
+        height: 100%;
+        width: 25%;
+        background: linear-gradient(90deg, rgb(var(--primary)) 0%, rgb(var(--accent)) 100%);
+        transition: width 0.35s ease;
     }
-    
+
+    .workflow-content {
+        padding: 2rem 1.5rem 1.5rem;
+    }
+
     .step-content {
         display: none;
     }
-    
+
     .step-content.active {
         display: block;
-        animation: fadeIn 0.3s ease;
+        animation: stageFade 0.35s ease forwards;
     }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
+
+    @keyframes stageFade {
+        from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
     }
-    
+
     .step-header {
         margin-bottom: 1.5rem;
-        text-align: center;
     }
-    
+
     .step-header h2 {
-        color: var(--color-primary-dark);
-        font-size: 1.75rem;
-        margin-bottom: 0.25rem;
-        font-weight: 700;
+        margin: 0;
+        font-size: clamp(1.55rem, 3vw, 2rem);
+        font-weight: 800;
+        letter-spacing: -0.02em;
     }
-    
-    @media (max-width: 768px) {
-        .step-header h2 {
-            font-size: 1.5rem;
-        }
-    }
-    
-    @media (max-width: 480px) {
-        .step-header h2 {
-            font-size: 1.25rem;
-        }
-    }
-    
-    @media (max-width: 360px) {
-        .step-header h2 {
-            font-size: 1.1rem;
-        }
-    }
-    
+
     .step-header p {
-        color: var(--color-gray-600);
-        font-size: 0.95rem;
-        margin-top: 0.25rem;
+        margin-top: 0.5rem;
+        color: rgb(var(--muted-foreground));
+        font-size: 0.98rem;
+        line-height: 1.7;
     }
-    
-    @media (max-width: 768px) {
-        .step-header p {
-            font-size: 0.875rem;
-        }
-    }
-    
-    @media (max-width: 480px) {
-        .step-header p {
-            font-size: 0.8rem;
-        }
-    }
-    
-    /* Form Styles - Compact & Modern */
-    .form-grid {
+
+    .route-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1.5rem;
-        margin-bottom: 1.5rem;
-        max-width: 1000px;
-        width: 100%;
-        margin-left: auto;
-        margin-right: auto;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    @media (min-width: 900px) {
+        .route-grid {
+            grid-template-columns: minmax(0, 1fr) 84px minmax(0, 1fr);
+        }
+    }
+
+    .location-field-card {
+        position: relative;
+        border-radius: 1.5rem;
+        padding: 1.1rem;
+        background:
+            linear-gradient(180deg, rgba(var(--card), 0.98) 0%, rgba(var(--muted), 0.82) 100%);
+        border: 1px solid rgba(var(--border), 0.92);
+        box-shadow: 0 16px 34px rgba(15, 23, 42, 0.06);
+    }
+
+    .location-field-card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        pointer-events: none;
+        background: radial-gradient(circle at top right, rgba(var(--primary), 0.08), transparent 32%);
+    }
+
+    .location-icon {
+        width: 2.8rem;
+        height: 2.8rem;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(var(--secondary), 0.82);
+        color: rgb(var(--secondary-foreground));
+        box-shadow: 0 10px 22px rgba(14, 165, 233, 0.14);
+    }
+
+    .route-connector {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 4rem;
+    }
+
+    .route-connector::before {
+        content: "";
+        position: absolute;
+        inset: 50% 0 auto 0;
+        height: 2px;
+        transform: translateY(-50%);
+        background: linear-gradient(90deg, rgba(var(--primary), 0.18), rgba(var(--accent), 0.4), rgba(var(--primary), 0.18));
+    }
+
+    @media (max-width: 899px) {
+        .route-connector::before {
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            right: auto;
+            width: 2px;
+            height: auto;
+            transform: translateX(-50%);
+            background: linear-gradient(180deg, rgba(var(--primary), 0.18), rgba(var(--accent), 0.4), rgba(var(--primary), 0.18));
+        }
+    }
+
+    .route-connector-badge {
         position: relative;
         z-index: 1;
+        width: 3.4rem;
+        height: 3.4rem;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(var(--card), 0.96);
+        border: 1px solid rgba(var(--border), 0.9);
+        box-shadow: 0 14px 28px rgba(15, 23, 42, 0.09);
+        color: rgb(var(--primary));
     }
-    
-    /* Ensure equal width columns */
-    .form-grid > .form-group {
+
+    .step-stage-grid {
+        display: grid;
+        gap: 1.5rem;
+        align-items: start;
+    }
+
+    @media (min-width: 1100px) {
+        .step-stage-grid {
+            grid-template-columns: minmax(0, 1fr) 372px;
+        }
+    }
+
+    .step-visual-panel {
+        position: relative;
+        overflow: hidden;
+        min-height: 620px;
+        border-radius: 1.75rem;
+        background:
+            linear-gradient(180deg, rgba(2, 6, 23, 0.14), rgba(2, 6, 23, 0.72)),
+            linear-gradient(135deg, rgba(var(--ocean), 1) 0%, rgba(var(--ocean-soft), 1) 55%, rgba(var(--accent), 0.9) 100%);
+        box-shadow: 0 24px 40px rgba(15, 23, 42, 0.12);
+    }
+
+    .step-visual-panel img {
+        position: absolute;
+        inset: 0;
         width: 100%;
-        min-width: 0;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.22;
     }
-    
-    /* Prevent form from moving up when zoomed */
-    @media (max-width: 768px) {
-        .form-grid {
-            grid-template-columns: 1fr;
-            gap: 1rem;
-        }
+
+    .step-visual-panel::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(2, 6, 23, 0.82), rgba(2, 6, 23, 0.08));
     }
-    
-    @media (max-width: 480px) {
-        .form-grid {
-            gap: 0.75rem;
-        }
-    }
-    
-    .form-group {
+
+    .step-visual-content {
+        position: relative;
+        z-index: 1;
         display: flex;
+        min-height: 100%;
         flex-direction: column;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1.3rem;
+        color: white;
+    }
+
+    .step-preview-float {
+        border-radius: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        background: rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        padding: 0.95rem;
+        box-shadow: 0 18px 32px rgba(2, 6, 23, 0.14);
+    }
+
+    .weather-preview-card {
+        display: grid;
+        gap: 0.85rem;
+    }
+
+    .weather-preview-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+
+    .weather-preview-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.12);
+        padding: 0.4rem 0.7rem;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.88);
+    }
+
+    .weather-preview-main {
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+    }
+
+    .weather-preview-icon {
+        width: 3.25rem;
+        height: 3.25rem;
+        flex: 0 0 3.25rem;
+        border-radius: 1rem;
+        background: rgba(255, 255, 255, 0.12);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .weather-preview-icon img {
         width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
     }
-    
-    .form-group input,
-    .form-group select {
-        width: 100%;
-        box-sizing: border-box;
+
+    .weather-preview-icon.is-empty {
+        background: #000000;
+        color: rgba(255, 255, 255, 0.82);
     }
-    
-    .form-group.full-width {
-        grid-column: 1 / -1;
+
+    .weather-preview-temp {
+        font-size: 2rem;
+        font-weight: 800;
+        line-height: 1;
+        color: #ffffff;
     }
-    
-    .form-group label {
-        font-weight: 600;
-        color: var(--color-primary-dark);
-        margin-bottom: 0.4rem;
-        font-size: 0.875rem;
+
+    .weather-preview-meta {
+        font-size: 0.86rem;
+        line-height: 1.65;
+        color: rgba(255, 255, 255, 0.74);
     }
-    
-    .form-group input,
-    .form-group select {
-        padding: 0.75rem 1rem;
-        border: 2px solid var(--color-gray-200);
-        border-radius: 12px;
-        font-size: 0.95rem;
-        transition: all 0.2s;
-        font-family: inherit;
-        background: var(--color-white);
-        color: var(--color-text-dark);
+
+    .weather-preview-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.65rem;
     }
-    
-    .form-group input:focus,
-    .form-group select:focus {
+
+    .weather-preview-chip {
+        border-radius: 0.9rem;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.08);
+        padding: 0.7rem 0.8rem;
+    }
+
+    .weather-preview-chip-label {
+        display: block;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.58);
+    }
+
+    .weather-preview-chip-value {
+        display: block;
+        margin-top: 0.2rem;
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #ffffff;
+    }
+
+    .field-kicker {
+        font-size: 0.75rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgb(var(--muted-foreground));
+        font-weight: 700;
+    }
+
+    .field-input-shell {
+        margin-top: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        border-radius: 1.15rem;
+        border: 1px solid rgba(var(--border), 0.92);
+        background: rgba(var(--background), 0.95);
+        padding: 0.85rem 1rem;
+        transition: all 0.2s ease;
+    }
+
+    .field-input-shell:focus-within {
+        border-color: rgba(var(--primary), 0.62);
+        box-shadow: 0 0 0 4px rgba(var(--primary), 0.12);
+    }
+
+    .field-input-shell input,
+    .field-input-shell select {
+        flex: 1;
+        min-width: 0;
+        border: 0;
+        background: transparent;
+        color: rgb(var(--foreground));
+        font-size: 0.98rem;
+        padding: 0;
+        box-shadow: none;
+    }
+
+    .field-input-shell input:focus,
+    .field-input-shell select:focus {
         outline: none;
-        border-color: var(--color-secondary);
-        box-shadow: 0 0 0 4px rgba(0, 131, 143, 0.08);
-        background: var(--color-white);
+        box-shadow: none;
     }
-    
-    .form-group input::placeholder {
-        color: var(--color-gray-400);
-        font-size: 0.9rem;
+
+    .field-input-shell i {
+        color: rgb(var(--primary));
     }
-    
-    /* Autocomplete */
+
     .autocomplete-dropdown {
         position: absolute;
-        top: 100%;
+        top: calc(100% + 0.45rem);
         left: 0;
         right: 0;
-        background: white;
-        border: 2px solid var(--color-gray-200);
-        border-top: none;
-        border-radius: 0 0 10px 10px;
+        display: none;
         max-height: 300px;
         overflow-y: auto;
-        z-index: 2000;
-        display: none;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        margin-top: -2px;
+        border-radius: 1.1rem;
+        border: 1px solid rgba(var(--border), 0.92);
+        background: rgba(var(--card), 0.96);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        box-shadow: 0 24px 48px rgba(15, 23, 42, 0.15);
+        z-index: 30;
     }
-    
+
     .autocomplete-dropdown.show {
         display: block;
     }
-    
+
     .autocomplete-item {
-        padding: 0.75rem 1rem;
-        cursor: pointer;
-        transition: background 0.2s;
-        border-bottom: 1px solid var(--color-gray-200);
-        color: var(--color-text-dark);
+        padding: 0.9rem 1rem;
         font-size: 0.95rem;
+        color: rgb(var(--foreground));
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease;
+        border-bottom: 1px solid rgba(var(--border), 0.65);
     }
-    
+
+    .autocomplete-item:last-child {
+        border-bottom: 0;
+    }
+
     .autocomplete-item:hover,
     .autocomplete-item.selected {
-        background: var(--color-gray-100);
-        color: var(--color-primary-dark);
+        background: rgba(var(--secondary), 0.55);
+        color: rgb(var(--secondary-foreground));
     }
-    
-    /* Location Actions */
-    .location-field {
-        position: relative;
-    }
-    
+
     .location-actions {
-        margin-top: 0.75rem;
         display: flex;
         gap: 0.75rem;
         align-items: center;
         flex-wrap: wrap;
+        margin-top: 0.9rem;
     }
-    
+
     .btn-location {
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
-        padding: 0.625rem 1rem;
-        background: var(--color-secondary);
-        color: white;
-        border: none;
-        border-radius: 10px;
-        font-size: 0.875rem;
+        justify-content: center;
+        gap: 0.55rem;
+        border-radius: 9999px;
+        border: 1px solid rgba(var(--border), 0.92);
+        background: rgba(var(--card), 0.9);
+        color: rgb(var(--foreground));
+        padding: 0.8rem 1rem;
+        font-size: 0.92rem;
         font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-        font-family: inherit;
+        transition: all 0.2s ease;
     }
-    
+
     .btn-location:hover:not(:disabled) {
-        background: var(--color-secondary-dark);
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0, 131, 143, 0.25);
+        border-color: rgba(var(--primary), 0.26);
+        box-shadow: 0 14px 28px rgba(4, 120, 87, 0.14);
     }
-    
+
     .btn-location:disabled {
-        opacity: 0.6;
+        opacity: 0.7;
         cursor: wait;
     }
-    
-    .btn-location .btn-icon {
-        font-size: 1rem;
-    }
-    
+
     .location-status {
-        color: var(--color-gray-600);
-        font-size: 0.875rem;
         min-height: 1.25rem;
-        display: inline-block;
+        font-size: 0.88rem;
+        color: rgb(var(--muted-foreground));
     }
-    
-    /* Detected Address Chip */
+
     .detected-chip {
+        width: 100%;
         display: inline-flex;
-        gap: 0.5rem;
         align-items: center;
-        background: white;
-        border: 2px solid var(--color-secondary);
-        border-radius: 25px;
-        padding: 0.625rem 1rem;
-        margin-top: 0.75rem;
-        box-shadow: 0 2px 8px rgba(0, 131, 143, 0.1);
-        animation: slideDown 0.3s ease;
-        width: 100%;
-        max-width: 100%;
+        gap: 0.55rem;
+        padding: 0.85rem 1rem;
+        margin-top: 0.9rem;
+        border-radius: 1rem;
+        border: 1px solid rgba(var(--primary), 0.24);
+        background: rgba(var(--emerald-soft), 0.95);
+        box-shadow: 0 12px 24px rgba(4, 120, 87, 0.08);
     }
-    
-    @keyframes slideDown {
-        from {
-            opacity: 0;
-            transform: translateY(-10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    .detected-chip.hidden {
-        display: none;
-    }
-    
-    .chip-address {
-        flex: 1;
-        font-size: 0.875rem;
-        color: var(--color-primary-dark);
-        font-weight: 500;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-    
-    .chip-btn {
-        background: none;
-        border: none;
-        cursor: pointer;
-        padding: 0.375rem 0.5rem;
-        border-radius: 6px;
-        transition: all 0.2s;
-        font-size: 0.875rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 28px;
-        height: 28px;
-    }
-    
-    .chip-edit {
-        color: var(--color-primary-dark);
-    }
-    
-    .chip-edit:hover {
-        background: var(--color-gray-100);
-        color: var(--color-secondary-dark);
-    }
-    
-    .chip-confirm {
-        background: var(--color-accent);
-        color: white;
-        font-weight: 600;
-    }
-    
-    .chip-confirm:hover {
-        background: var(--color-accent-dark);
-        transform: scale(1.1);
-    }
-    
-    /* Mini Map */
-    .mini-map {
-        width: 100%;
-        height: 200px;
-        border-radius: 12px;
-        overflow: hidden;
-        margin-top: 1rem;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        border: 2px solid var(--color-gray-200);
-        position: relative;
-        z-index: 1;
-    }
-    
+
+    .detected-chip.hidden,
     .mini-map.hidden {
         display: none;
     }
-    
-    .mini-map.visible {
-        display: block;
-        animation: fadeIn 0.3s ease;
-    }
-    
-    /* Leaflet controls z-index fix - ensure map controls are below autocomplete */
-    .mini-map .leaflet-control-container {
-        z-index: 100 !important;
-    }
-    
-    .mini-map .leaflet-top,
-    .mini-map .leaflet-bottom {
-        z-index: 100 !important;
-    }
-    
-    .mini-map .leaflet-control-zoom {
-        z-index: 100 !important;
-    }
-    
-    /* Prevent autocomplete from being covered */
-    .location-field {
-        position: relative;
-        z-index: 1;
-        width: 100%;
-    }
-    
-    .location-field input {
-        width: 100%;
-        box-sizing: border-box;
-    }
-    
-    .location-actions {
-        width: 100%;
-        margin-top: 0.5rem;
-    }
-    
-    .btn-location {
-        width: 100%;
-        box-sizing: border-box;
-        justify-content: center;
-    }
-    
-    /* Ensure inputs don't move up when zoomed out */
-    .form-group {
-        position: relative;
-        z-index: 1;
-    }
-    
-    /* Fix for zoom out issues - prevent elements from overlapping navbar */
-    @media (max-width: 480px) {
-        .workflow-container {
-            padding-top: calc(0.75rem + 70px);
-        }
-    }
-    
-    /* Very small screens or when zoomed out significantly */
-    @media (max-width: 360px) {
-        .workflow-container {
-            padding-top: calc(0.5rem + 65px);
-        }
-        
-        .workflow-content {
-            padding: 1rem;
-        }
-    }
-    
-    /* Error Modal Popup */
-    .error-modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(var(--color-primary-rgb), 0.7);
-        backdrop-filter: blur(4px);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 10000;
-        animation: fadeIn 0.3s ease;
-    }
-    
-    .error-modal-overlay.show {
-        display: flex;
-    }
-    
-    .error-modal {
-        background: var(--color-white);
-        border-radius: 16px;
-        padding: 0;
-        max-width: 450px;
-        width: 90%;
-        box-shadow: 0 20px 60px rgba(var(--color-primary-rgb), 0.3);
-        animation: slideUp 0.3s ease;
-        overflow: hidden;
-        border: 2px solid var(--color-primary);
-    }
-    
-    @keyframes slideUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    .error-modal-header {
-        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-        color: var(--color-white);
-        padding: 1.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-    
-    .error-modal-header.success {
-        background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%);
-    }
-    
-    .error-modal-header.error {
-        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-    }
-    
-    .error-modal-header .error-icon {
-        font-size: 2rem;
-    }
-    
-    .error-modal-header h3 {
-        margin: 0;
-        font-size: 1.25rem;
-        font-weight: 700;
-    }
-    
-    .error-modal-body {
-        padding: 1.5rem;
-        color: var(--color-text-dark);
-    }
-    
-    .error-modal-message {
-        font-size: 1rem;
-        line-height: 1.6;
-        margin-bottom: 1rem;
-    }
-    
-    .error-modal-footer {
-        padding: 0 1.5rem 1.5rem;
-        display: flex;
-        justify-content: flex-end;
-    }
-    
-    .error-modal-btn {
-        background: var(--color-secondary);
-        color: white;
-        border: none;
-        padding: 0.75rem 2rem;
-        border-radius: 10px;
-        font-size: 1rem;
+
+    .chip-address {
+        flex: 1;
+        font-size: 0.88rem;
+        line-height: 1.5;
+        color: rgb(var(--foreground));
         font-weight: 600;
+    }
+
+    .chip-btn {
+        width: 2rem;
+        height: 2rem;
+        border: 0;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         cursor: pointer;
-        transition: all 0.2s;
-        font-family: inherit;
+        transition: transform 0.2s ease, background 0.2s ease;
     }
-    
-    .error-modal-btn:hover {
-        background: var(--color-secondary-dark);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0, 131, 143, 0.3);
+
+    .chip-btn:hover {
+        transform: scale(1.04);
     }
-    
-    .error-modal-btn:active {
-        transform: translateY(0);
+
+    .chip-edit {
+        background: rgba(var(--card), 0.92);
+        color: rgb(var(--foreground));
     }
-    
-    /* Info Cards */
-    .info-card {
-        background: var(--color-gray-50);
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-        border-left: 4px solid var(--color-secondary);
+
+    .chip-confirm {
+        background: rgb(var(--primary));
+        color: rgb(var(--primary-foreground));
     }
-    
-    .info-card h4 {
-        color: var(--color-primary-dark);
-        margin-bottom: 0.5rem;
-        font-size: 1.1rem;
+
+    .mini-map {
+        width: 100%;
+        height: 220px;
+        margin-top: 1rem;
+        border-radius: 1.25rem;
+        overflow: hidden;
+        border: 1px solid rgba(var(--border), 0.92);
+        box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08);
     }
-    
-    .info-card p {
-        color: var(--color-gray-600);
-        margin: 0.25rem 0;
+
+    .mini-map-caption {
+        margin-top: 0.75rem;
+        font-size: 0.84rem;
+        color: rgb(var(--muted-foreground));
     }
-    
-    /* Transport Options */
-    .transport-options {
+
+    .travel-info-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 1rem;
+    }
+
+    @media (min-width: 768px) {
+        .travel-info-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    .input-card {
+        border-radius: 1.5rem;
+        padding: 1rem;
+        border: 1px solid rgba(var(--border), 0.92);
+        background: linear-gradient(180deg, rgba(var(--card), 0.98) 0%, rgba(var(--muted), 0.78) 100%);
+        box-shadow: 0 16px 32px rgba(15, 23, 42, 0.05);
+    }
+
+    .input-card .field-input-shell {
+        margin-top: 0.7rem;
+    }
+
+    .helper-text {
+        margin-top: 0.55rem;
+        font-size: 0.84rem;
+        color: rgb(var(--muted-foreground));
+        line-height: 1.55;
+    }
+
+    .travel-style-shell {
+        position: relative;
+    }
+
+    .travel-style-shell select {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .travel-style-cards {
+        display: grid;
+        gap: 0.75rem;
         margin-top: 1rem;
     }
-    
-    @media (max-width: 1024px) {
-        .transport-options {
-            grid-template-columns: repeat(3, 1fr);
+
+    @media (min-width: 768px) {
+        .travel-style-cards {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
     }
-    
-    @media (max-width: 640px) {
-        .transport-options {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.75rem;
-        }
-    }
-    
-    @media (max-width: 480px) {
-        .transport-options {
-            grid-template-columns: 1fr;
-        }
-    }
-    
-    .transport-option {
-        background: var(--color-white);
-        border: 2px solid var(--color-gray-200);
-        border-radius: 12px;
-        padding: 1.5rem;
-        text-align: center;
+
+    .travel-style-card {
+        display: flex;
+        gap: 0.85rem;
+        align-items: flex-start;
+        border-radius: 1.15rem;
+        border: 1px solid rgba(var(--border), 0.88);
+        background: rgba(var(--card), 0.9);
+        padding: 0.95rem;
+        transition: all 0.2s ease;
         cursor: pointer;
-        transition: all 0.3s;
     }
-    
-    .transport-option:hover {
-        border-color: var(--color-secondary);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 131, 143, 0.15);
+
+    .travel-style-card:hover {
+        transform: translateY(-1px);
+        border-color: rgba(var(--primary), 0.32);
+        box-shadow: 0 14px 28px rgba(4, 120, 87, 0.08);
     }
-    
-    .transport-option.selected {
-        border-color: var(--color-accent);
-        background: var(--color-gray-50);
+
+    .travel-style-card.is-selected {
+        border-color: rgba(var(--primary), 0.44);
+        background: rgba(var(--emerald-soft), 0.95);
+        box-shadow: 0 18px 34px rgba(4, 120, 87, 0.12);
     }
-    
+
+    :root[data-theme="dark"] .travel-style-card.is-selected {
+        background: rgba(var(--emerald-soft), 0.4);
+    }
+
+    .travel-style-icon {
+        width: 2.4rem;
+        height: 2.4rem;
+        flex: 0 0 2.4rem;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(var(--secondary), 0.72);
+        color: rgb(var(--secondary-foreground));
+        font-size: 1.05rem;
+    }
+
+    .transport-options {
+        display: grid;
+        gap: 0.9rem;
+        margin-top: 1rem;
+    }
+
+    @media (min-width: 768px) {
+        .transport-options {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    .transport-option {
+        padding: 1rem;
+        border-radius: 1.25rem;
+        border: 1px solid rgba(var(--border), 0.9);
+        background: rgba(var(--card), 0.9);
+        text-align: left;
+        box-shadow: 0 14px 28px rgba(15, 23, 42, 0.04);
+    }
+
     .transport-option-icon {
-        font-size: 2.5rem;
-        margin-bottom: 0.5rem;
+        width: 2.8rem;
+        height: 2.8rem;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(var(--secondary), 0.7);
+        margin-bottom: 0.75rem;
+        font-size: 1.15rem;
     }
-    
-    /* Budget Breakdown */
-    .budget-breakdown {
-        background: var(--color-white);
-        border: 2px solid var(--color-gray-200);
-        border-radius: 12px;
-        padding: 2rem;
-        margin-top: 2rem;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+    .step3-loading-card {
+        display: grid;
+        gap: 1rem;
+        border-radius: 1.5rem;
+        padding: 1.25rem;
+        border: 1px solid rgba(var(--border), 0.88);
+        background: linear-gradient(180deg, rgba(var(--card), 0.96) 0%, rgba(var(--muted), 0.82) 100%);
     }
-    
-    .budget-breakdown h4 {
-        color: var(--color-primary-dark);
-        font-size: 1.25rem;
-        font-weight: 700;
-        margin-bottom: 1.5rem;
-        padding-bottom: 0.75rem;
-        border-bottom: 2px solid var(--color-secondary);
+
+    .loading-line {
+        height: 0.8rem;
+        border-radius: 9999px;
+        background: linear-gradient(90deg, rgba(var(--border), 0.9) 25%, rgba(var(--primary), 0.15) 50%, rgba(var(--border), 0.9) 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s linear infinite;
     }
-    
-    @media (max-width: 768px) {
-        .budget-breakdown {
-            padding: 1.5rem;
-        }
-        
-        .budget-breakdown h4 {
-            font-size: 1.1rem;
-            margin-bottom: 1rem;
-        }
+
+    .loading-line.sm { width: 42%; }
+    .loading-line.md { width: 68%; }
+    .loading-line.lg { width: 100%; }
+
+    @keyframes shimmer {
+        from { background-position: 200% 0; }
+        to { background-position: -200% 0; }
     }
-    
-    @media (max-width: 480px) {
-        .budget-breakdown {
-            padding: 1rem;
-        }
-        
-        .budget-breakdown h4 {
-            font-size: 1rem;
-        }
+
+    .budget-breakdown,
+    .info-card {
+        border-radius: 1.5rem;
+        padding: 1.25rem;
+        border: 1px solid rgba(var(--border), 0.9);
+        background: rgba(var(--card), 0.94);
+        box-shadow: 0 14px 28px rgba(15, 23, 42, 0.05);
     }
-    
+
+    .budget-breakdown h4,
+    .info-card h4 {
+        margin: 0 0 1rem 0;
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: rgb(var(--foreground));
+    }
+
     .budget-item {
         display: flex;
         justify-content: space-between;
+        gap: 1rem;
         align-items: center;
-        padding: 1rem 0;
-        border-bottom: 1px solid var(--color-gray-200);
-        color: var(--color-text-dark);
+        padding: 0.85rem 0;
+        border-bottom: 1px solid rgba(var(--border), 0.75);
+        font-size: 0.96rem;
     }
-    
-    .budget-item span:first-child {
-        color: var(--color-gray-600);
-        font-weight: 500;
-        font-size: 0.95rem;
-    }
-    
-    .budget-item span:last-child {
-        color: var(--color-primary-dark);
-        font-weight: 600;
-        font-size: 1rem;
-        text-align: right;
-    }
-    
-    @media (max-width: 480px) {
-        .budget-item {
-            flex-direction: column;
-            gap: 0.5rem;
-            text-align: left;
-            padding: 0.75rem 0;
-            font-size: 0.9rem;
-        }
-        
-        .budget-item span:last-child {
-            text-align: left;
-            font-size: 1.1rem;
-        }
-    }
-    
+
     .budget-item:last-child {
-        border-bottom: none;
-        padding-top: 1.5rem;
-        margin-top: 0.5rem;
-        border-top: 2px solid var(--color-gray-300);
+        border-bottom: 0;
+        padding-bottom: 0;
+        font-weight: 800;
     }
-    
-    .budget-item:last-child span:first-child {
-        font-weight: 700;
-        font-size: 1.1rem;
-        color: var(--color-primary-dark);
-    }
-    
-    .budget-item:last-child span:last-child {
-        font-weight: 700;
-        font-size: 1.3rem;
-        color: var(--color-accent);
-    }
-    
+
     .budget-summary-footer {
         margin-top: 1rem;
         padding-top: 1rem;
-        border-top: 1px solid var(--color-gray-300);
+        border-top: 1px solid rgba(var(--border), 0.82);
+        color: rgb(var(--muted-foreground));
+        font-size: 0.9rem;
     }
-    
-    .budget-summary-footer p {
-        color: var(--color-gray-600);
-        font-size: 0.95rem;
-        margin: 0;
-    }
-    
-    .budget-summary-footer strong {
-        color: var(--color-primary-dark);
-        font-weight: 600;
-    }
-    
-    /* Hotel Cards - List Layout (mỗi khách sạn trên 1 dòng) */
+
     .hotels-list {
-        display: flex;
-        flex-direction: column;
+        display: grid;
         gap: 1rem;
-        margin-top: 1.5rem;
+        margin-top: 1.25rem;
     }
-    
-    .hotels-grid {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        margin-top: 1.5rem;
-    }
-    
+
     .hotel-card {
-        background: var(--color-white);
-        border: 2px solid var(--color-gray-200);
-        border-radius: 12px;
-        padding: 1.5rem;
+        border-radius: 1.5rem;
+        padding: 1.1rem;
+        border: 1px solid rgba(var(--border), 0.88);
+        background: rgba(var(--card), 0.94);
+        box-shadow: 0 16px 30px rgba(15, 23, 42, 0.05);
+        transition: all 0.25s ease;
         cursor: pointer;
-        transition: all 0.3s;
-        width: 100%;
     }
-    
+
     .hotel-card:hover {
-        border-color: var(--color-secondary);
-        box-shadow: 0 4px 12px rgba(0, 131, 143, 0.15);
+        transform: translateY(-2px);
+        box-shadow: 0 20px 36px rgba(15, 23, 42, 0.08);
+        border-color: rgba(var(--primary), 0.22);
     }
-    
+
     .hotel-card.selected {
-        border-color: var(--color-accent);
-        background: var(--color-gray-50);
-        box-shadow: 0 0 0 3px rgba(218, 165, 32, 0.2);
+        border-color: rgba(var(--primary), 0.5);
+        box-shadow: 0 0 0 3px rgba(var(--primary), 0.12), 0 24px 42px rgba(4, 120, 87, 0.10);
+        background: rgba(var(--emerald-soft), 0.94);
     }
-    
-    .hotel-name {
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: var(--color-primary-dark);
-        margin-bottom: 0.5rem;
+
+    :root[data-theme="dark"] .hotel-card.selected {
+        background: rgba(var(--emerald-soft), 0.36);
     }
-    
-    .hotel-rating {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 0.5rem;
+
+    .selection-note {
+        margin-top: 1rem;
+        border-radius: 1rem;
+        padding: 0.95rem 1rem;
+        background: rgba(var(--warning-soft), 0.92);
+        border: 1px solid rgba(var(--warning), 0.2);
+        color: rgb(var(--warning-foreground));
+        font-size: 0.92rem;
+        line-height: 1.6;
     }
-    
-    .hotel-price {
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: var(--color-accent);
+
+    .day-card {
+        border-radius: 1.4rem;
+        overflow: hidden;
+        border: 1px solid rgba(var(--border), 0.88);
+        background: rgba(var(--card), 0.95);
+        box-shadow: 0 16px 30px rgba(15, 23, 42, 0.05);
     }
-    
-    @media (max-width: 640px) {
-        .hotel-card {
-            padding: 1rem;
-        }
-        
-        .hotel-card > div {
-            flex-direction: column !important;
-        }
-        
-        .hotel-card > div > div:first-child {
-            width: 100% !important;
-            height: 200px !important;
-        }
-    }
-    
-    /* Itinerary */
-    .itinerary-day {
-        background: var(--color-gray-50);
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-    }
-    
-    .itinerary-day h4 {
-        color: var(--color-primary-dark);
-        margin-bottom: 1rem;
-        font-size: 1.2rem;
-    }
-    
-    .itinerary-activity {
-        padding: 0.75rem;
-        background: var(--color-white);
-        border-radius: 8px;
-        margin-bottom: 0.5rem;
-        border-left: 3px solid var(--color-secondary);
-    }
-    
-    /* Buttons */
-    .btn-workflow {
-        padding: 1rem 2rem;
-        border: none;
-        border-radius: 10px;
-        font-size: 1rem;
-        font-weight: 600;
+
+    .day-card-header {
+        padding: 1rem 1.15rem;
         cursor: pointer;
-        transition: all 0.3s;
-        display: inline-flex;
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
         align-items: center;
-        gap: 0.5rem;
     }
-    
-    .btn-primary {
-        background: var(--color-secondary);
-        color: var(--color-white);
+
+    .day-card-content {
+        display: none;
+        padding: 1.15rem;
+        background: rgba(var(--muted), 0.7);
+        border-top: 1px solid rgba(var(--border), 0.7);
     }
-    
-    .btn-primary:hover {
-        background: var(--color-secondary-light);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 131, 143, 0.3);
+
+    .itinerary-activity {
+        border-left: 3px solid rgba(var(--primary), 0.7);
+        border-radius: 0.8rem;
+        padding: 0.75rem 0.85rem;
+        background: rgba(var(--card), 0.92);
     }
-    
-    .btn-secondary {
-        background: var(--color-gray-200);
-        color: var(--color-primary-dark);
-    }
-    
-    .btn-secondary:hover {
-        background: var(--color-gray-300);
-    }
-    
-    .btn-success {
-        background: var(--color-accent);
-        color: var(--color-white);
-    }
-    
-    .btn-success:hover {
-        background: #c4941f;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(218, 165, 32, 0.3);
-    }
-    
-    .btn-workflow:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-    
+
     .workflow-actions {
         display: flex;
         justify-content: space-between;
-        margin-top: 2rem;
-        padding-top: 2rem;
-        border-top: 2px solid var(--color-gray-200);
         gap: 1rem;
-        flex-wrap: wrap;
+        align-items: center;
+        margin-top: 1.75rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid rgba(var(--border), 0.82);
     }
-    
-    @media (max-width: 768px) {
-        .workflow-actions {
-            flex-direction: column-reverse;
-        }
-        
-        .workflow-actions .btn-workflow {
-            width: 100%;
-        }
+
+    .btn-workflow {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.55rem;
+        border-radius: 9999px;
+        padding: 0.95rem 1.35rem;
+        font-size: 0.96rem;
+        font-weight: 700;
+        border: 0;
+        cursor: pointer;
+        transition: all 0.22s ease;
+        min-height: 3.25rem;
     }
-    
-    /* Loading */
+
+    .btn-workflow:active {
+        transform: scale(0.98);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, rgb(var(--primary)) 0%, rgb(var(--accent)) 100%);
+        color: white;
+        box-shadow: 0 16px 34px rgba(4, 120, 87, 0.22);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 20px 38px rgba(4, 120, 87, 0.3);
+    }
+
+    .btn-secondary {
+        background: rgba(var(--card), 0.92);
+        color: rgb(var(--foreground));
+        border: 1px solid rgba(var(--border), 0.92);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+        transform: translateY(-1px);
+        border-color: rgba(var(--primary), 0.24);
+        box-shadow: 0 14px 28px rgba(4, 120, 87, 0.08);
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, rgb(var(--primary)) 0%, rgb(var(--primary-hover)) 100%);
+        color: white;
+        box-shadow: 0 16px 34px rgba(4, 120, 87, 0.24);
+    }
+
+    .btn-success:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 20px 38px rgba(4, 120, 87, 0.28);
+    }
+
+    .btn-workflow:disabled {
+        opacity: 0.62;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
     .loading-spinner {
         display: inline-block;
-        width: 20px;
-        height: 20px;
-        border: 3px solid rgba(255, 255, 255, 0.3);
-        border-radius: 50%;
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid rgba(255, 255, 255, 0.35);
         border-top-color: white;
+        border-radius: 9999px;
         animation: spin 0.8s linear infinite;
     }
-    
+
     @keyframes spin {
         to { transform: rotate(360deg); }
     }
-    
-    /* Responsive */
-    @media (max-width: 768px) {
-        .workflow-content {
-            padding: 1.5rem;
+
+    .error-modal-overlay {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(2, 6, 23, 0.62);
+        backdrop-filter: blur(8px);
+        z-index: 110;
+        padding: 1rem;
+    }
+
+    .error-modal-overlay.show {
+        display: flex;
+    }
+
+    .error-modal {
+        width: min(100%, 480px);
+        border-radius: 1.5rem;
+        overflow: hidden;
+        background: rgba(var(--card), 0.98);
+        border: 1px solid rgba(var(--border), 0.92);
+        box-shadow: 0 30px 80px rgba(15, 23, 42, 0.24);
+    }
+
+    .error-modal-header {
+        display: flex;
+        gap: 0.85rem;
+        align-items: center;
+        padding: 1.2rem 1.35rem;
+        background: linear-gradient(135deg, rgb(var(--primary)) 0%, rgb(var(--accent)) 100%);
+        color: white;
+    }
+
+    .error-modal-header.success {
+        background: linear-gradient(135deg, rgb(var(--primary)) 0%, rgb(var(--primary-hover)) 100%);
+    }
+
+    .error-modal-body {
+        padding: 1.25rem 1.35rem 0;
+        color: rgb(var(--foreground));
+        line-height: 1.7;
+    }
+
+    .error-modal-footer {
+        padding: 1.2rem 1.35rem 1.35rem;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .error-modal-btn {
+        border: 0;
+        border-radius: 9999px;
+        padding: 0.85rem 1.3rem;
+        background: rgb(var(--primary));
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    @media (max-width: 1023px) {
+        .workflow-sidebar {
+            order: 2;
         }
-        
-        .form-grid {
-            grid-template-columns: 1fr;
-            gap: 1rem;
+
+        .workflow-stage {
+            order: 1;
         }
-        
-        .workflow-content {
-            padding: 1.5rem;
-        }
-        
-        .step-header h2 {
-            font-size: 1.5rem;
-        }
-        
-        .workflow-actions {
-            flex-direction: column-reverse;
-            gap: 1rem;
-        }
-        
-        .btn-workflow {
-            width: 100%;
-        }
-        
+
         .steps-indicator {
-            flex-direction: column;
-            gap: 1rem;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
-        
-        .steps-indicator::before {
+
+        .step-item::before {
             display: none;
         }
-        
-        .transport-options,
-        .hotels-grid {
+    }
+
+    @media (max-width: 767px) {
+        .travel-plan-page {
+            padding: 6.4rem 0.85rem 7rem;
+        }
+
+        .workflow-content {
+            padding: 1rem;
+        }
+
+        .steps-indicator {
             grid-template-columns: 1fr;
         }
-        
-        .location-actions {
+
+        .workflow-actions {
+            position: sticky;
+            bottom: 0;
+            margin: 1.5rem -1rem -1rem;
+            padding: 1rem;
+            background: rgba(var(--card), 0.96);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(var(--border), 0.9);
+            flex-direction: column-reverse;
+        }
+
+        .workflow-actions .btn-workflow {
+            width: 100%;
+        }
+
+        .route-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .step-stage-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .step-visual-panel {
+            min-height: 420px;
+        }
+
+        .day-card-header {
             flex-direction: column;
             align-items: flex-start;
         }
-        
-        .btn-location {
-            width: 100%;
-            justify-content: center;
-        }
-        
-        .mini-map {
-            height: 180px;
-        }
-        
-        .detected-chip {
-            flex-wrap: wrap;
-            padding: 0.75rem;
-        }
-        
-        .chip-address {
-            width: 100%;
-            white-space: normal;
-            margin-bottom: 0.5rem;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .step-content.active,
+        .assistant-orb,
+        .loading-line,
+        .btn-workflow,
+        .step-item,
+        .travel-style-card,
+        .hotel-card {
+            animation: none !important;
+            transition: none !important;
         }
     }
 </style>
+{% endblock %}
 
-<div class="workflow-container">
-    <div class="workflow-wrapper">
-        <!-- Progress Steps -->
-        <div class="workflow-progress">
-            <div class="steps-indicator">
-                <div class="step-item active" data-step="1">
-                    <div class="step-circle">1</div>
-                    <div class="step-label">Chọn địa điểm</div>
+{% block content %}
+<section class="travel-plan-page">
+    <div class="workflow-shell mx-auto flex max-w-7xl flex-col gap-6">
+        <header class="workflow-hero">
+            <div class="tp-card-strong rounded-[2rem] p-6 sm:p-8">
+                <div class="flex flex-wrap items-center gap-3">
+                    <span class="tp-badge tp-badge-primary">
+                        <i class="fa-solid fa-sparkles"></i>
+                        AI Travel Planner
+                    </span>
+                    <span class="tp-badge tp-badge-accent">
+                        <i class="fa-solid fa-route"></i>
+                        4-step guided workflow
+                    </span>
                 </div>
-                <div class="step-item" data-step="2">
-                    <div class="step-circle">2</div>
-                    <div class="step-label">Thông tin du lịch</div>
-                </div>
-                <div class="step-item" data-step="3">
-                    <div class="step-circle">3</div>
-                    <div class="step-label">Ngân sách & Khách sạn</div>
-                </div>
-                <div class="step-item" data-step="4">
-                    <div class="step-circle">4</div>
-                    <div class="step-label">Xác nhận & Tạo kế hoạch</div>
-                </div>
+                <h1 class="mt-5 font-heading text-4xl font-bold tracking-tight text-slate-950 dark:text-slate-50">
+                    Tạo lịch trình thông minh
+                </h1>
+                <p class="theme-text-muted mt-4 max-w-3xl text-base leading-8 md:text-lg">
+                    Hoàn thiện 4 bước để AI lập kế hoạch chuyến đi phù hợp với điểm đến, thời gian, ngân sách và phong cách du lịch của bạn.
+                </p>
             </div>
-        </div>
 
-        <!-- Workflow Content -->
-        <div class="workflow-content">
-            <!-- Step 1: Location Selection -->
-            <div class="step-content active" id="step-1">
-                <div class="step-header">
-                    <h2>📍 Chọn địa điểm</h2>
-                    <p>Nhập điểm xuất phát và điểm đến của bạn</p>
+            <aside class="tp-card rounded-[2rem] p-6">
+                <div class="flex items-start gap-4">
+                    <span class="assistant-orb">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </span>
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-[0.18em] theme-text-muted">Atlas AI Concierge</p>
+                        <h2 id="atlas-title" class="mt-2 font-heading text-xl font-bold">Sẵn sàng dẫn đường</h2>
+                        <p id="atlas-message" class="theme-text-muted mt-2 text-sm leading-7">
+                            Tôi sẽ kiểm tra khoảng cách, tuyến đường và khả năng di chuyển giữa hai địa điểm.
+                        </p>
+                    </div>
                 </div>
-                
-                <form id="step1-form">
-                    <div class="form-grid">
-                        <div class="form-group location-field">
-                            <label for="origin-input">Điểm xuất phát</label>
-                            <div style="position: relative; z-index: 2000;">
-                                <input type="text" id="origin-input" placeholder="Ví dụ: Thành phố Hồ Chí Minh" autocomplete="off" required>
-                                <div id="origin-autocomplete" class="autocomplete-dropdown"></div>
+                <div class="mt-5 rounded-[1.4rem] border border-[rgba(var(--border),0.85)] bg-[rgba(var(--muted),0.65)] p-4">
+                    <div class="flex items-center gap-3">
+                        <span class="inline-flex h-3 w-3 rounded-full bg-emerald-500"></span>
+                        <p id="atlas-status" class="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                            Atlas đang chờ thông tin điểm đi và điểm đến.
+                        </p>
+                    </div>
+                </div>
+            </aside>
+        </header>
+
+        <div class="workflow-main">
+            <aside class="workflow-sidebar">
+                <div class="workflow-progress tp-card rounded-[2rem]">
+                    <div class="steps-indicator">
+                        <div class="step-item active" data-step="1" aria-current="step">
+                            <div class="step-circle">1</div>
+                            <div class="step-meta">
+                                <span class="step-kicker">Bước 1</span>
+                                <span class="step-label">Chọn địa điểm</span>
+                                <p class="step-description">Xác định điểm đi, điểm đến và kiểm tra tuyến đường phù hợp.</p>
                             </div>
-                            <div class="location-actions">
-                                <button type="button" id="use-current-location-btn" class="btn-location" aria-live="polite">
-                                    <span class="btn-icon">📍</span>
-                                    <span class="btn-text">Dùng vị trí hiện tại</span>
+                        </div>
+                        <div class="step-item" data-step="2">
+                            <div class="step-circle">2</div>
+                            <div class="step-meta">
+                                <span class="step-kicker">Bước 2</span>
+                                <span class="step-label">Thông tin du lịch</span>
+                                <p class="step-description">Thiết lập ngày đi, số người và phong cách cho hành trình.</p>
+                            </div>
+                        </div>
+                        <div class="step-item" data-step="3">
+                            <div class="step-circle">3</div>
+                            <div class="step-meta">
+                                <span class="step-kicker">Bước 3</span>
+                                <span class="step-label">Ngân sách & Khách sạn</span>
+                                <p class="step-description">Atlas phân tích ngân sách và lọc khách sạn phù hợp.</p>
+                            </div>
+                        </div>
+                        <div class="step-item" data-step="4">
+                            <div class="step-circle">4</div>
+                            <div class="step-meta">
+                                <span class="step-kicker">Bước 4</span>
+                                <span class="step-label">Xác nhận kế hoạch</span>
+                                <p class="step-description">Rà soát lại kế hoạch trước khi tạo lịch trình cuối cùng.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="concierge-status tp-card rounded-[2rem] p-5">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-[0.18em] theme-text-muted">AI Summary</p>
+                        <h3 class="mt-2 font-heading text-lg font-bold">Bản tóm tắt chuyến đi</h3>
+                    </div>
+                    <div class="summary-list">
+                        <div class="summary-item">
+                            <i class="fa-solid fa-route"></i>
+                            <div>
+                                <span class="summary-label">Tuyến hành trình</span>
+                                <span id="summary-route" class="summary-value">Chưa xác định điểm đi và điểm đến</span>
+                            </div>
+                        </div>
+                        <div class="summary-item">
+                            <i class="fa-solid fa-calendar-days"></i>
+                            <div>
+                                <span class="summary-label">Thời gian</span>
+                                <span id="summary-schedule" class="summary-value">Chưa chọn ngày đi</span>
+                            </div>
+                        </div>
+                        <div class="summary-item">
+                            <i class="fa-solid fa-users"></i>
+                            <div>
+                                <span class="summary-label">Số lượng</span>
+                                <span id="summary-travelers" class="summary-value">2 người • 3 ngày mặc định</span>
+                            </div>
+                        </div>
+                        <div class="summary-item">
+                            <i class="fa-solid fa-sliders"></i>
+                            <div>
+                                <span class="summary-label">Phong cách</span>
+                                <span id="summary-style" class="summary-value">Tiêu chuẩn</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <div class="workflow-stage tp-card-strong rounded-[2rem]">
+                <div class="workflow-stage-progress">
+                    <div id="workflow-progress-bar" class="workflow-stage-progress-bar"></div>
+                </div>
+                <div class="workflow-content">
+                    <div class="step-content active" id="step-1">
+                        <div class="step-header">
+                            <span class="tp-badge tp-badge-primary mb-4">
+                                <i class="fa-solid fa-location-dot"></i>
+                                Chọn địa điểm
+                            </span>
+                            <h2>Thiết lập tuyến đường cho hành trình của bạn</h2>
+                            <p>Điền điểm xuất phát và điểm đến để Atlas kiểm tra khoảng cách, thời gian di chuyển và đề xuất tuyến phù hợp.</p>
+                        </div>
+
+                        <form id="step1-form">
+                            <div class="step-stage-grid">
+                                <div>
+                                    <div class="route-grid">
+                                        <div class="location-field-card location-field">
+                                            <div class="flex items-start gap-3">
+                                                <span class="location-icon"><i class="fa-solid fa-paper-plane"></i></span>
+                                                <div class="min-w-0 flex-1">
+                                                    <span class="field-kicker">Điểm xuất phát</span>
+                                                    <label for="origin-input" class="sr-only">Điểm xuất phát</label>
+                                                    <div class="field-input-shell">
+                                                        <i class="fa-solid fa-location-dot"></i>
+                                                        <div style="position: relative; z-index: 30; flex: 1;">
+                                                            <input type="text" id="origin-input" placeholder="Ví dụ: Thành phố Hồ Chí Minh" autocomplete="off" required>
+                                                            <div id="origin-autocomplete" class="autocomplete-dropdown"></div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="location-actions">
+                                                        <button type="button" id="use-current-location-btn" class="btn-location" aria-live="polite">
+                                                            <span class="btn-icon">📍</span>
+                                                            <span class="btn-text">Dùng vị trí hiện tại</span>
+                                                        </button>
+                                                        <span id="location-status" class="location-status" aria-live="polite"></span>
+                                                    </div>
+                                                    <div id="detected-chip" class="detected-chip hidden">
+                                                        <span id="detected-address" class="chip-address"></span>
+                                                        <button type="button" id="edit-address-btn" class="chip-btn chip-edit" title="Sửa vị trí" aria-label="Sửa địa chỉ">✎</button>
+                                                        <button type="button" id="confirm-address-btn" class="chip-btn chip-confirm" title="Xác nhận sử dụng vị trí này" aria-label="Xác nhận địa chỉ">✓</button>
+                                                    </div>
+                                                    <div id="origin-mini-map" class="mini-map hidden" aria-hidden="true"></div>
+                                                    <p class="mini-map-caption">Vị trí hiện tại sẽ được hiển thị trong một mini map gọn để bạn xác nhận trước khi tiếp tục.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="route-connector" aria-hidden="true">
+                                            <span class="route-connector-badge">
+                                                <i class="fa-solid fa-route"></i>
+                                            </span>
+                                        </div>
+
+                                        <div class="location-field-card">
+                                            <div class="flex items-start gap-3">
+                                                <span class="location-icon"><i class="fa-solid fa-location-crosshairs"></i></span>
+                                                <div class="min-w-0 flex-1">
+                                                    <span class="field-kicker">Điểm đến</span>
+                                                    <label for="destination-input" class="sr-only">Điểm đến</label>
+                                                    <div class="field-input-shell">
+                                                        <i class="fa-solid fa-mountain-city"></i>
+                                                        <div style="position: relative; z-index: 29; flex: 1;">
+                                                            <input type="text" id="destination-input" placeholder="Ví dụ: Thành phố Hà Nội" autocomplete="off" required>
+                                                            <div id="destination-autocomplete" class="autocomplete-dropdown"></div>
+                                                        </div>
+                                                    </div>
+                                                    <p class="helper-text">Autocomplete sẽ gợi ý địa danh thật từ hệ thống để bạn chọn nhanh và giảm lỗi nhập tay.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="step1-result" style="display: none;"></div>
+
+                                    <div class="workflow-actions">
+                                        <div class="theme-text-muted text-sm leading-6">Atlas sẽ xác minh tuyến đi trước khi mở khóa bước cấu hình chuyến đi.</div>
+                                        <button type="submit" class="btn-workflow btn-primary">
+                                            Tiếp tục
+                                            <i class="fa-solid fa-arrow-right"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <aside class="step-visual-panel hidden lg:block">
+                                    <img src="{% static 'img/stitch-deep-ocean-travel-plan.png' %}" alt="Travel plan workflow visual">
+                                    <div class="step-visual-content">
+                                        <div>
+                                            <span class="tp-badge border border-white/20 bg-white/10 px-3 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-white">
+                                                <i class="fa-solid fa-map-location-dot"></i>
+                                                Route Preview
+                                            </span>
+                                            <h3 class="mt-4 font-heading text-2xl font-bold">Bạn đi đâu thế?</h3>
+                                            <p class="mt-3 text-sm leading-7 text-white/80">Tuyến đường, gợi ý di chuyển và các bước tiếp theo sẽ được mở khóa ngay khi bạn xác nhận đủ hai địa điểm.</p>
+                                        </div>
+                                        <div class="space-y-4">
+                                            <div class="step-preview-float">
+                                                <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-white/65">Lộ trình</p>
+                                                <p id="stitch-preview-route" class="mt-2 text-sm font-semibold text-white">Đang chờ nhập điểm đến...</p>
+                                            </div>
+                                            <div id="weather-preview-card" class="step-preview-float weather-preview-card" aria-live="polite">
+                                                <div class="weather-preview-top">
+                                                    <div>
+                                                        <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-white/65">Thời tiết</p>
+                                                        <p id="weather-location" class="mt-1 text-sm font-semibold text-white">Điểm đến chưa được xác nhận</p>
+                                                    </div>
+                                                    <span id="weather-status-badge" class="weather-preview-badge">
+                                                        <i class="fa-solid fa-cloud-sun"></i>
+                                                        Chờ dữ liệu
+                                                    </span>
+                                                </div>
+                                                <div class="weather-preview-main">
+                                                    <div id="weather-icon-shell" class="weather-preview-icon is-empty">
+                                                        <i class="fa-solid fa-cloud"></i>
+                                                    </div>
+                                                    <div>
+                                                        <p id="weather-temp" class="weather-preview-temp">--°C</p>
+                                                        <p id="weather-summary" class="weather-preview-meta">Thời tiết sẽ hiện sau khi Atlas xác nhận điểm đến và lấy tọa độ thật.</p>
+                                                    </div>
+                                                </div>
+                                                <div class="weather-preview-grid">
+                                                    <div class="weather-preview-chip">
+                                                        <span class="weather-preview-chip-label">Cảm giác</span>
+                                                        <span id="weather-feels-like" class="weather-preview-chip-value">--°C</span>
+                                                    </div>
+                                                    <div class="weather-preview-chip">
+                                                        <span class="weather-preview-chip-label">Độ ẩm</span>
+                                                        <span id="weather-humidity" class="weather-preview-chip-value">--%</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="step-preview-float">
+                                                <div class="flex items-center gap-3">
+                                                    <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15">
+                                                        <i class="fa-solid fa-plane-departure"></i>
+                                                    </span>
+                                                    <div>
+                                                        <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-white/65">AI Note</p>
+                                                        <p class="mt-1 text-sm leading-6 text-white/85">Atlas sẽ đối chiếu khoảng cách, tuyến và nhịp di chuyển trước khi sang bước 2.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </aside>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="step-content" id="step-2">
+                        <div class="step-header">
+                            <span class="tp-badge tp-badge-primary mb-4">
+                                <i class="fa-solid fa-compass-drafting"></i>
+                                Thông tin du lịch
+                            </span>
+                            <h2>Cá nhân hóa nhịp điệu của chuyến đi</h2>
+                            <p>Thiết lập thời gian, số người và phong cách du lịch để AI chọn nhịp trải nghiệm phù hợp hơn với mục tiêu của bạn.</p>
+                        </div>
+
+                        <form id="step2-form">
+                            <div class="travel-info-grid">
+                                <div class="input-card">
+                                    <span class="field-kicker">Ngày bắt đầu</span>
+                                    <label for="start-date" class="sr-only">Ngày đi</label>
+                                    <div class="field-input-shell">
+                                        <i class="fa-solid fa-calendar-day"></i>
+                                        <input type="text" id="start-date" placeholder="Chọn ngày bắt đầu" required readonly>
+                                    </div>
+                                    <p class="helper-text">Chọn ngày khởi hành để hệ thống tính gợi ý lịch trình theo thời gian thực tế.</p>
+                                </div>
+
+                                <div class="input-card">
+                                    <span class="field-kicker">Thời lượng chuyến đi</span>
+                                    <label for="days" class="sr-only">Số ngày</label>
+                                    <div class="field-input-shell">
+                                        <i class="fa-solid fa-hourglass-half"></i>
+                                        <input type="number" id="days" min="1" max="14" value="3" required>
+                                    </div>
+                                    <p class="helper-text">Giới hạn từ 1–14 ngày để AI tối ưu mật độ hoạt động hợp lý.</p>
+                                </div>
+
+                                <div class="input-card">
+                                    <span class="field-kicker">Số người tham gia</span>
+                                    <label for="travelers" class="sr-only">Số người</label>
+                                    <div class="field-input-shell">
+                                        <i class="fa-solid fa-users"></i>
+                                        <input type="number" id="travelers" min="1" max="20" value="2" required>
+                                    </div>
+                                    <p class="helper-text">Giới hạn từ 1–20 người để hệ thống ước tính chi phí và chỗ ở chính xác hơn.</p>
+                                </div>
+
+                                <div class="input-card travel-style-shell">
+                                    <span class="field-kicker">Phong cách du lịch</span>
+                                    <label for="travel-style" class="sr-only">Phong cách du lịch</label>
+                                    <div class="field-input-shell">
+                                        <i class="fa-solid fa-stars"></i>
+                                        <input type="text" id="travel-style-display" value="Tiêu chuẩn" readonly aria-hidden="true">
+                                        <select id="travel-style" required>
+                                            <option value="standard" selected>Tiêu chuẩn</option>
+                                        </select>
+                                    </div>
+                                    <small class="helper-text">
+                                        Đang tải danh sách phong cách...
+                                    </small>
+                                    <div id="travel-style-cards" class="travel-style-cards" aria-live="polite"></div>
+                                </div>
+                            </div>
+
+                            <div id="step2-result" style="display: none;"></div>
+
+                            <div class="workflow-actions">
+                                <button type="button" class="btn-workflow btn-secondary" onclick="goToStep(1)">
+                                    <i class="fa-solid fa-arrow-left"></i>
+                                    Quay lại
                                 </button>
-                                <span id="location-status" class="location-status"></span>
+                                <button type="submit" class="btn-workflow btn-primary">
+                                    Tiếp tục
+                                    <i class="fa-solid fa-arrow-right"></i>
+                                </button>
                             </div>
-                            <div id="detected-chip" class="detected-chip hidden">
-                                <span id="detected-address" class="chip-address"></span>
-                                <button type="button" id="edit-address-btn" class="chip-btn chip-edit" title="Sửa vị trí" aria-label="Sửa địa chỉ">✎</button>
-                                <button type="button" id="confirm-address-btn" class="chip-btn chip-confirm" title="Xác nhận sử dụng vị trí này" aria-label="Xác nhận địa chỉ">✓</button>
+                        </form>
+                    </div>
+
+                    <div class="step-content" id="step-3">
+                        <div class="step-header">
+                            <span class="tp-badge tp-badge-primary mb-4">
+                                <i class="fa-solid fa-hotel"></i>
+                                Ngân sách & Khách sạn
+                            </span>
+                            <h2>Atlas đang phân tích ngân sách và lưu trú</h2>
+                            <p>Hệ thống sẽ ước tính chi phí, so sánh khách sạn phù hợp và đề xuất lựa chọn cân bằng với phong cách du lịch của bạn.</p>
+                        </div>
+
+                        <div class="step3-loading-card">
+                            <div class="flex items-center gap-3">
+                                <span class="assistant-orb" style="width: 2.75rem; height: 2.75rem;">
+                                    <i class="fa-solid fa-brain"></i>
+                                </span>
+                                <div>
+                                    <p class="font-semibold text-slate-900 dark:text-slate-100">Atlas đang phân tích ngân sách...</p>
+                                    <p class="theme-text-muted text-sm">Đang so sánh khách sạn phù hợp và tối ưu theo phong cách du lịch...</p>
+                                </div>
                             </div>
-                            <div id="origin-mini-map" class="mini-map hidden" aria-hidden="true"></div>
+                            <div class="loading-line lg"></div>
+                            <div class="loading-line md"></div>
+                            <div class="loading-line sm"></div>
                         </div>
-                        
-                        <div class="form-group">
-                            <label for="destination-input">Điểm đến</label>
-                            <div style="position: relative; z-index: 1999;">
-                                <input type="text" id="destination-input" placeholder="Ví dụ: Thành phố Hà Nội" autocomplete="off" required>
-                                <div id="destination-autocomplete" class="autocomplete-dropdown"></div>
+
+                        <div id="step3-result" class="mt-5">
+                            <div class="theme-text-muted rounded-[1.25rem] border border-dashed border-[rgba(var(--border),0.9)] px-5 py-10 text-center text-sm leading-7">
+                                Hệ thống sẽ hiển thị phân tích ngân sách và gợi ý khách sạn tại đây sau khi hoàn tất xử lý.
                             </div>
                         </div>
-                    </div>
-                    
-                    <div id="step1-result" style="display: none;"></div>
-                    
-                    <div class="workflow-actions">
-                        <div></div>
-                        <button type="submit" class="btn-workflow btn-primary">
-                            Tiếp tục →
-                        </button>
-                    </div>
-                </form>
-            </div>
 
-            <!-- Step 2: Travel Info -->
-            <div class="step-content" id="step-2">
-                <div class="step-header">
-                    <h2>✈️ Thông tin du lịch</h2>
-                </div>
-                
-                <form id="step2-form">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="start-date">Ngày đi</label>
-                            <input type="text" id="start-date" placeholder="Chọn ngày bắt đầu" required readonly>
+                        <div class="selection-note">
+                            Bạn có thể tiếp tục mà không chọn khách sạn nếu muốn chỉ xem kế hoạch tổng quan trước.
                         </div>
-                        
-                        <div class="form-group">
-                            <label for="days">Số ngày</label>
-                            <input type="number" id="days" min="1" max="14" value="3" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="travelers">Số người</label>
-                            <input type="number" id="travelers" min="1" max="20" value="2" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="travel-style">Phong cách du lịch</label>
-                            <select id="travel-style" required>
-                                <option value="standard" selected>⭐ Tiêu chuẩn</option>
-                                <!-- Options will be loaded dynamically from API -->
-                            </select>
-                            <small style="color: var(--color-gray-600); font-size: 0.85rem; margin-top: 0.25rem; display: block;">
-                                Đang tải danh sách phong cách...
-                            </small>
-                        </div>
-                    </div>
-                    
-                    <div id="step2-result" style="display: none;"></div>
-                    
-                    <div class="workflow-actions">
-                        <button type="button" class="btn-workflow btn-secondary" onclick="goToStep(1)">
-                            ← Quay lại
-                        </button>
-                        <button type="submit" class="btn-workflow btn-primary">
-                            Tiếp tục →
-                        </button>
-                    </div>
-                </form>
-            </div>
 
-            <!-- Step 3: Budget & Hotels -->
-            <div class="step-content" id="step-3">
-                <div class="step-header">
-                    <h2>💰 Ngân sách & Khách sạn</h2>
-                    <p>Xem gợi ý ngân sách và chọn khách sạn phù hợp</p>
-                </div>
-                
-                <div id="step3-result">
-                    <div style="text-align: center; padding: 3rem; color: var(--color-gray-600);">
-                        <p>Đang tải thông tin...</p>
+                        <div class="workflow-actions">
+                            <button type="button" class="btn-workflow btn-secondary" onclick="goToStep(2)">
+                                <i class="fa-solid fa-arrow-left"></i>
+                                Quay lại
+                            </button>
+                            <button type="button" class="btn-workflow btn-primary" id="step3-continue" onclick="goToStep(4)" disabled aria-disabled="true">
+                                Tiếp tục
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
                     </div>
-                </div>
-                
-                <div class="workflow-actions">
-                    <button type="button" class="btn-workflow btn-secondary" onclick="goToStep(2)">
-                        ← Quay lại
-                    </button>
-                    <button type="button" class="btn-workflow btn-primary" id="step3-continue" onclick="goToStep(4)" disabled>
-                        Tiếp tục →
-                    </button>
-                </div>
-            </div>
 
-            <!-- Step 4: Confirm & Plan -->
-            <div class="step-content" id="step-4">
-                <div class="step-header">
-                    <h2>✅ Xác nhận & Tạo kế hoạch</h2>
-                    <p>Xem lại và tạo lịch trình đầy đủ</p>
-                </div>
-                
-                <div id="step4-result">
-                    <div style="text-align: center; padding: 3rem;">
-                        <p style="color: #00838F; font-size: 1.1rem; font-weight: 500;">Đang tạo lịch trình...</p>
+                    <div class="step-content" id="step-4">
+                        <div class="step-header">
+                            <span class="tp-badge tp-badge-primary mb-4">
+                                <i class="fa-solid fa-map"></i>
+                                Xác nhận kế hoạch
+                            </span>
+                            <h2>Rà soát blueprint chuyến đi trước khi hoàn tất</h2>
+                            <p>Xem lại tổng chi phí, hoạt động gợi ý và timeline từng ngày. Hành động cuối chỉ tạo lịch trình trên màn hình hiện tại, chưa tự động lưu vào database nếu chưa có save logic.</p>
+                        </div>
+
+                        <div class="tp-soft rounded-[1.35rem] px-4 py-3 text-sm leading-7 theme-text-muted">
+                            <strong class="text-slate-900 dark:text-slate-100">Lưu ý chính xác:</strong>
+                            Nút <em>Tạo lịch trình</em> hiện dùng luồng thành công hiện có ở frontend và không khẳng định rằng dữ liệu đã được lưu vĩnh viễn.
+                        </div>
+
+                        <div id="step4-result" class="mt-5">
+                            <div class="theme-text-muted rounded-[1.25rem] border border-dashed border-[rgba(var(--border),0.9)] px-5 py-10 text-center text-sm leading-7">
+                                Atlas sẽ tổng hợp toàn bộ chi phí, hoạt động và lịch trình chi tiết tại đây.
+                            </div>
+                        </div>
+
+                        <div class="workflow-actions">
+                            <button type="button" class="btn-workflow btn-secondary" onclick="goToStep(3)">
+                                <i class="fa-solid fa-arrow-left"></i>
+                                Quay lại
+                            </button>
+                            <button type="button" class="btn-workflow btn-success" id="step4-create" onclick="createFinalPlan()" disabled aria-disabled="true">
+                                <i class="fa-solid fa-sparkles"></i>
+                                Tạo lịch trình
+                            </button>
+                        </div>
                     </div>
-                </div>
-                
-                <div class="workflow-actions">
-                    <button type="button" class="btn-workflow btn-secondary" onclick="goToStep(3)">
-                        ← Quay lại
-                    </button>
-                    <button type="button" class="btn-workflow btn-success" id="step4-create" onclick="createFinalPlan()" disabled>
-                        ✨ Tạo lịch trình
-                    </button>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 
-<!-- Leaflet CSS for mini-map -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<!-- Flatpickr CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<!-- Flatpickr JS -->
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<!-- Flatpickr Vietnamese locale -->
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/vn.js"></script>
-<!-- Leaflet JS for mini-map -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<style>
-    /* Flatpickr custom styles */
-    .flatpickr-calendar {
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
-        border-radius: 12px !important;
-        border: 1px solid var(--color-gray-200) !important;
-        font-family: inherit !important;
-    }
-    
-    .flatpickr-day {
-        border-radius: 8px !important;
-        margin: 2px !important;
-        transition: all 0.2s !important;
-    }
-    
-    .flatpickr-day:hover {
-        background: var(--color-gray-100) !important;
-    }
-    
-    .flatpickr-day.selected,
-    .flatpickr-day.startRange,
-    .flatpickr-day.endRange {
-        background: var(--color-secondary) !important;
-        border-color: var(--color-secondary) !important;
-        color: white !important;
-        font-weight: 600 !important;
-    }
-    
-    .flatpickr-day.today {
-        border-color: var(--color-secondary) !important;
-        color: var(--color-secondary) !important;
-        font-weight: 600 !important;
-    }
-    
-    .flatpickr-day.today.selected {
-        background: var(--color-secondary) !important;
-        color: white !important;
-    }
-    
-    .flatpickr-day.disabled,
-    .flatpickr-day.disabled:hover {
-        color: var(--color-gray-400) !important;
-        background: var(--color-gray-100) !important;
-        cursor: not-allowed !important;
-        opacity: 0.5 !important;
-        text-decoration: line-through !important;
-    }
-    
-    .flatpickr-day.prevMonthDay,
-    .flatpickr-day.nextMonthDay {
-        color: var(--color-gray-400) !important;
-    }
-    
-    .flatpickr-months {
-        padding: 1rem !important;
-    }
-    
-    .flatpickr-current-month {
-        font-size: 1.1rem !important;
-        font-weight: 600 !important;
-        color: var(--color-primary-dark) !important;
-    }
-    
-    .flatpickr-prev-month,
-    .flatpickr-next-month {
-        color: var(--color-secondary) !important;
-    }
-    
-    .flatpickr-prev-month:hover,
-    .flatpickr-next-month:hover {
-        color: var(--color-secondary-dark) !important;
-    }
-    
-    .flatpickr-weekdays {
-        background: var(--color-gray-50) !important;
-        padding: 0.5rem 0 !important;
-    }
-    
-    .flatpickr-weekday {
-        color: var(--color-primary-dark) !important;
-        font-weight: 600 !important;
-        font-size: 0.9rem !important;
-    }
-</style>
-
-<!-- Error Modal Popup -->
 <div id="error-modal-overlay" class="error-modal-overlay" onclick="closeErrorModal(event)">
     <div class="error-modal" onclick="event.stopPropagation()">
         <div class="error-modal-header">
@@ -1496,110 +1753,473 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/vn.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="{% static 'js/travel_plan_workflow.js' %}"></script>
+<script>
+    (function () {
+        const assistantContent = {
+            1: {
+                title: "Sẵn sàng dẫn đường",
+                message: "Tôi sẽ kiểm tra khoảng cách, tuyến đường và khả năng di chuyển giữa hai địa điểm.",
+                status: "Atlas đang chờ thông tin điểm đi và điểm đến."
+            },
+            2: {
+                title: "Cá nhân hóa hành trình",
+                message: "Tôi sẽ cá nhân hóa lịch trình theo thời gian, số người và phong cách du lịch của bạn.",
+                status: "Atlas đang chuẩn bị cấu hình nhịp điệu cho chuyến đi."
+            },
+            3: {
+                title: "Phân tích ngân sách",
+                message: "Tôi đang ước tính ngân sách và lọc khách sạn phù hợp với chuyến đi.",
+                status: "Atlas đang so sánh chi phí di chuyển, lưu trú và hoạt động."
+            },
+            4: {
+                title: "Hoàn thiện blueprint",
+                message: "Hãy kiểm tra lại kế hoạch trước khi tạo lịch trình cuối cùng.",
+                status: "Atlas đã tổng hợp các mảnh ghép chính của chuyến đi."
+            }
+        };
 
-<style>
-    /* ===================================
-     * FOOTER STYLES
-     * =================================== */
-    footer {
-        background: var(--color-primary-dark);
-        color: var(--color-text-light);
-        padding: 3rem 2rem 1.5rem;
-        margin-top: auto;
-    }
+        const styleDescriptions = {
+            budget: "Ưu tiên ngân sách hợp lý và trải nghiệm tiết kiệm.",
+            standard: "Cân bằng giữa chi phí, sự thoải mái và trải nghiệm.",
+            luxury: "Tập trung vào tiện nghi cao cấp và dịch vụ tốt.",
+            adventure: "Thiên về khám phá, di chuyển năng động và trải nghiệm mới.",
+            cultural: "Ưu tiên chiều sâu văn hóa, di sản và câu chuyện địa phương.",
+            gastronomy: "Đặt ẩm thực làm trọng tâm của chuyến đi.",
+            eco: "Ưu tiên trải nghiệm bền vững, gần thiên nhiên.",
+            wellness: "Nhịp điệu thư giãn, chăm sóc sức khỏe và cân bằng.",
+            family: "Tối ưu cho nhóm gia đình và nhu cầu đa thế hệ.",
+            romantic: "Không gian riêng tư, giàu cảm xúc và nhẹ nhàng.",
+            slow: "Lịch trình thong thả, ít vội vàng.",
+            digital_nomad: "Phù hợp kết hợp làm việc và trải nghiệm.",
+            photography: "Ưu tiên điểm chụp đẹp và thời gian ánh sáng tốt."
+        };
 
-    footer .footer-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 2rem;
-        margin-bottom: 2rem;
-    }
+        const styleIcons = {
+            budget: "💰",
+            standard: "⭐",
+            luxury: "✨",
+            adventure: "🏔️",
+            cultural: "🏛️",
+            gastronomy: "🍽️",
+            eco: "🌿",
+            wellness: "🧘",
+            family: "👨‍👩‍👧‍👦",
+            romantic: "💞",
+            slow: "🐚",
+            digital_nomad: "💻",
+            shop_leisure: "🛍️",
+            photography: "📸",
+            religious: "🕍",
+            festival: "🎉",
+            extreme: "⚡"
+        };
 
-    footer .footer-section h4 {
-        font-size: 1.2rem;
-        margin-bottom: 1rem;
-        color: var(--color-accent);
-    }
-
-    footer .footer-section p {
-        opacity: 0.9;
-        line-height: 1.6;
-        margin-bottom: 0.5rem;
-    }
-
-    footer .footer-section ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    footer .footer-section ul li {
-        margin-bottom: 0.5rem;
-    }
-
-    footer .footer-section a {
-        color: var(--color-text-light);
-        text-decoration: none;
-        opacity: 0.9;
-        transition: all 0.3s;
-    }
-
-    footer .footer-section a:hover {
-        color: var(--color-accent);
-        opacity: 1;
-    }
-
-    footer .footer-bottom {
-        text-align: center;
-        padding-top: 2rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-        opacity: 0.8;
-    }
-
-    footer .social-links {
-        display: flex;
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-
-    footer .social-link {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 45px;
-        height: 45px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.1);
-        transition: all 0.3s;
-        color: var(--color-text-light);
-        text-decoration: none;
-    }
-
-    footer .social-link:hover {
-        background: var(--color-accent);
-        transform: translateY(-3px);
-    }
-
-    /* Responsive footer */
-    @media (max-width: 768px) {
-        footer .footer-container {
-            grid-template-columns: 1fr;
-            gap: 2rem;
+        function safeText(id, value) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = value;
         }
-        
-        footer {
-            padding: 2rem 1rem 1rem;
+
+        function getCurrentStepFromDom() {
+            const active = document.querySelector('.step-content.active');
+            if (!active || !active.id) return 1;
+            const parts = active.id.split('-');
+            return Number(parts[1] || 1);
         }
-    }
-</style>
-{% endblock %}
 
-{% block footer %}
-    <!-- FOOTER -->
-    {% include 'includes/footer.html' %}
-{% endblock %}
+        function updateAssistantPanel(step) {
+            const payload = assistantContent[step] || assistantContent[1];
+            safeText('atlas-title', payload.title);
+            safeText('atlas-message', payload.message);
+            safeText('atlas-status', payload.status);
+            const progressBar = document.getElementById('workflow-progress-bar');
+            if (progressBar) progressBar.style.width = `${Math.max(25, Math.min(100, step * 25))}%`;
 
+            document.querySelectorAll('.step-item').forEach((item) => {
+                const itemStep = Number(item.dataset.step || 0);
+                item.removeAttribute('aria-current');
+                if (itemStep === step) item.setAttribute('aria-current', 'step');
+            });
+        }
+
+        function selectedOptionLabel(select) {
+            if (!select || !select.options || select.selectedIndex < 0) return '';
+            const option = select.options[select.selectedIndex];
+            return option ? option.textContent.replace(/^.+?\s/, '').trim() : '';
+        }
+
+        function updateSummary() {
+            const origin = (document.getElementById('origin-input')?.value || '').trim();
+            const destination = (document.getElementById('destination-input')?.value || '').trim();
+            const startDate = (document.getElementById('start-date')?.value || '').trim();
+            const days = (document.getElementById('days')?.value || '3').trim();
+            const travelers = (document.getElementById('travelers')?.value || '2').trim();
+            const styleSelect = document.getElementById('travel-style');
+            const styleLabel = selectedOptionLabel(styleSelect) || 'Tiêu chuẩn';
+
+            safeText('summary-route', origin && destination ? `${origin} → ${destination}` : 'Chưa xác định điểm đi và điểm đến');
+            safeText('summary-schedule', startDate ? `${startDate} • ${days} ngày` : 'Chưa chọn ngày đi');
+            safeText('summary-travelers', `${travelers} người • ${days} ngày`);
+            safeText('summary-style', styleLabel);
+            safeText('travel-style-display', styleLabel);
+            safeText('stitch-preview-route', origin && destination ? `${origin} → ${destination}` : 'Đang chờ nhập điểm đến...');
+        }
+
+        function renderTravelStyleCards() {
+            const select = document.getElementById('travel-style');
+            const container = document.getElementById('travel-style-cards');
+            if (!select || !container) return;
+
+            const options = Array.from(select.options).filter((option) => !option.disabled && option.value);
+            if (!options.length) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = options.map((option) => {
+                const value = option.value;
+                const label = option.textContent.replace(/^[^\s]+\s/, '').trim() || option.textContent.trim();
+                const isSelected = select.value === value;
+                return `
+                    <button type="button" class="travel-style-card ${isSelected ? 'is-selected' : ''}" data-style-value="${value}" aria-pressed="${isSelected ? 'true' : 'false'}">
+                        <span class="travel-style-icon">${styleIcons[value] || '⭐'}</span>
+                        <span>
+                            <strong class="block text-sm text-slate-900 dark:text-slate-100">${label}</strong>
+                            <span class="mt-1 block text-sm leading-6 theme-text-muted">${styleDescriptions[value] || 'Phong cách du lịch được tải động từ hệ thống.'}</span>
+                        </span>
+                    </button>
+                `;
+            }).join('');
+
+            container.querySelectorAll('.travel-style-card').forEach((card) => {
+                card.addEventListener('click', () => {
+                    select.value = card.dataset.styleValue;
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                    updateSummary();
+                    renderTravelStyleCards();
+                });
+            });
+        }
+
+        function bindSummaryInputs() {
+            ['origin-input', 'destination-input', 'start-date', 'days', 'travelers', 'travel-style'].forEach((id) => {
+                const element = document.getElementById(id);
+                if (!element) return;
+                ['input', 'change', 'blur'].forEach((eventName) => {
+                    element.addEventListener(eventName, () => {
+                        updateSummary();
+                        if (id === 'travel-style') renderTravelStyleCards();
+                    });
+                });
+            });
+        }
+
+        function installStepObserver() {
+            const contentHost = document.querySelector('.workflow-content');
+            if (!contentHost) return;
+            const observer = new MutationObserver(() => {
+                updateAssistantPanel(getCurrentStepFromDom());
+                updateSummary();
+            });
+            observer.observe(contentHost, { subtree: true, attributes: true, attributeFilter: ['class'] });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateAssistantPanel(1);
+            updateSummary();
+            bindSummaryInputs();
+            installStepObserver();
+
+            const styleSelect = document.getElementById('travel-style');
+            if (styleSelect) {
+                setTimeout(renderTravelStyleCards, 300);
+                const styleObserver = new MutationObserver(() => {
+                    renderTravelStyleCards();
+                    updateSummary();
+                });
+                styleObserver.observe(styleSelect, { childList: true, subtree: true, attributes: true, attributeFilter: ['value'] });
+            }
+
+            const step3Button = document.getElementById('step3-continue');
+            const step4Button = document.getElementById('step4-create');
+            [step3Button, step4Button].forEach((button) => {
+                if (!button) return;
+                const syncDisabled = () => button.setAttribute('aria-disabled', button.disabled ? 'true' : 'false');
+                syncDisabled();
+                const buttonObserver = new MutationObserver(syncDisabled);
+                buttonObserver.observe(button, { attributes: true, attributeFilter: ['disabled'] });
+            });
+        });
+    })();
+</script>
+<script>
+    (() => {
+        let lastWeatherLookupKey = "";
+
+        const assistantContent = {
+            1: {
+                title: "Sẵn sàng dẫn đường",
+                message: "Tôi sẽ kiểm tra khoảng cách, tuyến đường và khả năng di chuyển giữa hai địa điểm.",
+                status: "Atlas đang chờ thông tin điểm đi và điểm đến."
+            },
+            2: {
+                title: "Cá nhân hóa hành trình",
+                message: "Tôi sẽ cá nhân hóa lịch trình theo thời gian, số người và phong cách du lịch của bạn.",
+                status: "Atlas đang chuẩn bị cấu hình nhịp điệu cho chuyến đi."
+            },
+            3: {
+                title: "Phân tích ngân sách",
+                message: "Tôi đang ước tính ngân sách và lọc khách sạn phù hợp với chuyến đi.",
+                status: "Atlas đang so sánh chi phí di chuyển, lưu trú và hoạt động."
+            },
+            4: {
+                title: "Hoàn thiện blueprint",
+                message: "Hãy kiểm tra lại kế hoạch trước khi tạo lịch trình cuối cùng.",
+                status: "Atlas đã tổng hợp các mảnh ghép chính của chuyến đi."
+            }
+        };
+
+        const styleDescriptions = {
+            budget: "Ưu tiên ngân sách hợp lý và trải nghiệm tiết kiệm.",
+            standard: "Cân bằng giữa chi phí, sự thoải mái và trải nghiệm.",
+            luxury: "Tập trung vào tiện nghi cao cấp và dịch vụ tốt.",
+            adventure: "Thiên về khám phá, di chuyển năng động và trải nghiệm mới.",
+            cultural: "Ưu tiên chiều sâu văn hóa, di sản và câu chuyện địa phương.",
+            gastronomy: "Đặt ẩm thực làm trọng tâm của chuyến đi.",
+            eco: "Ưu tiên trải nghiệm bền vững, gần thiên nhiên.",
+            wellness: "Nhịp điệu thư giãn, chăm sóc sức khỏe và cân bằng.",
+            family: "Tối ưu cho nhóm gia đình và nhu cầu đa thế hệ.",
+            romantic: "Không gian riêng tư, giàu cảm xúc và nhẹ nhàng.",
+            slow: "Lịch trình thong thả, ít vội vàng.",
+            digital_nomad: "Phù hợp kết hợp làm việc và trải nghiệm.",
+            photography: "Ưu tiên điểm chụp đẹp và thời gian ánh sáng tốt."
+        };
+
+        const styleIcons = {
+            budget: "💰",
+            standard: "⭐",
+            luxury: "✨",
+            adventure: "🏔️",
+            cultural: "🏛️",
+            gastronomy: "🍽️",
+            eco: "🌿",
+            wellness: "🧘",
+            family: "👨‍👩‍👧‍👦",
+            romantic: "💞",
+            slow: "🐚",
+            digital_nomad: "💻",
+            shop_leisure: "🛍️",
+            photography: "📸",
+            religious: "🕍",
+            festival: "🎉",
+            extreme: "⚡"
+        };
+
+        function safeText(id, value) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = value;
+        }
+
+        function selectedOptionLabel(select) {
+            if (!select || !select.options || select.selectedIndex < 0) return "";
+            const option = select.options[select.selectedIndex];
+            return option ? option.textContent.replace(/^.+?\s/, "").trim() : "";
+        }
+
+        function setWeatherVisual({
+            location = "Điểm đến chưa được xác nhận",
+            status = "Chờ dữ liệu",
+            temp = "--°C",
+            summary = "Thời tiết sẽ hiện sau khi Atlas xác nhận điểm đến và lấy tọa độ thật.",
+            feelsLike = "--°C",
+            humidity = "--%",
+            iconUrl = ""
+        } = {}) {
+            safeText("weather-location", location);
+            safeText("weather-temp", temp);
+            safeText("weather-summary", summary);
+            safeText("weather-feels-like", feelsLike);
+            safeText("weather-humidity", humidity);
+            safeText("weather-status-badge", status);
+
+            const shell = document.getElementById("weather-icon-shell");
+            if (!shell) return;
+
+            if (iconUrl) {
+                shell.classList.remove("is-empty");
+                shell.innerHTML = `<img src="${iconUrl}" alt="Biểu tượng thời tiết">`;
+            } else {
+                shell.classList.add("is-empty");
+                shell.innerHTML = '<i class="fa-solid fa-cloud"></i>';
+            }
+        }
+
+        function getDestinationGeo() {
+            if (typeof workflowState === "undefined" || !workflowState?.step1Data?.destination) return null;
+            const destination = workflowState.step1Data.destination;
+            const lat = destination.latitude ?? destination.lat ?? destination.viDo;
+            const lon = destination.longitude ?? destination.lon ?? destination.lng ?? destination.kinhDo;
+            if (lat === undefined || lon === undefined || lat === null || lon === null) return null;
+            return {
+                name: destination.name || destination.display_name || document.getElementById("destination-input")?.value || "Điểm đến",
+                lat: Number(lat),
+                lon: Number(lon)
+            };
+        }
+
+        async function syncWeatherCard() {
+            const destinationGeo = getDestinationGeo();
+            if (!destinationGeo || Number.isNaN(destinationGeo.lat) || Number.isNaN(destinationGeo.lon)) {
+                lastWeatherLookupKey = "";
+                setWeatherVisual();
+                return;
+            }
+
+            const lookupKey = `${destinationGeo.name}:${destinationGeo.lat.toFixed(4)}:${destinationGeo.lon.toFixed(4)}`;
+            if (lookupKey === lastWeatherLookupKey) return;
+            lastWeatherLookupKey = lookupKey;
+
+            setWeatherVisual({
+                location: destinationGeo.name,
+                status: "Đang tải",
+                summary: "Atlas đang lấy thời tiết hiện tại từ OpenWeather cho điểm đến này."
+            });
+
+            try {
+                const url = `/api/v1/weather/?lat=${destinationGeo.lat}&lon=${destinationGeo.lon}`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`OpenWeather ${response.status}`);
+                const data = await response.json();
+                const weather = Array.isArray(data.weather) && data.weather.length ? data.weather[0] : {};
+                const main = data.main || {};
+                const description = weather.description
+                    ? weather.description.charAt(0).toUpperCase() + weather.description.slice(1)
+                    : "Không có mô tả thời tiết.";
+
+                setWeatherVisual({
+                    location: destinationGeo.name,
+                    status: "Đã cập nhật",
+                    temp: Number.isFinite(main.temp) ? `${Math.round(main.temp)}°C` : "--°C",
+                    summary: description,
+                    feelsLike: Number.isFinite(main.feels_like) ? `${Math.round(main.feels_like)}°C` : "--°C",
+                    humidity: Number.isFinite(main.humidity) ? `${Math.round(main.humidity)}%` : "--%",
+                    iconUrl: weather.icon ? `https://openweathermap.org/img/wn/${weather.icon}@2x.png` : ""
+                });
+            } catch (error) {
+                console.error("OpenWeather error:", error);
+                setWeatherVisual({
+                    location: destinationGeo.name,
+                    status: "Không khả dụng",
+                    summary: "Chưa thể tải thời tiết lúc này. Bạn vẫn có thể tiếp tục lập lịch trình."
+                });
+            }
+        }
+
+        function refreshAssistantAndSummary() {
+            const currentStep = document.querySelector(".step-content.active")?.id?.split("-")[1] || "1";
+            const payload = assistantContent[Number(currentStep)] || assistantContent[1];
+            safeText("atlas-title", payload.title);
+            safeText("atlas-message", payload.message);
+            safeText("atlas-status", payload.status);
+
+            const progressBar = document.getElementById("workflow-progress-bar");
+            if (progressBar) progressBar.style.width = `${Math.max(25, Math.min(100, Number(currentStep) * 25))}%`;
+
+            const origin = (document.getElementById("origin-input")?.value || "").trim();
+            const destination = (document.getElementById("destination-input")?.value || "").trim();
+            const startDate = (document.getElementById("start-date")?.value || "").trim();
+            const days = (document.getElementById("days")?.value || "3").trim();
+            const travelers = (document.getElementById("travelers")?.value || "2").trim();
+            const styleSelect = document.getElementById("travel-style");
+            const styleLabel = selectedOptionLabel(styleSelect) || "Tiêu chuẩn";
+
+            safeText("summary-route", origin && destination ? `${origin} → ${destination}` : "Chưa xác định điểm đi và điểm đến");
+            safeText("summary-schedule", startDate ? `${startDate} • ${days} ngày` : "Chưa chọn ngày đi");
+            safeText("summary-travelers", `${travelers} người • ${days} ngày`);
+            safeText("summary-style", styleLabel);
+            safeText("travel-style-display", styleLabel);
+            safeText("stitch-preview-route", origin && destination ? `${origin} → ${destination}` : "Đang chờ nhập điểm đến...");
+
+            document.querySelectorAll(".step-item").forEach((item) => {
+                const step = Number(item.dataset.step || 0);
+                item.removeAttribute("aria-current");
+                if (step === Number(currentStep)) item.setAttribute("aria-current", "step");
+            });
+
+            syncWeatherCard();
+        }
+
+        function rerenderTravelStyleCards() {
+            const select = document.getElementById("travel-style");
+            const container = document.getElementById("travel-style-cards");
+            if (!select || !container) return;
+            const options = Array.from(select.options).filter((option) => !option.disabled && option.value);
+            if (!options.length) return;
+
+            container.innerHTML = options.map((option) => {
+                const value = option.value;
+                const label = option.textContent.replace(/^[^\s]+\s/, "").trim() || option.textContent.trim();
+                const selected = select.value === value;
+                return `
+                    <button type="button" class="travel-style-card ${selected ? "is-selected" : ""}" data-style-value="${value}" aria-pressed="${selected ? "true" : "false"}">
+                        <span class="travel-style-icon">${styleIcons[value] || "⭐"}</span>
+                        <span>
+                            <strong class="block text-sm text-slate-900 dark:text-slate-100">${label}</strong>
+                            <span class="mt-1 block text-sm leading-6 theme-text-muted">${styleDescriptions[value] || "Phong cách du lịch được tải động từ hệ thống."}</span>
+                        </span>
+                    </button>
+                `;
+            }).join("");
+
+            container.querySelectorAll(".travel-style-card").forEach((card) => {
+                card.addEventListener("click", () => {
+                    select.value = card.dataset.styleValue;
+                    select.dispatchEvent(new Event("change", { bubbles: true }));
+                    refreshAssistantAndSummary();
+                    rerenderTravelStyleCards();
+                });
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            refreshAssistantAndSummary();
+            rerenderTravelStyleCards();
+
+            ["origin-input", "destination-input", "start-date", "days", "travelers", "travel-style"].forEach((id) => {
+                const element = document.getElementById(id);
+                if (!element) return;
+                ["input", "change", "blur"].forEach((eventName) => {
+                    element.addEventListener(eventName, () => {
+                        refreshAssistantAndSummary();
+                        if (id === "travel-style") rerenderTravelStyleCards();
+                    });
+                });
+            });
+
+            const contentHost = document.querySelector(".workflow-content");
+            if (contentHost) {
+                const observer = new MutationObserver(() => {
+                    refreshAssistantAndSummary();
+                    rerenderTravelStyleCards();
+                });
+                observer.observe(contentHost, { subtree: true, attributes: true, attributeFilter: ["class"] });
+            }
+
+            const styleSelect = document.getElementById("travel-style");
+            if (styleSelect) {
+                const styleObserver = new MutationObserver(() => {
+                    rerenderTravelStyleCards();
+                    refreshAssistantAndSummary();
+                });
+                styleObserver.observe(styleSelect, { childList: true, subtree: true, attributes: true, attributeFilter: ["value"] });
+            }
+        });
+    })();
+</script>
+{% endblock %}

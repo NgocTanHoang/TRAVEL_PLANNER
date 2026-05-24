@@ -115,14 +115,24 @@ class PlanningAgent(BaseAgent):
                 state["itinerary_description"] = description
             except ValidationError as exc:
                 self.log_error(exc, context={"stage": "planning_output_validation", "state": state})
-                state["planning_error"] = f"Structured output validation failed: {exc}"
+                fallback_output = await asyncio.to_thread(
+                    self._build_fail_safe_structured_output,
+                    state,
+                    itinerary,
+                )
+                state["planning_error"] = f"Structured output validation failed, fallback payload used: {exc}"
+                state["itinerary_json"] = self._model_dump(fallback_output)
                 state["itinerary_description"] = None
-                return state
             except Exception as exc:
                 self.log_error(exc, context={"stage": "planning_output_generation", "state": state})
-                state["planning_error"] = f"Failed to generate structured itinerary output: {exc}"
+                fallback_output = await asyncio.to_thread(
+                    self._build_fail_safe_structured_output,
+                    state,
+                    itinerary,
+                )
+                state["planning_error"] = f"Failed to generate structured itinerary output, fallback payload used: {exc}"
+                state["itinerary_json"] = self._model_dump(fallback_output)
                 state["itinerary_description"] = None
-                return state
 
             self.log_output(state)
             return state
@@ -218,7 +228,11 @@ class PlanningAgent(BaseAgent):
                     )
 
                 logger.info("Structured planning output succeeded with provider: %s", candidate_name)
-                return self._post_process_structured_output(validated, state)
+                return await asyncio.to_thread(
+                    self._post_process_structured_output,
+                    validated,
+                    state,
+                )
             except Exception as exc:
                 logger.warning("Structured planning output failed with provider %s: %s", candidate_name, exc)
                 errors.append(f"{candidate_name}: {exc}")
@@ -358,12 +372,22 @@ class PlanningAgent(BaseAgent):
     ) -> FullTravelPlanOutput:
         """Chuan hoa cac rang buoc logic sau khi LLM tra ket qua."""
         source_index = self._build_source_place_index(state)
+        province_place_context = self._build_destination_place_context(state)
         payload = self._model_dump(plan_output)
 
         for day in payload.get("daily_itinerary", []):
             for item in day.get("timeline", []):
                 place_id = str(item.get("place_id", "") or "")
                 source_place = source_index.get(place_id, {})
+                resolved_place_id, resolved_place = self._resolve_grounded_place(
+                    item=item,
+                    source_place=source_place,
+                    province_place_context=province_place_context,
+                )
+                if resolved_place_id:
+                    item["place_id"] = resolved_place_id
+                if resolved_place:
+                    source_place = resolved_place
 
                 item["transport_to_next"] = self._normalize_transport_to_next(
                     item.get("transport_to_next") or {}
@@ -378,6 +402,13 @@ class PlanningAgent(BaseAgent):
                     source_place,
                     state,
                 )
+            route_flow = [
+                str(timeline_item.get("place_id"))
+                for timeline_item in day.get("timeline", [])
+                if timeline_item.get("place_id") not in (None, "")
+            ]
+            if route_flow:
+                day["route_flow"] = route_flow
 
         return FullTravelPlanOutput.model_validate(payload)
 
@@ -402,6 +433,186 @@ class PlanningAgent(BaseAgent):
             register(selected_hotel)
 
         return indexed
+
+    def _build_fail_safe_structured_output(
+        self,
+        state: Dict[str, Any],
+        itinerary: Dict[str, Any],
+    ) -> FullTravelPlanOutput:
+        """Dung payload rule-based da duoc ground ve DB that neu LLM schema that bai."""
+        fallback_payload = self._build_fallback_structured_payload(state=state, itinerary=itinerary)
+        fallback_plan = FullTravelPlanOutput.model_validate(fallback_payload)
+        return self._post_process_structured_output(fallback_plan, state)
+
+    def _build_destination_place_context(self, state: Dict[str, Any]) -> Dict[str, Any]:
+        """Tai map POI cua tinh dich de ep place_id cua structured output ve DB that."""
+        destination = str(state.get("destination") or "").strip()
+        if not destination:
+            return {
+                "province_id": None,
+                "place_ids": set(),
+                "by_id": {},
+                "by_name": {},
+                "by_name_contains": [],
+            }
+
+        try:
+            from apps.places.models import DiaDiem, TinhThanh
+        except Exception:
+            logger.warning("Khong import duoc apps.places.models trong planning post-process", exc_info=True)
+            return {
+                "province_id": None,
+                "place_ids": set(),
+                "by_id": {},
+                "by_name": {},
+                "by_name_contains": [],
+            }
+
+        province = (
+            TinhThanh.objects.filter(tenTinhThanh__iexact=destination).first()
+            or TinhThanh.objects.filter(tenTinhThanh__icontains=destination).first()
+        )
+        if province is None:
+            return {
+                "province_id": None,
+                "place_ids": set(),
+                "by_id": {},
+                "by_name": {},
+                "by_name_contains": [],
+            }
+
+        places = list(
+            DiaDiem.objects.filter(maTinhThanh=province)
+            .only("maDiaDiem", "tenDiaDiem", "diaChi", "loaiDiaDiem", "moTa", "dacDiem")
+        )
+        by_id: Dict[str, Dict[str, Any]] = {}
+        by_name: Dict[str, Dict[str, Any]] = {}
+        by_name_contains: List[Tuple[str, Dict[str, Any]]] = []
+        category_candidates: Dict[str, List[Dict[str, Any]]] = {
+            "restaurant": [],
+            "hotel": [],
+            "activity": [],
+        }
+
+        for place in places:
+            place_payload = {
+                "maDiaDiem": place.maDiaDiem,
+                "name": place.tenDiaDiem,
+                "tenDiaDiem": place.tenDiaDiem,
+                "address": place.diaChi,
+                "diaChi": place.diaChi,
+                "category": place.loaiDiaDiem,
+                "type": place.loaiDiaDiem,
+                "description": place.moTa or place.dacDiem or "",
+                "moTa": place.moTa or place.dacDiem or "",
+            }
+            by_id[str(place.maDiaDiem)] = place_payload
+            normalized_name = normalize_location_text(place.tenDiaDiem)
+            if normalized_name and normalized_name not in by_name:
+                by_name[normalized_name] = place_payload
+                by_name_contains.append((normalized_name, place_payload))
+
+            normalized_type = normalize_location_text(place.loaiDiaDiem)
+            if normalized_type == "nha hang":
+                category_candidates["restaurant"].append(place_payload)
+            elif normalized_type == "khach san":
+                category_candidates["hotel"].append(place_payload)
+            else:
+                category_candidates["activity"].append(place_payload)
+
+        def append_state_candidates(group_key: str, target_key: str) -> None:
+            for place in state.get(group_key, []) or []:
+                if not isinstance(place, dict):
+                    continue
+                candidate_id = place.get("maDiaDiem") or place.get("place_id") or place.get("id")
+                candidate_key = str(candidate_id) if candidate_id not in (None, "") else ""
+                if candidate_key and candidate_key in by_id:
+                    category_candidates[target_key].insert(0, by_id[candidate_key])
+
+        append_state_candidates("restaurants", "restaurant")
+        append_state_candidates("hotels", "hotel")
+        append_state_candidates("activities", "activity")
+
+        return {
+            "province_id": province.maTinhThanh,
+            "place_ids": set(by_id.keys()),
+            "by_id": by_id,
+            "by_name": by_name,
+            "by_name_contains": by_name_contains,
+            "category_candidates": category_candidates,
+        }
+
+    def _resolve_grounded_place(
+        self,
+        item: Dict[str, Any],
+        source_place: Dict[str, Any],
+        province_place_context: Dict[str, Any],
+    ) -> Tuple[Optional[str], Dict[str, Any]]:
+        """Co gang resolve timeline item ve place_id that cua tinh dich."""
+        province_ids = province_place_context.get("place_ids") or set()
+        by_id = province_place_context.get("by_id") or {}
+        by_name = province_place_context.get("by_name") or {}
+        by_name_contains = province_place_context.get("by_name_contains") or []
+        category_candidates = province_place_context.get("category_candidates") or {}
+
+        def resolve_candidate_id(value: Any) -> Optional[Tuple[str, Dict[str, Any]]]:
+            if value in (None, ""):
+                return None
+            candidate_id = str(value)
+            if candidate_id in province_ids:
+                return candidate_id, by_id.get(candidate_id, {})
+            return None
+
+        for candidate in (
+            item.get("place_id"),
+            source_place.get("maDiaDiem"),
+            source_place.get("place_id"),
+            source_place.get("id"),
+            source_place.get("ma_dia_diem"),
+        ):
+            resolved = resolve_candidate_id(candidate)
+            if resolved:
+                return resolved
+
+        name_candidates = [
+            item.get("activity_name"),
+            source_place.get("name"),
+            source_place.get("tenDiaDiem"),
+        ]
+        for name in name_candidates:
+            normalized_name = normalize_location_text(str(name or ""))
+            if not normalized_name:
+                continue
+            matched_place = by_name.get(normalized_name)
+            if matched_place:
+                return str(matched_place["maDiaDiem"]), matched_place
+
+            contains_matches = [
+                place_payload
+                for place_name, place_payload in by_name_contains
+                if normalized_name in place_name or place_name in normalized_name
+            ]
+            if len(contains_matches) == 1:
+                matched_place = contains_matches[0]
+                return str(matched_place["maDiaDiem"]), matched_place
+
+        normalized_activity_name = normalize_location_text(str(item.get("activity_name") or ""))
+        if normalized_activity_name:
+            candidate_bucket = "activity"
+            if "nha hang" in normalized_activity_name or "hai san" in normalized_activity_name or "an " in normalized_activity_name:
+                candidate_bucket = "restaurant"
+            elif "khach san" in normalized_activity_name or "hotel" in normalized_activity_name or "resort" in normalized_activity_name:
+                candidate_bucket = "hotel"
+
+            bucket_items = category_candidates.get(candidate_bucket) or category_candidates.get("activity") or []
+            if bucket_items:
+                matched_place = bucket_items[0]
+                return str(matched_place["maDiaDiem"]), matched_place
+
+        return (
+            str(item.get("place_id")) if item.get("place_id") not in (None, "") else None,
+            source_place,
+        )
 
     def _normalize_transport_to_next(self, transport: Dict[str, Any]) -> Dict[str, Any]:
         """Siết logic thời gian di bo ve dung 4-5 km/h."""

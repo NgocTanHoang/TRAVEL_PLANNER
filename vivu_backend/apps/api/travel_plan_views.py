@@ -27,6 +27,7 @@ import asyncio
 import traceback
 from typing import Dict, Any, List, Optional
 from pydantic import ValidationError as PydanticValidationError
+import requests
 
 from apps.analytics.models import YeuCauLoTrinh
 from apps.analytics.services import ghi_nhan_yeu_cau_lo_trinh_async
@@ -387,6 +388,9 @@ class TravelPlanCreateView(APIView):
                 return Response({
                     'error': result_state.get('error', 'Unknown error occurred')
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            structured_output = result_state.get('itinerary_json')
+            weather_snapshot = _fetch_destination_weather(validated_data.get('destination'))
             
             # Save itinerary to database if user is authenticated
             saved_itinerary = None
@@ -422,6 +426,8 @@ class TravelPlanCreateView(APIView):
                     'restaurants': result_state.get('restaurants', []),
                     'budget': result_state.get('budget', {}),
                     'itinerary': result_state.get('itinerary', {}),
+                    'structured_output': structured_output,
+                    'weather': weather_snapshot,
                 },
                 'costs': {
                     'transport': result_state.get('transport_cost', 0),
@@ -568,6 +574,64 @@ def _find_tinh_thanh_by_name(destination: Optional[str]) -> Optional[TinhThanh]:
     return TinhThanh.objects.filter(tenTinhThanh__icontains=destination_clean).first()
 
 
+def _resolve_destination_coordinates(destination: Optional[str]) -> Optional[Dict[str, float]]:
+    """Lay toa do diem den uu tien tu TinhThanh, fallback qua geocoding."""
+    tinh_thanh = _find_tinh_thanh_by_name(destination)
+    if tinh_thanh and tinh_thanh.viDo is not None and tinh_thanh.kinhDo is not None:
+        return {
+            "lat": float(tinh_thanh.viDo),
+            "lon": float(tinh_thanh.kinhDo),
+        }
+
+    if not destination:
+        return None
+
+    try:
+        from tools.geo_tools import get_geo_tools
+
+        geo_tools = get_geo_tools()
+        geocoded = geo_tools.geocode(destination, country="VN")
+        if geocoded and geocoded.get("lat") is not None and geocoded.get("lon") is not None:
+            return {
+                "lat": float(geocoded["lat"]),
+                "lon": float(geocoded["lon"]),
+            }
+    except Exception:
+        logger.warning("Khong resolve duoc toa do destination=%s de lay weather", destination, exc_info=True)
+
+    return None
+
+
+def _fetch_destination_weather(destination: Optional[str]) -> Optional[Dict[str, Any]]:
+    """Lay snapshot weather backend-side de phuc vu integration flow."""
+    coords = _resolve_destination_coordinates(destination)
+    api_key = os.getenv("OPENWEATHER_API_KEY")
+    if not coords or not api_key:
+        return None
+
+    try:
+        response = requests.get(
+            "https://api.openweathermap.org/data/2.5/weather",
+            params={
+                "lat": coords["lat"],
+                "lon": coords["lon"],
+                "appid": api_key,
+                "units": "metric",
+                "lang": "vi",
+            },
+            timeout=8,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        if not isinstance(payload, dict):
+            return None
+        payload["requested_destination"] = destination
+        return payload
+    except Exception:
+        logger.warning("Khong the lay weather snapshot cho destination=%s", destination, exc_info=True)
+        return None
+
+
 def _extract_trip_dates(plan_payload: Dict[str, Any]) -> tuple[datetime.date, datetime.date]:
     """Lay ngay bat dau va ket thuc tu daily_itinerary."""
     daily_itinerary = plan_payload.get("daily_itinerary", [])
@@ -712,6 +776,7 @@ class SaveTravelPlanView(APIView):
 
                 place_by_id, place_by_name = _build_place_lookup_maps(daily_itinerary)
                 lich_trinh_dia_diem_rows: List[LichTrinhDiaDiem] = []
+                seen_place_per_day = set()
 
                 for day in daily_itinerary:
                     if not isinstance(day, dict):
@@ -748,6 +813,17 @@ class SaveTravelPlanView(APIView):
                                 timeline_item.get("activity_name"),
                             )
                             continue
+
+                        dedupe_key = (ngay_tham_quan, resolved_place.pk)
+                        if dedupe_key in seen_place_per_day:
+                            logger.info(
+                                "Bo qua ban ghi trung DiaDiem=%s trong ngay=%s cho lich_trinh=%s",
+                                resolved_place.pk,
+                                ngay_tham_quan,
+                                lich_trinh.maLichTrinh,
+                            )
+                            continue
+                        seen_place_per_day.add(dedupe_key)
 
                         time_start = str(timeline_item.get("time_start", "")).strip()
                         time_end = str(timeline_item.get("time_end", "")).strip()

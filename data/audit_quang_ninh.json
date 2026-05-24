@@ -1,0 +1,73 @@
+{
+  "province": {
+    "id": 45,
+    "name": "Tỉnh Quảng Ninh",
+    "slug": "quang_ninh"
+  },
+  "min_pois": 500,
+  "generated_at": "2026-05-24T06:46:08.925728+00:00",
+  "coverage": {
+    "total_pois": 1289,
+    "meets_min_pois": true,
+    "category_breakdown": {
+      "cslt": 593,
+      "dest": 353,
+      "rest": 166,
+      "shop": 61,
+      "vcgt": 61
+    }
+  },
+  "integrity": {
+    "invalid_coordinates": 0,
+    "missing_or_short_dacDiem": 36,
+    "missing_image_links": 0
+  },
+  "anomalies": {
+    "duplicate_group_count": 0,
+    "duplicate_groups": [],
+    "mojibake_count": 8,
+    "mojibake_samples": [
+      {
+        "maDiaDiem": 9816,
+        "tenDiaDiem": "Hồ Yên Lập",
+        "diaChi": "274V+H22, Cẩm Đông, Cẩm Phả, Quảng Ninh"
+      },
+      {
+        "maDiaDiem": 9411,
+        "tenDiaDiem": "Chùa Lôi Âm Thượng",
+        "diaChi": "2W6F+HF4, Đại Yên, Hạ Long, Quảng Ninh"
+      },
+      {
+        "maDiaDiem": 9652,
+        "tenDiaDiem": "Karaoke D&g",
+        "diaChi": "Lô 45 46 tổ 19a khu 3, Hà Khánh, Hạ Long, Quảng Ninh"
+      },
+      {
+        "maDiaDiem": 9575,
+        "tenDiaDiem": "Karaoke Hải Âu",
+        "diaChi": "X7XJ+J45, Cẩm Bìn, Cẩm Phả, Quảng Ninh"
+      },
+      {
+        "maDiaDiem": 9792,
+        "tenDiaDiem": "ĐỒNG HỒ CHÍNH HÃNG HẠ LONG",
+        "diaChi": "695 Lê Thánh Tông, P. Bạch Đằng, Hạ Long, Quảng Ninh"
+      },
+      {
+        "maDiaDiem": 256,
+        "tenDiaDiem": "Cụm di tích Chùa Lôi Âm và Hồ Yên Lập",
+        "diaChi": "Phường Đại Yên, tp Hạ Long, Phường Đại Yên, Thành phố Hạ Long, Quảng Ninh"
+      },
+      {
+        "maDiaDiem": 3531,
+        "tenDiaDiem": "SUN PREMIER VILLAGE HA LONG BAY RESORT",
+        "diaChi": "SỐ 9 ĐƯỜNG HẠ LONG, PHƯỜNG BÃI CHÁY, THÀNH PHỐ HẠ LONG, QUẢNG NINH, Phường Bãi Cháy, Thành phố Hạ Long, Quảng Ninh"
+      },
+      {
+        "maDiaDiem": 3757,
+        "tenDiaDiem": "NHÀ NGHỈ HOÀNG VÂN",
+        "diaChi": "SỐ NHÀ 102, TỔ 3, KHU 5B, PHƯỜNG CẨM TRUNG, THÀNH PHỐ CẨM PHẢ, TỈNH QUẢNG NINH, Phường Cẩm Trung, Thành phố Cẩm Phả, Quảng Ninh"
+      }
+    ]
+  },
+  "warnings": []
+}
