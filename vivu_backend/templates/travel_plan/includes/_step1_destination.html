@@ -1,0 +1,146 @@
+{% load static %}
+<div class="step-content active" id="step-1">
+    <div class="step-header">
+        <span class="tp-badge tp-badge-primary mb-4">
+            <i class="fa-solid fa-map-marker-alt"></i>
+            Chọn địa điểm
+        </span>
+        <h2>Thiết lập tuyến đường cho hành trình của bạn</h2>
+        <p>Điền điểm xuất phát và điểm đến để Atlas kiểm tra khoảng cách, thời gian di chuyển và đề xuất tuyến phù hợp.</p>
+    </div>
+
+    <form id="step1-form">
+        <div class="step-stage-grid">
+            <div>
+                <div class="route-grid">
+                    <div class="location-field-card location-field">
+                        <div class="flex items-start gap-3">
+                            <span class="location-icon"><i class="fa-solid fa-paper-plane"></i></span>
+                            <div class="min-w-0 flex-1">
+                                <span class="field-kicker">Điểm xuất phát</span>
+                                <label for="origin-input" class="sr-only">Điểm xuất phát</label>
+                                <div class="field-input-shell">
+                                    <i class="fa-solid fa-map-marker-alt"></i>
+                                    <div style="position: relative; z-index: 30; flex: 1;">
+                                        <input type="text" id="origin-input" placeholder="Ví dụ: Thành phố Hồ Chí Minh" autocomplete="off" required>
+                                        <div id="origin-autocomplete" class="autocomplete-dropdown"></div>
+                                    </div>
+                                </div>
+                                <div class="location-actions">
+                                    <button type="button" id="use-current-location-btn" class="btn-location" aria-live="polite">
+                                        <span class="btn-icon">📍</span>
+                                        <span class="btn-text">Dùng vị trí hiện tại</span>
+                                    </button>
+                                    <span id="location-status" class="location-status" aria-live="polite"></span>
+                                </div>
+                                <div id="detected-chip" class="detected-chip hidden">
+                                    <span id="detected-address" class="chip-address"></span>
+                                    <button type="button" id="edit-address-btn" class="chip-btn chip-edit" title="Sửa vị trí" aria-label="Sửa địa chỉ">✎</button>
+                                    <button type="button" id="confirm-address-btn" class="chip-btn chip-confirm" title="Xác nhận sử dụng vị trí này" aria-label="Xác nhận địa chỉ">✓</button>
+                                </div>
+                                <div id="origin-mini-map" class="mini-map hidden" aria-hidden="true"></div>
+                                <p class="mini-map-caption">Vị trí hiện tại sẽ được hiển thị trong một mini map gọn để bạn xác nhận trước khi tiếp tục.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="route-connector" aria-hidden="true">
+                        <span class="route-connector-badge">
+                            <i class="fa-solid fa-road"></i>
+                        </span>
+                    </div>
+
+                    <div class="location-field-card">
+                        <div class="flex items-start gap-3">
+                            <span class="location-icon"><i class="fa-solid fa-location-crosshairs"></i></span>
+                            <div class="min-w-0 flex-1">
+                                <span class="field-kicker">Điểm đến</span>
+                                <label for="destination-input" class="sr-only">Điểm đến</label>
+                                <div class="field-input-shell">
+                                    <i class="fa-solid fa-mountain-city"></i>
+                                    <div style="position: relative; z-index: 29; flex: 1;">
+                                        <input type="text" id="destination-input" placeholder="Ví dụ: Thành phố Hà Nội" autocomplete="off" required>
+                                        <div id="destination-autocomplete" class="autocomplete-dropdown"></div>
+                                    </div>
+                                </div>
+                                <p class="helper-text">Autocomplete sẽ gợi ý địa danh thật từ hệ thống để bạn chọn nhanh và giảm lỗi nhập tay.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="step1-result" style="display: none;"></div>
+
+                <div class="workflow-actions">
+                    <div class="theme-text-muted text-sm leading-6">Atlas sẽ xác minh tuyến đi trước khi mở khóa bước cấu hình chuyến đi.</div>
+                    <button type="submit" class="btn-workflow btn-primary">
+                        Tiếp tục
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <aside class="step-visual-panel hidden lg:block">
+                <img src="{% static 'img/stitch-deep-ocean-travel-plan.png' %}" alt="Travel plan workflow visual">
+                <div class="step-visual-content">
+                    <div>
+                        <span class="tp-badge border border-white/20 bg-white/10 px-3 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-white">
+                            <i class="fa-solid fa-map-location-dot"></i>
+                            Route Preview
+                        </span>
+                        <h3 class="mt-4 font-heading text-2xl font-bold">Bạn đi đâu thế?</h3>
+                        <p class="mt-3 text-sm leading-7 text-white/80">Tuyến đường, gợi ý di chuyển và các bước tiếp theo sẽ được mở khóa ngay khi bạn xác nhận đủ hai địa điểm.</p>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="step-preview-float">
+                            <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-white/65">Lộ trình</p>
+                            <p id="stitch-preview-route" class="mt-2 text-sm font-semibold text-white">Đang chờ nhập điểm đến...</p>
+                        </div>
+                        <div id="weather-preview-card" class="step-preview-float weather-preview-card" aria-live="polite">
+                            <div class="weather-preview-top">
+                                <div>
+                                    <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-white/65">Thời tiết</p>
+                                    <p id="weather-location" class="mt-1 text-sm font-semibold text-white">Điểm đến chưa được xác nhận</p>
+                                </div>
+                                <span id="weather-status-badge" class="weather-preview-badge">
+                                    <i class="fa-solid fa-cloud-sun"></i>
+                                    Chờ dữ liệu
+                                </span>
+                            </div>
+                            <div class="weather-preview-main">
+                                <div id="weather-icon-shell" class="weather-preview-icon is-empty">
+                                    <i class="fa-solid fa-cloud"></i>
+                                </div>
+                                <div>
+                                    <p id="weather-temp" class="weather-preview-temp">--°C</p>
+                                    <p id="weather-summary" class="weather-preview-meta">Thời tiết sẽ hiện sau khi Atlas xác nhận điểm đến và lấy tọa độ thật.</p>
+                                </div>
+                            </div>
+                            <div class="weather-preview-grid">
+                                <div class="weather-preview-chip">
+                                    <span class="weather-preview-chip-label">Cảm giác</span>
+                                    <span id="weather-feels-like" class="weather-preview-chip-value">--°C</span>
+                                </div>
+                                <div class="weather-preview-chip">
+                                    <span class="weather-preview-chip-label">Độ ẩm</span>
+                                    <span id="weather-humidity" class="weather-preview-chip-value">--%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="step-preview-float">
+                            <div class="flex items-center gap-3">
+                                <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15">
+                                    <i class="fa-solid fa-plane-departure"></i>
+                                </span>
+                                <div>
+                                    <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-white/65">AI Note</p>
+                                    <p class="mt-1 text-sm leading-6 text-white/85">Atlas sẽ đối chiếu khoảng cách, tuyến và nhịp di chuyển trước khi sang bước 2.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,108 @@
+<div class="step-content" id="step-2">
+    <div class="step-header">
+        <span class="tp-badge tp-badge-primary mb-4">
+            <i class="fa-solid fa-compass-drafting"></i>
+            Thông tin du lịch
+        </span>
+        <h2>Cá nhân hóa nhịp điệu của chuyến đi</h2>
+        <p>Thiết lập thời gian, số người và phong cách du lịch để AI chọn nhịp trải nghiệm phù hợp hơn với mục tiêu của bạn.</p>
+    </div>
+
+    <form id="step2-form">
+        <div class="step2-sections">
+            <div class="step2-grid">
+                <section class="step2-section">
+                    <div class="step2-header">
+                        <i class="fa-solid fa-sliders"></i>
+                        <span>Thiết lập nhịp chuyến đi</span>
+                    </div>
+                    <p class="step2-support">Chia nhỏ các thông tin cốt lõi để Atlas hiểu nhịp khởi hành, thời lượng và quy mô nhóm của bạn.</p>
+
+                    <div class="travel-info-grid">
+                        <div class="input-card">
+                            <span class="field-kicker">Ngày bắt đầu</span>
+                            <label for="start-date" class="sr-only">Ngày đi</label>
+                            <div class="field-input-shell">
+                                <i class="fa-solid fa-calendar-day"></i>
+                                <input type="text" id="start-date" placeholder="Chọn ngày bắt đầu" required readonly>
+                            </div>
+                            <p class="helper-text">Chọn ngày khởi hành để hệ thống tính gợi ý lịch trình theo thời gian thực tế.</p>
+                        </div>
+
+                        <div class="input-card">
+                            <span class="field-kicker">Thời lượng chuyến đi</span>
+                            <label for="days" class="sr-only">Số ngày</label>
+                            <div class="field-input-shell">
+                                <i class="fa-solid fa-hourglass-half"></i>
+                                <input type="number" id="days" min="1" max="14" value="3" required>
+                            </div>
+                            <p class="helper-text">Giới hạn từ 1-14 ngày để AI tối ưu mật độ hoạt động hợp lý.</p>
+                        </div>
+
+                        <div class="input-card">
+                            <span class="field-kicker">Số người tham gia</span>
+                            <label for="travelers" class="sr-only">Số người</label>
+                            <div class="field-input-shell">
+                                <i class="fa-solid fa-users"></i>
+                                <input type="number" id="travelers" min="1" max="20" value="2" required>
+                            </div>
+                            <p class="helper-text">Giới hạn từ 1-20 người để hệ thống ước tính chi phí và chỗ ở chính xác hơn.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="step2-section">
+                    <div class="step2-header">
+                        <i class="fa-solid fa-compass-drafting"></i>
+                        <span>Phong cách du lịch</span>
+                    </div>
+                    <p class="step2-support">Chân dung chuyến đi sẽ ảnh hưởng tới cách Atlas sắp xếp nhịp tham quan, ẩm thực và thời gian nghỉ ngơi.</p>
+
+                    <div class="step2-divider"></div>
+
+                    <div class="input-card travel-style-shell">
+                        <span class="field-kicker">Phong cách đang chọn</span>
+                        <label for="travel-style" class="sr-only">Phong cách du lịch</label>
+                        <div class="field-input-shell">
+                            <i class="fa-solid fa-stars"></i>
+                            <input type="text" id="travel-style-display" value="Tiêu chuẩn" readonly aria-hidden="true">
+                            <select id="travel-style" required>
+                                <option value="standard" selected>Tiêu chuẩn</option>
+                            </select>
+                        </div>
+                        <small class="helper-text">Đang tải danh sách phong cách...</small>
+                        <div id="travel-style-cards" class="travel-style-cards" aria-live="polite"></div>
+                    </div>
+                </section>
+            </div>
+
+            <div id="step2-result" class="step2-section">
+                <div class="step2-header">
+                    <i class="fa-solid fa-road"></i>
+                    <span>Tóm tắt nhanh bước 2</span>
+                </div>
+                <p class="step2-support">Tóm tắt này giúp bạn kiểm tra nhanh những tham số sáng tạo lịch trình trước khi chuyển sang bước ngân sách.</p>
+                <div class="step2-summary-grid">
+                    <div class="summary-item"><span class="summary-label">Route</span><span id="summary-route-clone" class="summary-value">Theo bước 1</span></div>
+                    <div class="summary-item"><span class="summary-label">Style</span><span id="travel-style-display-clone" class="summary-value">Tiêu chuẩn</span></div>
+                </div>
+                <div class="step2-chip-row">
+                    <span class="step2-chip"><i class="fa-regular fa-clock"></i> 1-14 ngày</span>
+                    <span class="step2-chip"><i class="fa-solid fa-users"></i> 1-20 người</span>
+                    <span class="step2-chip"><i class="fa-solid fa-sparkles"></i> Tùy biến theo gu du lịch</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="workflow-actions">
+            <button type="button" class="btn-workflow btn-secondary" onclick="goToStep(1)">
+                <i class="fa-solid fa-arrow-left"></i>
+                Quay lại
+            </button>
+            <button type="submit" class="btn-workflow btn-primary">
+                Tiếp tục
+                <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+    </form>
+</div>

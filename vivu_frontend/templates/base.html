@@ -13,9 +13,49 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: ["class", '[data-theme="dark"]'],
+            darkMode: 'class',
             theme: {
                 extend: {
+                    colors: {
+                        background: 'var(--background-hex)',
+                        foreground: 'var(--foreground-hex)',
+                        muted: {
+                            DEFAULT: 'var(--muted-hex)',
+                            foreground: 'var(--muted-foreground-hex)',
+                        },
+                        card: {
+                            DEFAULT: 'var(--card-hex)',
+                            foreground: 'var(--card-foreground-hex)',
+                        },
+                        border: 'var(--border-hex)',
+                        input: 'var(--input-hex)',
+                        primary: {
+                            DEFAULT: 'var(--primary-hex)',
+                            hover: 'var(--primary-hover-hex)',
+                            foreground: 'var(--primary-foreground-hex)',
+                        },
+                        secondary: {
+                            DEFAULT: 'var(--secondary-hex)',
+                            foreground: 'var(--secondary-foreground-hex)',
+                        },
+                        accent: {
+                            DEFAULT: 'var(--accent-hex)',
+                            hover: 'var(--accent-hover-hex)',
+                            foreground: 'var(--accent-foreground-hex)',
+                        },
+                        ocean: {
+                            DEFAULT: 'var(--ocean-hex)',
+                            soft: 'var(--ocean-soft-hex)',
+                        },
+                        emerald: {
+                            soft: 'var(--emerald-soft-hex)',
+                        },
+                        warning: {
+                            DEFAULT: 'var(--warning-hex)',
+                            soft: 'var(--warning-soft-hex)',
+                            foreground: 'var(--warning-foreground-hex)',
+                        },
+                    },
                     fontFamily: {
                         sans: ['Inter', 'system-ui', 'sans-serif'],
                         heading: ['Plus Jakarta Sans', 'Inter', 'sans-serif']
@@ -42,193 +82,11 @@
             }
         })();
     </script>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
     <link rel="stylesheet" href="{% static 'css/animations.css' %}">
     {% block extra_styles %}{% endblock %}
-    <style>
-        :root {
-            --background: 255 255 255;
-            --foreground: 15 23 42;
-            --muted: 248 250 252;
-            --muted-foreground: 100 116 139;
-            --card: 255 255 255;
-            --card-foreground: 15 23 42;
-            --border: 226 232 240;
-            --input: 226 232 240;
-            --primary: 15 118 110;
-            --primary-hover: 13 148 136;
-            --primary-foreground: 255 255 255;
-            --secondary: 224 242 254;
-            --secondary-foreground: 7 89 133;
-            --accent: 5 150 105;
-            --accent-hover: 4 120 87;
-            --accent-foreground: 255 255 255;
-            --ocean: 15 23 42;
-            --ocean-soft: 22 78 99;
-            --emerald-soft: 236 253 245;
-            --warning: 245 158 11;
-            --warning-soft: 255 251 235;
-            --warning-foreground: 120 53 15;
-            --surface-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
-            --surface-shadow-strong: 0 28px 80px rgba(15, 23, 42, 0.12);
-        }
-
-        :root[data-theme="dark"] {
-            --background: 2 6 23;
-            --foreground: 248 250 252;
-            --muted: 15 23 42;
-            --muted-foreground: 148 163 184;
-            --card: 15 23 42;
-            --card-foreground: 248 250 252;
-            --border: 30 41 59;
-            --input: 51 65 85;
-            --primary: 20 184 166;
-            --primary-hover: 45 212 191;
-            --primary-foreground: 4 47 46;
-            --secondary: 8 47 73;
-            --secondary-foreground: 186 230 253;
-            --accent: 16 185 129;
-            --accent-hover: 52 211 153;
-            --accent-foreground: 2 44 34;
-            --ocean: 2 6 23;
-            --ocean-soft: 14 116 144;
-            --emerald-soft: 5 46 43;
-            --warning: 251 191 36;
-            --warning-soft: 69 26 3;
-            --warning-foreground: 254 243 199;
-            --surface-shadow: 0 22px 65px rgba(2, 6, 23, 0.45);
-            --surface-shadow-strong: 0 34px 90px rgba(2, 6, 23, 0.55);
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body {
-            font-family: 'Inter', system-ui, sans-serif;
-            background:
-                radial-gradient(circle at top left, rgba(var(--primary), 0.12), transparent 26%),
-                radial-gradient(circle at bottom right, rgba(var(--accent), 0.10), transparent 22%),
-                linear-gradient(180deg, rgba(var(--background), 1) 0%, rgba(var(--muted), 1) 100%);
-            color: rgb(var(--foreground));
-            transition: background-color 0.2s ease-out, color 0.2s ease-out;
-        }
-
-        body.drawer-open {
-            overflow: hidden;
-        }
-
-        h1, h2, h3, h4, h5, h6 {
-            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-            color: rgb(var(--foreground));
-        }
-
-        .theme-surface {
-            background: rgba(var(--card), 0.88);
-            color: rgb(var(--card-foreground));
-            border: 1px solid rgba(var(--border), 0.9);
-            box-shadow: var(--surface-shadow);
-            backdrop-filter: blur(18px);
-        }
-
-        .theme-surface-strong {
-            background: rgba(var(--card), 0.92);
-            color: rgb(var(--card-foreground));
-            border: 1px solid rgba(var(--border), 0.9);
-            box-shadow: var(--surface-shadow-strong);
-            backdrop-filter: blur(24px);
-        }
-
-        .theme-muted-surface {
-            background: rgba(var(--muted), 0.92);
-            border: 1px solid rgba(var(--border), 0.8);
-        }
-
-        .theme-warning-surface {
-            background: rgba(var(--warning-soft), 0.92);
-            color: rgb(var(--warning-foreground));
-            border: 1px solid rgba(var(--warning), 0.28);
-        }
-
-        .theme-input {
-            background: rgba(var(--background), 0.85);
-            color: rgb(var(--foreground));
-            border: 1px solid rgba(var(--input), 1);
-            transition: all 0.2s ease-out;
-        }
-
-        .theme-input::placeholder {
-            color: rgb(var(--muted-foreground));
-        }
-
-        .theme-input:focus {
-            outline: none;
-            border-color: rgba(var(--primary), 0.7);
-            box-shadow: 0 0 0 4px rgba(var(--primary), 0.14);
-        }
-
-        .theme-btn-primary {
-            background: rgb(var(--primary));
-            color: rgb(var(--primary-foreground));
-            transition: all 0.2s ease-out;
-        }
-
-        .theme-btn-primary:hover {
-            background: rgb(var(--primary-hover));
-            transform: translateY(-1px);
-        }
-
-        .theme-btn-secondary {
-            background: rgba(var(--card), 0.72);
-            color: rgb(var(--foreground));
-            border: 1px solid rgba(var(--border), 1);
-            transition: all 0.2s ease-out;
-        }
-
-        .theme-btn-secondary:hover {
-            background: rgba(var(--muted), 0.95);
-            border-color: rgba(var(--primary), 0.3);
-            color: rgb(var(--foreground));
-            transform: translateY(-1px);
-        }
-
-        .theme-badge {
-            background: rgba(var(--secondary), 0.85);
-            color: rgb(var(--secondary-foreground));
-            border: 1px solid rgba(var(--secondary-foreground), 0.1);
-        }
-
-        .theme-icon-badge {
-            background: rgba(var(--secondary), 0.9);
-            color: rgb(var(--primary));
-            border: 1px solid rgba(var(--border), 0.75);
-        }
-
-        .theme-card-hover {
-            transition: all 0.2s ease-out;
-        }
-
-        .theme-card-hover:hover {
-            box-shadow: var(--surface-shadow-strong);
-            transform: translateY(-2px);
-        }
-
-        .theme-text-muted {
-            color: rgb(var(--muted-foreground));
-        }
-
-        .theme-divider {
-            border-color: rgba(var(--border), 0.9);
-        }
-
-        .glass-panel {
-            background: rgba(var(--card), 0.72);
-            border: 1px solid rgba(var(--border), 0.8);
-            box-shadow: var(--surface-shadow);
-            backdrop-filter: blur(18px);
-        }
-    </style>
 </head>
-<body class="min-h-screen antialiased">
+<body class="min-h-screen bg-background text-foreground font-sans antialiased transition-colors duration-300">
     {% include 'includes/navbar.html' %}
 
     <main class="min-h-[calc(100vh-80px)]">
@@ -240,9 +98,9 @@
     {% endblock %}
 
     {% if user.is_authenticated %}
-    <div id="logout-modal-overlay" class="fixed inset-0 z-[90] hidden items-center justify-center bg-slate-950/50 px-4 backdrop-blur-sm">
+    <div id="logout-modal-overlay" class="fixed inset-0 z-[90] hidden items-center justify-center bg-black/45 px-4 backdrop-blur-sm">
         <div class="theme-surface-strong w-full max-w-md overflow-hidden rounded-3xl">
-            <div class="px-6 py-5 text-white" style="background: linear-gradient(135deg, rgb(var(--ocean)) 0%, rgb(var(--primary)) 100%);">
+            <div class="bg-gradient-to-r from-ocean to-primary px-6 py-5 text-white">
                 <div class="flex items-center gap-3">
                     <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 text-xl">
                         <i class="fas fa-right-from-bracket"></i>
@@ -260,7 +118,7 @@
                 <button id="logout-modal-cancel" type="button" class="theme-btn-secondary rounded-full px-5 py-2.5 text-sm font-semibold">
                     Ở lại
                 </button>
-                <form id="logout-form" method="post" action="/accounts/logout/">
+                <form id="logout-form" method="post" action="{% url 'logout' %}">
                     {% csrf_token %}
                     <button type="submit" class="theme-btn-primary rounded-full px-5 py-2.5 text-sm font-semibold">
                         Đăng xuất

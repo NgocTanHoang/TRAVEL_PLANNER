@@ -1,0 +1,158 @@
+{
+  "province": {
+    "id": 21,
+    "name": "Thành phố Hà Nội",
+    "slug": "ha_noi"
+  },
+  "min_pois": 1000,
+  "generated_at": "2026-05-27T20:09:24.553261+00:00",
+  "coverage": {
+    "total_pois": 1390,
+    "meets_min_pois": true,
+    "category_breakdown": {
+      "cslt": 138,
+      "dest": 802,
+      "rest": 186,
+      "shop": 125,
+      "vcgt": 91
+    }
+  },
+  "integrity": {
+    "invalid_coordinates": 0,
+    "missing_or_short_dacDiem": 0,
+    "missing_image_links": 0
+  },
+  "anomalies": {
+    "duplicate_group_count": 0,
+    "duplicate_groups": [],
+    "mojibake_count": 35,
+    "mojibake_samples": [
+      {
+        "maDiaDiem": 8329,
+        "tenDiaDiem": "Dilf - Donut I’d Love to Fudge",
+        "diaChi": "23 Ng. 172 Đ. Âu Cơ, Tứ Liên, Tây Hồ, Hà Nội"
+      },
+      {
+        "maDiaDiem": 9082,
+        "tenDiaDiem": "Xưởng Cơ Khí Trí - Ngọc",
+        "diaChi": "19 Đ. Âu Cơ, Quảng An, Tây Hồ, Hà Nội"
+      },
+      {
+        "maDiaDiem": 9155,
+        "tenDiaDiem": "XÓM CÂY ĐÀO",
+        "diaChi": "Yên Viên, Gia Lâm, Hà Nội"
+      },
+      {
+        "maDiaDiem": 9175,
+        "tenDiaDiem": "GK CYBER GAME - 39 ĐƯỜNG NGỌC LÂM",
+        "diaChi": "39 Đ. Ngọc Lâm, Ngọc Lâm, Long Biên, Hà Nội"
+      },
+      {
+        "maDiaDiem": 8140,
+        "tenDiaDiem": "Pizza 4P's Âu Cơ",
+        "diaChi": "1A Đ. Âu Cơ, Quảng An, Tây Hồ, Hà Nội 11207"
+      },
+      {
+        "maDiaDiem": 8644,
+        "tenDiaDiem": "MANO Italian Restaurant & Shop",
+        "diaChi": "247 Đ. Âu Cơ, Quảng An, Tây Hồ, Hà Nội 11310"
+      },
+      {
+        "maDiaDiem": 9033,
+        "tenDiaDiem": "Karaoke Lion King",
+        "diaChi": "109 P. Kim Ngưu, Vĩnh Tuy, Hai Bà Trưng, Hà Nội"
+      },
+      {
+        "maDiaDiem": 8901,
+        "tenDiaDiem": "GÂU - CAFE PHIM Nghĩa Đô",
+        "diaChi": "28 Ngõ 34 P. Nghĩa Đô, Nghĩa Đô, Cầu Giấy, Hà Nội"
+      },
+      {
+        "maDiaDiem": 9143,
+        "tenDiaDiem": "Trường Xuân Flower & Bonsai",
+        "diaChi": "236 Đ. Âu Cơ, Quảng An, Tây Hồ, Hà Nội 11200"
+      },
+      {
+        "maDiaDiem": 8483,
+        "tenDiaDiem": "Unmute hanoi",
+        "diaChi": "169 P. Phúc Tân, Phúc Tân, Hoàn Kiếm, Hà Nội"
+      },
+      {
+        "maDiaDiem": 8628,
+        "tenDiaDiem": "Tmories Bakery",
+        "diaChi": "Lô 43 TT4, Khu đô thị Thành phố Giao lưu, Bắc Từ Liêm, Hà Nội 100000"
+      },
+      {
+        "maDiaDiem": 8992,
+        "tenDiaDiem": "Đình - Chùa Hạ Trại",
+        "diaChi": "2V7W+Q96, Thống Nhất, Long Biên, Hà Nội"
+      },
+      {
+        "maDiaDiem": 8606,
+        "tenDiaDiem": "Treebee- Làng Hoa",
+        "diaChi": "139 Ngõ 464 Âu Cơ, Phú Thượng, Tây Hồ, Hà Nội 000084"
+      },
+      {
+        "maDiaDiem": 8676,
+        "tenDiaDiem": "Chùa Quang Ân",
+        "diaChi": "XR86+CWM, Thanh Liệt, Thanh Trì, Hà Nội"
+      },
+      {
+        "maDiaDiem": 8708,
+        "tenDiaDiem": "GÂU - CAFE PHIM",
+        "diaChi": "41 Ng. 24 P. Phan Văn Trường, Dịch Vọng Hậu, Cầu Giấy, Hà Nội"
+      },
+      {
+        "maDiaDiem": 8721,
+        "tenDiaDiem": "Vườn táo cổ Chill Garden",
+        "diaChi": "68 Ngõ 264 Âu Cơ, Nhật Tân, Tây Hồ, Hà Nội 124066"
+      },
+      {
+        "maDiaDiem": 8128,
+        "tenDiaDiem": "Bãi Đá Sông Hồng",
+        "diaChi": "Ngõ 264 Âu Cơ, Nhật Tân, Tây Hồ, Hà Nội 100000"
+      },
+      {
+        "maDiaDiem": 8485,
+        "tenDiaDiem": "Chợ Cổ Loa",
+        "diaChi": "4V6G+9W8, Xóm Hậu, Đông Anh, Hà Nội"
+      },
+      {
+        "maDiaDiem": 8524,
+        "tenDiaDiem": "Bảo tàng Văn học Việt Nam",
+        "diaChi": "275 Đ. Âu Cơ, Quảng An, Tây Hồ, Hà Nội"
+      },
+      {
+        "maDiaDiem": 8845,
+        "tenDiaDiem": "ĐÀO HUYỀN NHẬT TÂN",
+        "diaChi": "Thanh Liệt, Thanh Trì, Hà Nội"
+      },
+      {
+        "maDiaDiem": 48,
+        "tenDiaDiem": "Khu di tích Thành Cổ Loa",
+        "diaChi": "Xã Cổ Loa, Đông Anh, Hà Nội"
+      },
+      {
+        "maDiaDiem": 8095,
+        "tenDiaDiem": "Khu Văn hoá ẩm thực Sen Tây Hồ",
+        "diaChi": "614 Đ. Lạc Long Quân, Nhật Tân, Tây Hồ, Hà Nội 10000"
+      },
+      {
+        "maDiaDiem": 8326,
+        "tenDiaDiem": "Nhà Hàng Buffet Chay Tịnh Thực Quán",
+        "diaChi": "Nhà Hát, P. Nguyên Hồng/43A Âu Cơ, Thành Công, Ba Đình, Hà Nội 10000"
+      },
+      {
+        "maDiaDiem": 8584,
+        "tenDiaDiem": "Chợ Tứ Liên",
+        "diaChi": "Ngõ 200 Đ. Âu Cơ, Tứ Liên, Tây Hồ, Hà Nội"
+      },
+      {
+        "maDiaDiem": 8743,
+        "tenDiaDiem": "Nhà Thờ Giáo Xứ Hàm Long Karaoke Cơm chay Âu Lạc nhân chính",
+        "diaChi": "21 P.Hàm Long, Phan Chu Trinh, Hoàn Kiếm, Hà Nội 100000"
+      }
+    ]
+  },
+  "warnings": []
+}

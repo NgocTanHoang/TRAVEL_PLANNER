@@ -1,0 +1,59 @@
+<div class="concierge-status rounded-[2rem] p-5">
+    <div>
+        <p class="text-xs font-bold uppercase tracking-[0.18em] theme-text-muted">AI Summary</p>
+        <h3 class="mt-2 font-heading text-lg font-bold">Bản tóm tắt chuyến đi</h3>
+    </div>
+    <div class="summary-list">
+        <div class="summary-item">
+            <i class="fa-solid fa-road"></i>
+            <div>
+                <span class="summary-label">Tuyến hành trình</span>
+                <span id="summary-route" class="summary-value">Chưa xác định điểm đi và điểm đến</span>
+            </div>
+        </div>
+        <div class="summary-item">
+            <i class="fa-solid fa-calendar-days"></i>
+            <div>
+                <span class="summary-label">Thời gian</span>
+                <span id="summary-schedule" class="summary-value">Chưa chọn ngày đi</span>
+            </div>
+        </div>
+        <div class="summary-item">
+            <i class="fa-solid fa-users"></i>
+            <div>
+                <span class="summary-label">Số lượng</span>
+                <span id="summary-travelers" class="summary-value">2 người • 3 ngày mặc định</span>
+            </div>
+        </div>
+        <div class="summary-item">
+            <i class="fa-solid fa-sliders"></i>
+            <div>
+                <span class="summary-label">Phong cách</span>
+                <span id="summary-style" class="summary-value">Tiêu chuẩn</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="atlas-sidebar-panel rounded-[2rem] p-5">
+    <div class="flex items-start gap-4">
+        <span class="assistant-orb">
+            <i class="fa-solid fa-wand-magic"></i>
+        </span>
+        <div>
+            <p class="text-xs font-bold uppercase tracking-[0.18em] theme-text-muted">Atlas AI Concierge</p>
+            <h2 id="atlas-title" class="mt-2 font-heading text-xl font-bold">Sẵn sàng dẫn đường</h2>
+            <p id="atlas-message" class="theme-text-muted mt-2 text-sm leading-7">
+                Tôi sẽ kiểm tra khoảng cách, tuyến đường và khả năng di chuyển giữa hai địa điểm.
+            </p>
+        </div>
+    </div>
+    <div class="rounded-[1.4rem] border border-[rgba(var(--border),0.85)] bg-[rgba(var(--muted),0.65)] p-4">
+        <div class="flex items-center gap-3">
+            <span class="inline-flex h-3 w-3 rounded-full bg-emerald-500"></span>
+            <p id="atlas-status" class="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                Atlas đang chờ thông tin điểm đi và điểm đến.
+            </p>
+        </div>
+    </div>
+</div>

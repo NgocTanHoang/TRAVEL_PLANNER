@@ -1,57 +1,81 @@
 {% load static %}
-<footer class="font-sans border-t transition-all duration-200 ease-out" style="background: linear-gradient(180deg, rgba(var(--ocean), 0.96) 0%, rgba(var(--ocean-soft), 0.88) 100%); border-color: rgba(var(--border), 0.18); color: rgb(var(--foreground));">
-    <div class="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.3fr_1fr_1fr_1fr] lg:px-8">
-        <div>
+
+<footer class="border-t border-border bg-ocean text-slate-100 font-sans transition-colors duration-300">
+    <div class="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-6 py-12 md:grid-cols-2 lg:grid-cols-4">
+        <div class="space-y-4">
             <div class="flex items-center gap-3">
-                <span class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-white ring-1 ring-white/10">
-                    <img src="{% static 'img/logo_crop-Photoroom.png' %}" alt="Vi Vu Logo" class="h-9 w-9 object-contain">
-                </span>
+                <img
+                    src="{% static 'img/logo_crop-Photoroom.png' %}"
+                    alt="Vi Vu logo"
+                    class="h-10 w-auto"
+                >
                 <div>
-                    <h3 class="text-lg font-semibold text-white">Vi Vu</h3>
-                    <p class="text-sm text-slate-300">Cổng thông tin du lịch tương tác cho hành trình tại Việt Nam.</p>
+                    <p class="text-lg font-semibold text-white">Vi Vu</p>
+                    <p class="text-xs text-slate-400">AI-Powered Travel Planner cho Việt Nam</p>
                 </div>
             </div>
-            <p class="mt-4 max-w-md text-sm leading-7 text-slate-300">
-                Vi Vu kết hợp AI, bản đồ và dữ liệu địa điểm để giúp bạn khám phá, so sánh và lập kế hoạch thông minh hơn cho từng chuyến đi.
+            <p class="text-sm leading-relaxed text-slate-400">
+                Nền tảng công nghệ tối ưu hóa lộ trình du lịch nội địa, quản lý ngân sách và đồng hành cùng bạn trên mọi nẻo đường Việt Nam.
             </p>
+            <div class="flex gap-4 text-slate-400">
+                <a href="https://facebook.com" class="transition-colors hover:text-primary" aria-label="Facebook">
+                    <i class="fa-brands fa-facebook-f text-base"></i>
+                </a>
+                <a href="https://github.com" class="transition-colors hover:text-primary" aria-label="GitHub">
+                    <i class="fa-brands fa-github text-base"></i>
+                </a>
+                <a href="https://youtube.com" class="transition-colors hover:text-primary" aria-label="YouTube">
+                    <i class="fa-brands fa-youtube text-base"></i>
+                </a>
+            </div>
         </div>
 
         <div>
-            <h4 class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-400">Điều hướng</h4>
-            <ul class="mt-4 space-y-3 text-sm text-slate-300">
-                <li><a href="/" class="transition hover:text-white">Trang chủ</a></li>
-                <li><a href="/places/search/" class="transition hover:text-white">Khám phá</a></li>
-                <li><a href="/travel-plan/" class="transition hover:text-white">Tạo lịch trình</a></li>
-                <li><a href="/ai-chat/" class="transition hover:text-white">AI Chat</a></li>
+            <h3 class="text-sm font-semibold uppercase tracking-[0.2em] text-white">Sản phẩm</h3>
+            <ul class="mt-4 space-y-3 text-sm text-slate-400">
+                <li><a href="{% url 'travel-plan' %}" class="transition-colors hover:text-primary">Tạo lịch trình</a></li>
+                <li><a href="{% url 'place_search' %}" class="transition-colors hover:text-primary">Khám phá địa điểm</a></li>
+                <li><a href="{% url 'swagger-ui' %}" class="transition-colors hover:text-primary">Tài liệu API</a></li>
+                <li><a href="{% url 'place_search' %}" class="transition-colors hover:text-primary">Tiện ích bản đồ</a></li>
             </ul>
         </div>
 
         <div>
-            <h4 class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-400">Hệ sinh thái</h4>
-            <ul class="mt-4 space-y-3 text-sm text-slate-300">
-                <li><a href="/api/docs/" class="transition hover:text-white">API Docs</a></li>
-                <li><a href="/tech-langchain" class="transition hover:text-white">LangChain & LangGraph</a></li>
-                <li><a href="/tech-chromadb" class="transition hover:text-white">ChromaDB & RAG</a></li>
-                <li><a href="/tech-multi-agent" class="transition hover:text-white">Multi-Agent Workflow</a></li>
+            <h3 class="text-sm font-semibold uppercase tracking-[0.2em] text-white">Công nghệ lõi</h3>
+            <ul class="mt-4 space-y-3 text-sm leading-relaxed text-slate-400">
+                <li>Django REST Framework</li>
+                <li>LangChain &amp; LangGraph</li>
+                <li>OpenAI &amp; Groq LLMs</li>
+                <li>ChromaDB RAG</li>
+                <li>OpenStreetMap / OSRM</li>
             </ul>
         </div>
 
         <div>
-            <h4 class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-400">Kết nối</h4>
-            <p class="mt-4 text-sm leading-7 text-slate-300">
-                Vi Vu phù hợp cho người dùng cá nhân, nhóm bạn và đơn vị cần một không gian khám phá điểm đến trực quan.
-            </p>
-            <div class="mt-5 flex items-center gap-3">
-                <a href="#" class="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-200 transition hover:bg-white/10 hover:text-white" aria-label="GitHub"><i class="fab fa-github"></i></a>
-                <a href="#" class="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-200 transition hover:bg-white/10 hover:text-white" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                <a href="#" class="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-200 transition hover:bg-white/10 hover:text-white" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <h3 class="text-sm font-semibold uppercase tracking-[0.2em] text-white">Ban phát triển</h3>
+            <div class="mt-4 space-y-4 text-sm leading-relaxed text-slate-400">
+                <div>
+                    <p class="font-semibold text-slate-100">Hoàng Ngọc Tân</p>
+                    <p>MSSV: 21074741</p>
+                    <a href="mailto:hoangngoctanptth@gmail.com" class="transition-colors hover:text-primary">
+                        hoangngoctanptth@gmail.com
+                    </a>
+                </div>
+                <p>
+                    Sẵn sàng đồng hành trong việc xây dựng nền tảng lập kế hoạch du lịch thông minh, bám dữ liệu thật và trải nghiệm thực tế của người dùng Việt Nam.
+                </p>
             </div>
         </div>
     </div>
-    <div class="border-t border-white/10">
-        <div class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-sm leading-6 text-slate-500 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
-            <p class="font-medium">&copy; 2025 Vi Vu. All rights reserved.</p>
-            <p>Thiết kế cho trải nghiệm lập kế hoạch du lịch thông minh, rõ ràng và thân thiện trên mọi thiết bị.</p>
+
+    <div class="border-t border-border">
+        <div class="mx-auto flex max-w-7xl flex-col gap-3 px-6 py-5 text-sm text-slate-500 md:flex-row md:items-center md:justify-between">
+            <p>© 2026 Vi Vu - AI Travel Planner. All rights reserved.</p>
+            <div class="flex items-center gap-3">
+                <a href="{% url 'home' %}" class="transition-colors hover:text-primary">Điều khoản dịch vụ</a>
+                <span class="text-slate-700">|</span>
+                <a href="{% url 'home' %}" class="transition-colors hover:text-primary">Chính sách bảo mật</a>
+            </div>
         </div>
     </div>
 </footer>

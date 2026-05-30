@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .step-active-glow {
+            box-shadow: 0 0 15px rgba(0, 92, 85, 0.2);
+        }
+        @keyframes fade-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-up {
+            animation: fade-up 0.6s ease-out forwards;
+        }
+        .stagger-1 { animation-delay: 0.1s; }
+        .stagger-2 { animation-delay: 0.2s; }
+        .stagger-3 { animation-delay: 0.3s; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "outline": "#6e7977",
+                        "primary": "#005c55",
+                        "tertiary": "#7f4025",
+                        "on-primary-fixed": "#00201d",
+                        "on-primary-container": "#a3faef",
+                        "ocean": "#0F172A",
+                        "outline-variant": "#bdc9c6",
+                        "on-tertiary-fixed": "#370e00",
+                        "secondary-fixed": "#d3e5f1",
+                        "warning": "#F59E0B",
+                        "inverse-primary": "#80d5cb",
+                        "surface-bright": "#f7faf8",
+                        "surface-container": "#ebefed",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-tint": "#006a63",
+                        "surface": "#f7faf8",
+                        "primary-fixed": "#9cf2e8",
+                        "inverse-surface": "#2d3130",
+                        "tertiary-container": "#9c573a",
+                        "surface-container-low": "#f1f4f3",
+                        "surface-container-highest": "#e0e3e1",
+                        "ocean-soft": "#164E63",
+                        "surface-container-high": "#e5e9e7",
+                        "on-tertiary-fixed-variant": "#72361b",
+                        "on-surface": "#181c1c",
+                        "accent": "#059669",
+                        "error": "#ba1a1a",
+                        "on-surface-variant": "#3e4947",
+                        "on-tertiary": "#ffffff",
+                        "on-background": "#181c1c",
+                        "on-secondary-fixed-variant": "#384953",
+                        "on-tertiary-container": "#ffe5db",
+                        "background": "#f7faf8",
+                        "on-error-container": "#93000a",
+                        "surface-variant": "#e0e3e1",
+                        "on-primary-fixed-variant": "#00504a",
+                        "secondary-fixed-dim": "#b7c9d5",
+                        "primary-fixed-dim": "#80d5cb",
+                        "on-primary": "#ffffff",
+                        "on-secondary-fixed": "#0c1e26",
+                        "tertiary-fixed-dim": "#ffb598",
+                        "surface-dim": "#d7dbd9",
+                        "secondary-container": "#d3e5f1",
+                        "tertiary-fixed": "#ffdbce",
+                        "emerald-soft": "#ECFDF5",
+                        "on-secondary-container": "#566771",
+                        "on-secondary": "#ffffff",
+                        "primary-container": "#0f766e",
+                        "inverse-on-surface": "#eef1f0",
+                        "secondary": "#50616b"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-md": "1rem",
+                        "gutter": "1.5rem",
+                        "container-max": "1280px",
+                        "stack-lg": "1.5rem",
+                        "stack-sm": "0.5rem",
+                        "stack-xs": "0.25rem",
+                        "margin-desktop": "2.5rem",
+                        "stack-xl": "2.5rem",
+                        "margin-mobile": "1rem"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-md": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface antialiased min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="bg-white/70 backdrop-blur-md font-body-md text-body-md docked full-width top-0 sticky z-50 shadow-sm border-b border-outline-variant/30">
+<div class="flex justify-between items-center w-full px-gutter max-w-container-max mx-auto h-16">
+<div class="font-headline-md text-headline-md font-bold text-primary">AetherTravel</div>
+<nav class="hidden md:flex gap-8 items-center">
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Explore</a>
+<a class="text-primary border-b-2 border-primary pb-1" href="#">Bookings</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Dashboard</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">AI Insights</a>
+</nav>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-primary-container/10 p-2 rounded-lg transition-all">dark_mode</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-primary-container/10 p-2 rounded-lg transition-all">notifications</span>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-fixed">
+<img alt="Profile" data-alt="A professional headshot of a young woman with a warm, confident smile, set against a blurred urban architectural background. The lighting is soft and natural, emphasizing her friendly demeanor. The overall aesthetic is clean, modern, and high-end, perfectly fitting the luxury travel context of AetherTravel." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBb01XSfDMLuaI46xoP90JA6yxL5uaA8CJswYsMAd_3wkUClp7FLXdVEFji5bQ6gKjQkUh3VKo0Cnd_zHvc_Oili4mitvCBcObW3uYq36T2AeoipyWpBr83FVF40QwFkgEGD-_WWmWb3mOUz1YlUEEnwf8cGwOOP9G33nMrTJLTiMUFuWGti2jBfkq5DMeo10UzB1dgsJCDrAxHsrbStmogsoCIvx9EiSmLPjlpYKy5YKkIfpmMFQpKIFopGzrQI0bmxR_xRS1shxqS"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow w-full max-w-container-max mx-auto px-gutter py-stack-xl">
+<!-- Hero Header -->
+<div class="mb-stack-xl animate-fade-up">
+<div class="flex items-center gap-2 mb-stack-xs">
+<span class="bg-emerald-soft text-primary px-3 py-1 rounded-full text-label-sm flex items-center gap-1 border border-primary/20">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+                    AI Travel Planner
+                </span>
+</div>
+<h1 class="font-display-lg text-headline-lg md:text-display-lg text-ocean mb-stack-sm">Tạo lịch trình thông minh</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Hoàn thiện 4 bước để AI lập kế hoạch chuyến đi phù hợp nhất với phong cách và ngân sách của bạn.</p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-stack-xl items-start">
+<!-- Left Rail: Step Progress -->
+<aside class="lg:col-span-3 space-y-stack-md animate-fade-up stagger-1">
+<div class="flex lg:flex-col gap-4 overflow-x-auto pb-4 lg:pb-0 scrollbar-hide">
+<!-- Step 1: Active -->
+<div class="flex-shrink-0 lg:w-full flex items-center gap-4 p-4 rounded-xl border-2 border-primary bg-primary-fixed/10 step-active-glow">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold">1</div>
+<span class="font-label-md text-primary whitespace-nowrap">Chọn địa điểm</span>
+</div>
+<!-- Step 2: Pending -->
+<div class="flex-shrink-0 lg:w-full flex items-center gap-4 p-4 rounded-xl border border-outline-variant bg-surface hover:bg-surface-container transition-colors">
+<div class="w-8 h-8 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center font-bold">2</div>
+<span class="font-label-md text-on-surface-variant whitespace-nowrap">Thông tin du lịch</span>
+</div>
+<!-- Step 3: Pending -->
+<div class="flex-shrink-0 lg:w-full flex items-center gap-4 p-4 rounded-xl border border-outline-variant bg-surface hover:bg-surface-container transition-colors">
+<div class="w-8 h-8 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center font-bold">3</div>
+<span class="font-label-md text-on-surface-variant whitespace-nowrap">Ngân sách &amp; Khách sạn</span>
+</div>
+<!-- Step 4: Pending -->
+<div class="flex-shrink-0 lg:w-full flex items-center gap-4 p-4 rounded-xl border border-outline-variant bg-surface hover:bg-surface-container transition-colors">
+<div class="w-8 h-8 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center font-bold">4</div>
+<span class="font-label-md text-on-surface-variant whitespace-nowrap">Xác nhận kế hoạch</span>
+</div>
+</div>
+<!-- AI Concierge Panel (Atlas AI) -->
+<div class="hidden lg:block glass-panel border border-primary/20 rounded-2xl p-stack-lg mt-stack-xl shadow-lg relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-[64px]">smart_toy</span>
+</div>
+<div class="relative z-10">
+<div class="flex items-center gap-2 mb-stack-sm">
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary text-[18px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<span class="font-headline-md text-body-md font-bold text-ocean">Atlas AI</span>
+</div>
+<p class="text-body-sm text-on-surface-variant leading-relaxed" id="ai-suggestion-text">
+                            Chào bạn! Tôi là Atlas. Bắt đầu bằng cách cho tôi biết bạn sẽ khởi hành từ đâu và điểm đến mong muốn của bạn là gì nhé. Tôi sẽ kiểm tra khoảng cách và thời tiết ngay!
+                        </p>
+</div>
+</div>
+</aside>
+<!-- Right Content: Active Step Content -->
+<div class="lg:col-span-9 animate-fade-up stagger-2">
+<div class="bg-surface-container-lowest border border-outline-variant/50 rounded-3xl p-stack-xl shadow-sm relative overflow-hidden">
+<!-- Progress Bar -->
+<div class="absolute top-0 left-0 w-full h-1.5 bg-surface-container">
+<div class="h-full bg-primary w-1/4 transition-all duration-500"></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-stack-xl">
+<!-- Inputs Section -->
+<div class="space-y-stack-lg">
+<h2 class="font-headline-md text-headline-md text-ocean">Bạn đi đâu thế?</h2>
+<div class="space-y-stack-md relative">
+<!-- Origin -->
+<div class="relative p-stack-md border-2 border-primary bg-emerald-soft/30 rounded-2xl group transition-all">
+<label class="block text-label-sm text-primary font-bold mb-1">ĐIỂM XUẤT PHÁT</label>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">my_location</span>
+<input class="w-full bg-transparent border-none focus:ring-0 p-0 text-body-lg font-medium text-ocean placeholder:text-outline-variant" id="origin-input" placeholder="Ví dụ: Hà Nội, Việt Nam" type="text"/>
+</div>
+<div class="absolute -bottom-4 left-1/2 -translate-x-1/2 w-8 h-8 bg-white border border-outline-variant rounded-full flex items-center justify-center z-10 shadow-sm">
+<span class="material-symbols-outlined text-outline text-[18px]">south</span>
+</div>
+</div>
+<!-- Destination -->
+<div class="p-stack-md border border-outline-variant bg-surface rounded-2xl group focus-within:border-primary transition-all pt-stack-lg">
+<label class="block text-label-sm text-on-surface-variant font-bold mb-1">ĐIỂM ĐẾN</label>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant group-focus-within:text-primary transition-colors">map</span>
+<input class="w-full bg-transparent border-none focus:ring-0 p-0 text-body-lg font-medium text-ocean placeholder:text-outline-variant" id="destination-input" placeholder="Bạn muốn đến đâu?" type="text"/>
+</div>
+</div>
+</div>
+<button class="flex items-center gap-2 text-primary font-label-md hover:bg-primary-container/10 px-4 py-2 rounded-lg transition-all">
+<span class="material-symbols-outlined text-[20px]">gps_fixed</span>
+                                Dùng vị trí hiện tại
+                            </button>
+<div class="pt-stack-lg">
+<button class="w-full py-4 bg-primary text-on-primary rounded-xl font-headline-md text-body-lg shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                                    Tiếp tục bước 2
+                                    <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Visual Section (Map/Preview) -->
+<div class="space-y-stack-md">
+<div class="aspect-square md:aspect-auto md:h-full rounded-2xl overflow-hidden border border-outline-variant/30 relative">
+<img class="w-full h-full object-cover" data-alt="A stylized, high-detail top-down satellite map view of a coastal region where deep ocean blues meet lush emerald forests. The map is overlaid with clean, modern digital interface elements such as route paths and destination pins in a vibrant primary emerald color. The lighting suggests a clear day, highlighting the geographical textures and creating a sophisticated, professional travel-planning aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCI_cy4la973IAXvY3-EVfshzuX--EIOoPX4-pU_sHH0jsKphouVrFNMer9peY9AS4LQLGe3xyOFv_LBgNuIS6tMT4Ghs_n4RwC7FMcpd_a8KfpmWzHC04oAXGDRdOZ9gV7ZbZX0ZXeG1eglGIuO00OajSwV1OPPgil_aBhNfSba5IFL4cYFOHcQfcG31hokTM01ySKwAID5a6SHXU2mdSsK6E-FRC7K7glV_bq51RckGbmrxEctxj5_WIvD-yVXMISQ92IxffLTyri"/>
+<div class="absolute top-4 left-4 right-4">
+<div class="glass-panel p-3 rounded-xl border border-white/40 shadow-sm flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-primary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">flight_takeoff</span>
+</div>
+<div>
+<div class="text-label-sm text-on-surface-variant">LỘ TRÌNH</div>
+<div class="text-body-sm font-bold text-ocean">Đang chờ nhập điểm đến...</div>
+</div>
+</div>
+</div>
+</div>
+<div class="absolute bottom-4 right-4">
+<div class="bg-white/90 backdrop-blur rounded-lg p-2 shadow-lg flex flex-col gap-2">
+<button class="w-8 h-8 rounded bg-surface hover:bg-surface-container flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+<button class="w-8 h-8 rounded bg-surface hover:bg-surface-container flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[20px]">remove</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Hidden inputs for business logic/step state preservation -->
+<input id="start-date" type="hidden" value=""/>
+<input id="days" type="hidden" value="1"/>
+<input id="travelers" type="hidden" value="1"/>
+<input id="travel-style" type="hidden" value="balanced"/>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-ocean w-full rounded-t-xl border-t border-outline/20 mt-stack-xl">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-stack-xl w-full px-gutter py-stack-xl max-w-container-max mx-auto">
+<div class="col-span-1 md:col-span-1">
+<div class="font-headline-md text-headline-md font-bold text-primary-fixed mb-stack-sm">AetherTravel</div>
+<p class="font-body-sm text-body-sm text-on-primary-container/80">© 2024 AetherTravel AI. Elevated exploration through intelligence.</p>
+</div>
+<div class="flex flex-col gap-2">
+<h4 class="text-primary-fixed font-bold mb-2">Platform</h4>
+<a class="font-body-sm text-body-sm text-on-primary-container/80 hover:text-primary-fixed hover:underline transition-colors" href="#">About Us</a>
+<a class="font-body-sm text-body-sm text-on-primary-container/80 hover:text-primary-fixed hover:underline transition-colors" href="#">Sustainability</a>
+</div>
+<div class="flex flex-col gap-2">
+<h4 class="text-primary-fixed font-bold mb-2">Legal</h4>
+<a class="font-body-sm text-body-sm text-on-primary-container/80 hover:text-primary-fixed hover:underline transition-colors" href="#">Terms of Service</a>
+<a class="font-body-sm text-body-sm text-on-primary-container/80 hover:text-primary-fixed hover:underline transition-colors" href="#">Privacy Policy</a>
+</div>
+<div class="flex flex-col gap-2">
+<h4 class="text-primary-fixed font-bold mb-2">Support</h4>
+<a class="font-body-sm text-body-sm text-on-primary-container/80 hover:text-primary-fixed hover:underline transition-colors" href="#">Contact Support</a>
+<a class="font-body-sm text-body-sm text-on-primary-container/80 hover:text-primary-fixed hover:underline transition-colors" href="#">Global Destinations</a>
+</div>
+</div>
+</footer>
+<script>
+        // Micro-interactions and logic mock
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputs = ['origin-input', 'destination-input'];
+            const aiText = document.getElementById('ai-suggestion-text');
+
+            inputs.forEach(id => {
+                const el = document.getElementById(id);
+                el.addEventListener('focus', () => {
+                    const parent = el.closest('.p-stack-md');
+                    parent.classList.add('step-active-glow', 'border-primary');
+                    
+                    if(id === 'destination-input') {
+                        aiText.innerText = "Tuyệt vời! Chọn điểm đến giúp tôi có thể gợi ý những khách sạn tốt nhất và những trải nghiệm 'must-try' cho bạn đấy.";
+                    }
+                });
+                el.addEventListener('blur', () => {
+                    const parent = el.closest('.p-stack-md');
+                    if (!el.value) {
+                        parent.classList.remove('step-active-glow');
+                        if (id !== 'origin-input') parent.classList.remove('border-primary');
+                    }
+                });
+            });
+
+            // Smooth entrance for page load
+            const animatedElements = document.querySelectorAll('.animate-fade-up');
+            animatedElements.forEach((el, index) => {
+                el.style.opacity = '0';
+            });
+        });
+    </script>
+</body></html>

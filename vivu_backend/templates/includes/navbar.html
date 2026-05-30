@@ -1,130 +1,272 @@
 {% load static %}
-<nav id="navbar" class="sticky top-0 z-50 border-b backdrop-blur-xl transition-all duration-200 ease-out" style="background: rgba(var(--background), 0.8); border-color: rgba(var(--border), 0.8);">
-    <div class="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        <a href="/" class="group flex min-w-0 items-center gap-3">
-            <span class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-[rgba(var(--border),0.9)] dark:bg-slate-900/80">
-                <img src="{% static 'img/logo_crop-Photoroom.png' %}" alt="Vi Vu Logo" class="h-10 w-10 object-contain">
-            </span>
-            <span class="min-w-0">
-                <span class="block truncate font-heading text-lg font-bold tracking-tight sm:text-xl" style="color: rgb(var(--ocean-soft));">Vi Vu</span>
-                <span class="theme-text-muted hidden text-xs font-medium lg:block">Lập kế hoạch thông minh, trọn vẹn hành trình</span>
-            </span>
+
+<header
+    id="navbar"
+    class="sticky top-0 z-50 border-b border-border bg-card text-foreground font-sans backdrop-blur-xl transition-colors duration-300"
+>
+    <div class="mx-auto flex h-20 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <a href="{% url 'home' %}" class="flex min-w-0 items-center gap-3">
+            <img
+                src="{% static 'img/logo_crop-Photoroom.png' %}"
+                alt="Vi Vu logo"
+                class="h-9 w-auto shrink-0"
+            >
+            <div class="min-w-0">
+                <p class="truncate text-2xl font-semibold tracking-tight text-foreground">
+                    Vi Vu
+                </p>
+                <p class="hidden text-xs text-muted-foreground md:block">
+                    Lập kế hoạch thông minh, trọn vẹn hành trình
+                </p>
+            </div>
         </a>
 
-        <div class="hidden items-center gap-2 lg:flex">
-            <a href="/" class="rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ease-out {% if request.path == '/' %}theme-badge{% else %}theme-text-muted hover:bg-[rgba(var(--muted),0.95)] hover:text-[rgb(var(--foreground))]{% endif %}">Trang chủ</a>
-            <a href="/places/search/" class="rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ease-out {% if '/places/search/' in request.path %}theme-badge{% else %}theme-text-muted hover:bg-[rgba(var(--muted),0.95)] hover:text-[rgb(var(--foreground))]{% endif %}">Khám phá</a>
-            <a href="/travel-plan/" class="rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ease-out {% if '/travel-plan/' in request.path %}theme-badge{% else %}theme-text-muted hover:bg-[rgba(var(--muted),0.95)] hover:text-[rgb(var(--foreground))]{% endif %}">Tạo lịch trình</a>
-            <a href="/ai-chat/" class="rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ease-out {% if '/ai-chat/' in request.path %}theme-badge{% else %}theme-text-muted hover:bg-[rgba(var(--muted),0.95)] hover:text-[rgb(var(--foreground))]{% endif %}">AI Chat</a>
-        </div>
+        <nav class="hidden items-center gap-2 lg:flex">
+            <a
+                href="{% url 'home' %}"
+                class="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground {% if request.path == '/' %}bg-emerald-soft text-primary{% endif %}"
+            >
+                Trang chủ
+            </a>
+            <a
+                href="{% url 'place_search' %}"
+                class="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground {% if '/places/' in request.path %}bg-emerald-soft text-primary{% endif %}"
+            >
+                Khám phá
+            </a>
+            <a
+                href="{% url 'travel-plan' %}"
+                class="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground {% if '/travel-plan/' in request.path %}bg-emerald-soft text-primary{% endif %}"
+            >
+                Tạo lịch trình
+            </a>
+            <a
+                href="{% url 'ai-chat' %}"
+                class="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground {% if '/ai-chat/' in request.path %}bg-emerald-soft text-primary{% endif %}"
+            >
+                AI Chat
+            </a>
+        </nav>
 
         <div class="hidden items-center gap-3 lg:flex">
-            <button id="theme-toggle-desktop" type="button" class="theme-btn-secondary inline-flex h-11 w-11 items-center justify-center rounded-2xl text-sm" aria-label="Chuyển chế độ sáng tối">
-                <i class="fa-solid fa-moon theme-toggle-icon"></i>
+            <button
+                id="theme-toggle-desktop"
+                type="button"
+                aria-label="Chuyển giao diện"
+                class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background text-foreground shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary hover:text-primary"
+            >
+                <i class="theme-toggle-icon fa-solid fa-moon text-sm"></i>
             </button>
+
             {% if user.is_authenticated %}
                 <div class="relative">
-                    <button id="user-avatar-btn" type="button" class="theme-btn-secondary flex items-center gap-3 rounded-full px-3 py-2 shadow-sm" aria-expanded="false">
-                        <span class="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full text-sm font-bold text-white" style="background: rgb(var(--primary));">
-                            {% if user.anhDaiDien %}
-                                <img src="{{ user.anhDaiDien }}" alt="{{ user.hoTen|default:user.username }}" class="h-full w-full object-cover">
-                            {% else %}
-                                {{ user.username|first|upper }}
-                            {% endif %}
+                    <button
+                        id="user-avatar-btn"
+                        type="button"
+                        class="inline-flex items-center gap-3 rounded-full border border-border bg-background py-2 pl-3 pr-4 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                    >
+                        <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-soft text-sm font-semibold text-primary">
+                            {{ user.username|slice:":1"|upper }}
                         </span>
-                        <span class="hidden text-left xl:block">
-                            <span class="block text-sm font-semibold" style="color: rgb(var(--foreground));">{{ user.hoTen|default:user.username }}</span>
-                            <span class="theme-text-muted block text-xs">Quản lý tài khoản</span>
+                        <span class="max-w-[9rem] truncate text-sm font-medium text-foreground">
+                            {{ user.username }}
                         </span>
-                        <i class="fas fa-chevron-down text-xs theme-text-muted"></i>
                     </button>
-                    <ul id="user-dropdown-menu" class="theme-surface invisible absolute right-0 top-[calc(100%+0.75rem)] z-50 w-64 translate-y-2 rounded-3xl p-2 opacity-0 shadow-2xl transition duration-200">
-                        <li><a href="/accounts/profile/" class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium theme-text-muted transition hover:bg-[rgba(var(--muted),0.95)] hover:text-[rgb(var(--foreground))]"><i class="fas fa-user w-4"></i>Thông tin cá nhân</a></li>
-                        <li><a href="/accounts/itineraries/" class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium theme-text-muted transition hover:bg-[rgba(var(--muted),0.95)] hover:text-[rgb(var(--foreground))]"><i class="fas fa-route w-4"></i>Lịch trình đã tạo</a></li>
-                        <li><a href="/accounts/search-history/" class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium theme-text-muted transition hover:bg-[rgba(var(--muted),0.95)] hover:text-[rgb(var(--foreground))]"><i class="fas fa-clock-rotate-left w-4"></i>Lịch sử tìm kiếm</a></li>
-                        <li class="my-2 border-t theme-divider"></li>
-                        <li><a id="dropdown-logout-link" href="#" class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-rose-500 transition hover:bg-rose-500/10"><i class="fas fa-right-from-bracket w-4"></i>Đăng xuất</a></li>
-                    </ul>
+                    <div
+                        id="user-dropdown-menu"
+                        class="invisible absolute right-0 top-[calc(100%+0.75rem)] z-50 w-56 translate-y-2 rounded-2xl border border-border bg-card p-2 opacity-0 shadow-xl transition-all duration-200"
+                    >
+                        <a
+                            href="{% url 'admin:index' %}"
+                            class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        >
+                            <i class="fa-solid fa-gauge-high w-4"></i>
+                            Quản trị hệ thống
+                        </a>
+                        <button
+                            id="dropdown-logout-link"
+                            type="button"
+                            class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                        >
+                            <i class="fa-solid fa-arrow-right-from-bracket w-4"></i>
+                            Đăng xuất
+                        </button>
+                    </div>
                 </div>
             {% else %}
-                <a href="/accounts/login/" class="theme-btn-secondary rounded-full px-4 py-2 text-sm font-semibold">Đăng nhập</a>
-                <a href="/accounts/signup/" class="theme-btn-primary rounded-full px-5 py-2.5 text-sm font-semibold">Đăng ký</a>
+                <a
+                    href="{% url 'login' %}"
+                    class="px-3 py-2 text-sm font-medium text-foreground transition-colors hover:text-primary"
+                >
+                    Đăng nhập
+                </a>
+                <a
+                    href="{% url 'signup' %}"
+                    class="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary-hover hover:shadow-lg"
+                >
+                    Đăng ký
+                </a>
             {% endif %}
         </div>
 
-        <div class="flex items-center gap-2 lg:hidden">
-            <button id="theme-toggle-mobile-top" type="button" class="theme-btn-secondary inline-flex h-11 w-11 items-center justify-center rounded-2xl text-sm" aria-label="Chuyển chế độ sáng tối">
-                <i class="fa-solid fa-moon theme-toggle-icon"></i>
+        <div class="flex items-center gap-3 lg:hidden">
+            <button
+                id="theme-toggle-mobile-top"
+                type="button"
+                aria-label="Chuyển giao diện"
+                class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background text-foreground shadow-sm transition-all duration-200 hover:border-primary hover:text-primary"
+            >
+                <i class="theme-toggle-icon fa-solid fa-moon text-sm"></i>
             </button>
-            <button id="mobile-menu-toggle" type="button" class="theme-btn-secondary inline-flex h-11 w-11 items-center justify-center rounded-2xl text-sm" aria-label="Mở menu điều hướng" aria-expanded="false">
-                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <path d="M4 7h16M4 12h16M4 17h16"></path>
-                </svg>
+            <button
+                id="mobile-menu-toggle"
+                type="button"
+                aria-label="Mở menu điều hướng"
+                class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background text-foreground shadow-sm transition-all duration-200 hover:border-primary hover:text-primary"
+            >
+                <i class="fa-solid fa-bars text-base"></i>
             </button>
         </div>
     </div>
 
-    <div id="mobile-menu-overlay" class="pointer-events-none fixed inset-0 z-[60] bg-slate-950/40 opacity-0 transition duration-300 lg:hidden"></div>
-    <aside id="mobile-drawer" class="theme-surface fixed right-0 top-0 z-[70] flex h-full w-[min(24rem,88vw)] translate-x-full flex-col shadow-2xl transition duration-300 lg:hidden">
-        <div class="flex items-center justify-between border-b px-5 py-5 theme-divider">
-            <div>
-                <p class="font-heading text-base font-semibold" style="color: rgb(var(--ocean-soft));">Điều hướng</p>
-                <p class="theme-text-muted text-sm">Khám phá nhanh mọi tính năng của Vi Vu</p>
+    <div
+        id="mobile-menu-overlay"
+        class="pointer-events-none fixed inset-0 z-50 bg-black/45 opacity-0 transition-opacity duration-300 lg:hidden"
+    ></div>
+
+    <aside
+        id="mobile-drawer"
+        class="pointer-events-none fixed right-0 top-0 z-[60] flex h-full w-full max-w-sm translate-x-full flex-col border-l border-border bg-card text-foreground font-sans opacity-0 shadow-2xl transition-all duration-300 lg:hidden"
+        aria-hidden="true"
+    >
+        <div class="flex items-center justify-between border-b border-border px-5 py-5">
+            <div class="flex items-center gap-3">
+                <img
+                    src="{% static 'img/logo_crop-Photoroom.png' %}"
+                    alt="Vi Vu logo"
+                    class="h-9 w-auto"
+                >
+                <div>
+                    <p class="text-lg font-semibold tracking-tight text-foreground">Vi Vu</p>
+                    <p class="text-xs text-muted-foreground">Lập kế hoạch thông minh, trọn vẹn hành trình</p>
+                </div>
             </div>
-            <button id="mobile-menu-close" type="button" class="theme-btn-secondary inline-flex h-11 w-11 items-center justify-center rounded-2xl" aria-label="Đóng menu">
-                <i class="fas fa-xmark text-lg"></i>
+            <button
+                id="mobile-menu-close"
+                type="button"
+                aria-label="Đóng menu điều hướng"
+                class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+            >
+                <i class="fa-solid fa-xmark text-base"></i>
             </button>
         </div>
 
         <div class="flex-1 overflow-y-auto px-5 py-6">
-            <div class="space-y-2">
-                <a href="/" class="mobile-drawer-link flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold transition-all duration-200 ease-out {% if request.path == '/' %}theme-badge{% else %}theme-text-muted hover:bg-[rgba(var(--muted),0.95)] hover:text-[rgb(var(--foreground))]{% endif %}"><span>Trang chủ</span><i class="fas fa-angle-right text-xs opacity-60"></i></a>
-                <a href="/places/search/" class="mobile-drawer-link flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold transition-all duration-200 ease-out {% if '/places/search/' in request.path %}theme-badge{% else %}theme-text-muted hover:bg-[rgba(var(--muted),0.95)] hover:text-[rgb(var(--foreground))]{% endif %}"><span>Khám phá</span><i class="fas fa-angle-right text-xs opacity-60"></i></a>
-                <a href="/travel-plan/" class="mobile-drawer-link flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold transition-all duration-200 ease-out {% if '/travel-plan/' in request.path %}theme-badge{% else %}theme-text-muted hover:bg-[rgba(var(--muted),0.95)] hover:text-[rgb(var(--foreground))]{% endif %}"><span>Tạo lịch trình</span><i class="fas fa-angle-right text-xs opacity-60"></i></a>
-                <a href="/ai-chat/" class="mobile-drawer-link flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold transition-all duration-200 ease-out {% if '/ai-chat/' in request.path %}theme-badge{% else %}theme-text-muted hover:bg-[rgba(var(--muted),0.95)] hover:text-[rgb(var(--foreground))]{% endif %}"><span>AI Chat</span><i class="fas fa-angle-right text-xs opacity-60"></i></a>
-            </div>
+            <nav class="flex flex-col gap-2">
+                <a href="{% url 'home' %}" class="mobile-drawer-link rounded-2xl px-4 py-4 text-base font-medium text-foreground transition-colors hover:bg-muted hover:text-primary">Trang chủ</a>
+                <a href="{% url 'place_search' %}" class="mobile-drawer-link rounded-2xl px-4 py-4 text-base font-medium text-foreground transition-colors hover:bg-muted hover:text-primary">Khám phá</a>
+                <a href="{% url 'travel-plan' %}" class="mobile-drawer-link rounded-2xl px-4 py-4 text-base font-medium text-foreground transition-colors hover:bg-muted hover:text-primary">Tạo lịch trình</a>
+                <a href="{% url 'ai-chat' %}" class="mobile-drawer-link rounded-2xl px-4 py-4 text-base font-medium text-foreground transition-colors hover:bg-muted hover:text-primary">AI Chat</a>
+            </nav>
 
-            <div class="theme-muted-surface mt-8 rounded-3xl p-4">
-                <div class="flex items-center justify-between gap-3">
-                    <div>
-                        <p class="theme-text-muted text-xs font-semibold uppercase tracking-[0.24em]">Giao diện</p>
-                        <p class="mt-1 text-sm" style="color: rgb(var(--foreground));">Chuyển light hoặc dark mode</p>
-                    </div>
-                    <button id="theme-toggle-drawer" type="button" class="theme-btn-secondary inline-flex h-11 w-11 items-center justify-center rounded-2xl text-sm" aria-label="Chuyển chế độ sáng tối">
-                        <i class="fa-solid fa-moon theme-toggle-icon"></i>
-                    </button>
-                </div>
-            </div>
-
-            <div class="theme-muted-surface mt-4 rounded-3xl p-4">
-                <p class="theme-text-muted text-xs font-semibold uppercase tracking-[0.24em]">Truy cập nhanh</p>
-                <div class="mt-4 flex flex-wrap gap-2">
-                    <span class="theme-btn-secondary rounded-full px-3 py-2 text-xs font-medium">⛅ Thời tiết</span>
-                    <span class="theme-btn-secondary rounded-full px-3 py-2 text-xs font-medium">📍 Địa danh</span>
-                    <span class="theme-btn-secondary rounded-full px-3 py-2 text-xs font-medium">🏨 Khách sạn</span>
-                    <span class="theme-btn-secondary rounded-full px-3 py-2 text-xs font-medium">🍽️ Ăn uống</span>
-                    <span class="theme-btn-secondary rounded-full px-3 py-2 text-xs font-medium">🛡️ Lưu ý khẩn cấp</span>
-                </div>
+            <div class="mt-8 rounded-3xl border border-border bg-muted p-5">
+                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-primary">
+                    Trợ lý hành trình
+                </p>
+                <p class="mt-3 text-sm leading-relaxed text-muted-foreground">
+                    Khám phá điểm đến, xây lịch trình 4 bước và theo dõi ngân sách du lịch nội địa ngay trên cùng một nền tảng.
+                </p>
+                <button
+                    id="theme-toggle-drawer"
+                    type="button"
+                    class="mt-4 inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-background"
+                >
+                    <i class="theme-toggle-icon fa-solid fa-moon text-sm"></i>
+                    Đổi giao diện
+                </button>
             </div>
         </div>
 
-        <div class="border-t px-5 py-5 theme-divider">
+        <div class="border-t border-border px-5 py-5">
             {% if user.is_authenticated %}
-                <div class="theme-muted-surface mb-4 rounded-2xl p-4">
-                    <p class="text-sm font-semibold" style="color: rgb(var(--foreground));">{{ user.hoTen|default:user.username }}</p>
-                    <p class="theme-text-muted text-xs">Quản lý hành trình và hồ sơ cá nhân</p>
+                <div class="mb-4 flex items-center gap-3 rounded-2xl bg-muted px-4 py-4">
+                    <span class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-emerald-soft text-sm font-semibold text-primary">
+                        {{ user.username|slice:":1"|upper }}
+                    </span>
+                    <div class="min-w-0">
+                        <p class="truncate text-sm font-semibold text-foreground">{{ user.username }}</p>
+                        <p class="text-xs text-muted-foreground">Tài khoản đang hoạt động</p>
+                    </div>
                 </div>
-                <div class="space-y-2">
-                    <a href="/accounts/profile/" class="mobile-drawer-link theme-btn-secondary block rounded-2xl px-4 py-3 text-sm font-semibold">Thông tin cá nhân</a>
-                    <a href="/accounts/itineraries/" class="mobile-drawer-link theme-btn-secondary block rounded-2xl px-4 py-3 text-sm font-semibold">Lịch trình đã tạo</a>
-                    <a id="drawer-logout-link" href="#" class="theme-btn-primary block rounded-2xl px-4 py-3 text-center text-sm font-semibold">Đăng xuất</a>
+                <div class="flex flex-col gap-3">
+                    <a
+                        href="{% url 'admin:index' %}"
+                        class="inline-flex items-center justify-center rounded-full border border-border px-4 py-3 text-sm font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
+                    >
+                        Quản trị hệ thống
+                    </a>
+                    <button
+                        id="drawer-logout-link"
+                        type="button"
+                        class="inline-flex items-center justify-center rounded-full bg-rose-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-rose-700"
+                    >
+                        Đăng xuất
+                    </button>
                 </div>
             {% else %}
-                <div class="space-y-3">
-                    <a href="/accounts/login/" class="mobile-drawer-link theme-btn-secondary block rounded-2xl px-4 py-3 text-center text-sm font-semibold">Đăng nhập</a>
-                    <a href="/accounts/signup/" class="mobile-drawer-link theme-btn-primary block rounded-2xl px-4 py-3 text-center text-sm font-semibold">Đăng ký</a>
+                <div class="flex flex-col gap-3">
+                    <a
+                        href="{% url 'login' %}"
+                        class="inline-flex items-center justify-center rounded-full border border-border px-4 py-3 text-sm font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
+                    >
+                        Đăng nhập
+                    </a>
+                    <a
+                        href="{% url 'signup' %}"
+                        class="inline-flex items-center justify-center rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover"
+                    >
+                        Đăng ký
+                    </a>
                 </div>
             {% endif %}
         </div>
     </aside>
-</nav>
+
+    <div
+        id="logout-modal-overlay"
+        class="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center bg-black/50 px-4 opacity-0 transition-opacity duration-300"
+    >
+        <div class="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-2xl">
+            <div class="flex items-start gap-4">
+                <span class="mt-1 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                </span>
+                <div>
+                    <h3 class="text-lg font-semibold text-foreground">Đăng xuất khỏi Vi Vu?</h3>
+                    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
+                        Phiên làm việc hiện tại sẽ kết thúc. Bạn có thể đăng nhập lại bất cứ lúc nào để tiếp tục lên kế hoạch du lịch.
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <button
+                    id="logout-modal-cancel"
+                    type="button"
+                    class="inline-flex items-center justify-center rounded-full border border-border px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                >
+                    Ở lại
+                </button>
+                <form id="logout-form" method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button
+                        type="submit"
+                        class="inline-flex items-center justify-center rounded-full bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-rose-700"
+                    >
+                        Đăng xuất
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</header>

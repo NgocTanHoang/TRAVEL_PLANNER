@@ -1,158 +1,202 @@
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng ký | Vi Vu</title>
-    <link rel="icon" type="image/png" href="{% static 'img/logo_crop-Photoroom.png' %}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <style>
-        :root{--color-primary:#153D68;--color-primary-dark:#0d2842;--color-secondary:#00838F;--color-accent:#DAA520}
-        body{position:relative;background:var(--color-primary);background-size:cover;min-height:100vh;font-family:'Inter',sans-serif;overflow:auto;margin:0;display:flex;flex-direction:column}
-        .content-wrap{flex:1;display:flex;justify-content:center;align-items:flex-start;padding:2.5rem 1rem 3.5rem}
-        body::before{content:'';position:absolute;inset:0;background-color:#f5f6fa;opacity:.1}
-        .navbar{background:var(--color-primary);position:sticky;top:0;z-index:1000;border-bottom:2px solid rgba(0,131,143,.2);transition:all .3s cubic-bezier(.4,0,.2,1)}
-        .navbar.scrolled{background:rgba(21,61,104,.7);backdrop-filter:blur(20px);box-shadow:0 10px 15px -3px rgba(0,0,0,.1)}
-        .nav-container{max-width:1280px;margin:0 auto;padding:0.5rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1.5rem}
-        .logo{display:flex;align-items:center;gap:0.75rem;text-decoration:none}
-        .logo img{height:46px;width:46px;border-radius:50%;background:#fff;padding:3px;border:2px solid transparent;box-shadow:0 4px 12px rgba(0,0,0,.25);object-fit:contain;transition:.3s;transform:scale(1.0)}
-        .logo:hover img{border-color:var(--color-accent);box-shadow:0 6px 20px rgba(218,165,32,.4)}
-        .logo h1{color:#fff;font-weight:800;letter-spacing:.5px;font-size:1.4rem;margin:0}
-        .nav-menu{display:flex;gap:2rem;list-style:none;margin:0;padding:0}
-        .nav-menu a{color:#fff;text-decoration:none;font-weight:600;opacity:.95;padding:.5rem 1rem;border-radius:.5rem;position:relative}
-        .nav-menu a::before{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:0;height:2px;background:var(--color-accent);transition:.3s}
-        .nav-menu a:hover{color:var(--color-accent);background:rgba(218,165,32,.1)}
-        .nav-menu a:hover::before{width:80%}
-        footer{background:var(--color-primary-dark);color:#fff;padding:3rem 2rem 1.5rem;margin-top:auto}
-        footer .footer-container{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:2rem;margin-bottom:2rem}
-        footer .footer-section h4{font-size:1.2rem;margin-bottom:1rem;color:var(--color-accent)}
-        footer .footer-section ul{list-style:none}
-        footer .footer-section ul li{margin-bottom:.5rem}
-        footer .footer-section a{color:#fff;text-decoration:none;opacity:.9;transition:all .3s}
-        footer .footer-section a:hover{color:var(--color-accent);opacity:1}
-        footer .footer-bottom{text-align:center;padding-top:2rem;border-top:1px solid rgba(255,255,255,.1);opacity:.8}
-        footer .social-links{display:flex;gap:1rem;margin-top:1rem}
-        footer .social-link{display:flex;align-items:center;justify-content:center;width:45px;height:45px;border-radius:50%;background:rgba(255,255,255,.1);transition:all .3s;color:#fff}
-        footer .social-link:hover{background:var(--color-accent);transform:translateY(-3px)}
-        .container{position:relative;margin:0 auto;width:850px;background:#fff;border-radius:15px;display:flex;box-shadow:0 25px 60px rgba(0,0,0,.35);border:2px solid rgba(0,131,143,.15)}
-        .form-content{width:400px}
-        figure{margin:10px;display:flex;align-items:center;justify-content:center}
-        .form-image{width:auto;margin:auto 20px}
-        .form-content h1{text-align:center;padding-top:20px;margin:0;font-weight:800;color:var(--color-primary)}
-        .form-content form{padding:0 40px}
-        .form-control{position:relative;border-bottom:2px solid #adadad;margin:40px 0}
-        .form-control label{display:none}
-        .form-control input{width:100%;height:40px;font-size:16px;border:none;background:none;outline:none;padding-right:35px}
-        .hint{display:block;font-size:.85rem;color:#6b7280;margin-top:.35rem}
-        .form-control span::before{content:'';position:absolute;top:42px;left:0;width:0;height:2px;background:var(--color-accent);transition:.3s}
-        .form-control input:focus~span::before{width:100%}
-        .password-toggle{position:absolute;right:5px;top:50%;transform:translateY(-50%);background:none!important;border:none!important;cursor:pointer;color:#999;font-size:0.95rem;padding:3px 6px;transition:all .2s;z-index:10;height:auto!important;width:auto!important;margin:0!important;visibility:visible!important;opacity:0.7}
-        .password-toggle:hover{color:var(--color-secondary);opacity:1}
-        .password-toggle i{display:block;visibility:visible;font-weight:400}
-        .form-buttons{display:flex;justify-content:space-between}
-        .form-buttons input[type='submit'],.form-buttons button[type='button']{margin-top:10px;margin-bottom:20px;width:48%;height:50px;border:1px solid var(--color-secondary);background:var(--color-secondary);border-radius:25px;font-size:18px;color:#e9f4fb;font-weight:700;cursor:pointer;outline:none;transition:.25s;text-align:center;display:inline-block}
-        .form-buttons input[type='submit']:hover,.form-buttons button[type='button']:hover{background-color:#00a5b5;box-shadow:0 10px 20px rgba(0,131,143,.35)}
-        .signup_link{margin:20px 0;text-align:center;font-size:16px;color:#666}
-        .signup_link a{color:#2691d9;text-decoration:none}
-        .signup_link a:hover{text-decoration:underline}
-        @media(max-width:920px){.content-wrap{padding:2rem 1rem 2.5rem}.container{width:95%;max-width:850px}.form-image{display:none}.form-content{width:100%;margin-left:0}.logo img{height:40px;width:40px;padding:3px;object-fit:contain;transform:scale(1.0)}.logo h1{font-size:1.2rem}}
-    </style>
-</head>
-<body>
-    <nav class="navbar" role="navigation" aria-label="Main navigation">
-        <div class="nav-container">
-            <a href="/" class="logo" aria-label="Vi Vu Home">
-                <img src="{% static 'img/logo_crop-Photoroom.png' %}" alt="Vi Vu Logo">
-                <h1>Vi Vu</h1>
-            </a>
-            <ul class="nav-menu">
-                <li><a href="/">Trang chủ</a></li>
-            </ul>
-        </div>
-    </nav>
-    <div class="content-wrap">
-      <div class="container">
-        <figure>
-            <img class="form-image" src="{% static 'img/signup-image.jpg' %}" alt="signup-image" onerror="this.onerror=null;this.src='{% static 'img/logo_crop-Photoroom.png' %}';this.style.maxWidth='160px'"/>
-        </figure>
-        <div class="form-content" style="margin-left:auto">
-            <h1>Đăng ký</h1>
-            <form method="post">
-                {% csrf_token %}
-                <div class="form-control">
-                    {{ form.username }}
-                    <span></span>
-                </div>
-                <div class="form-control">
-                    {{ form.email }}
-                    <span></span>
-                </div>
-                <div class="form-control">
-                    {{ form.password1 }}
-                    <span></span>
-                    <button type="button" class="password-toggle" onclick="togglePassword('id_password1', 'toggle-icon-password1')">
-                        <i class="fa-solid fa-eye-slash" id="toggle-icon-password1"></i>
-                    </button>
-                </div>
-                <div class="form-control">
-                    {{ form.password2 }}
-                    <span></span>
-                    <button type="button" class="password-toggle" onclick="togglePassword('id_password2', 'toggle-icon-password2')">
-                        <i class="fa-solid fa-eye-slash" id="toggle-icon-password2"></i>
-                    </button>
-                </div>
-                {% if form.errors %}
-                <div style="color: red; text-align: center; margin-bottom: 10px;">
-                    {% for error in form.non_field_errors %}
-                        {{ error }}
-                    {% endfor %}
-                </div>
-                {% endif %}
-                <div class="form-buttons">
-                    <button type="button" onclick="location.href='/'">Quay lại</button>
-                    <input type="submit" value="Đăng ký"/>
-                </div>
-            </form>
-            <div class="signup_link">Đã có tài khoản? <a href="{% url 'login' %}">Đăng nhập</a></div>
-            <div class="signup_link" style="opacity:.8;margin-top:-10px">Đăng ký để lưu lịch trình và đồng bộ đa thiết bị.</div>
-        </div>
-      </div>
-    </div>
-    
-    {% include 'includes/footer.html' %}
-    <script>
-    // Navbar scroll effect - transparency on scroll
-    const navbar = document.querySelector('.navbar');
-    if(navbar){
-        window.addEventListener('scroll', () => {
-            const currentScroll = window.pageYOffset;
-            if(currentScroll > 50){
-                navbar.classList.add('scrolled');
-            } else {
-                navbar.classList.remove('scrolled');
-            }
-        });
+
+{% block title %}Đăng ký | Vi Vu{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .auth-shell {
+        position: relative;
+        overflow: hidden;
     }
-    
-    // Toggle password visibility
-    function togglePassword(fieldId, iconId){
-        const passwordInput = document.getElementById(fieldId);
-        const toggleIcon = document.getElementById(iconId);
-        if(passwordInput && toggleIcon){
-            if(passwordInput.type === 'password'){
-                passwordInput.type = 'text';
-                toggleIcon.className = 'fa-solid fa-eye';
-            } else {
-                passwordInput.type = 'password';
-                toggleIcon.className = 'fa-solid fa-eye-slash';
-            }
+
+    .auth-shell::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+            radial-gradient(circle at top right, rgba(var(--primary), 0.08), transparent 36%),
+            radial-gradient(circle at bottom left, rgba(var(--accent), 0.08), transparent 30%);
+        pointer-events: none;
+    }
+
+    .auth-input {
+        width: 100%;
+        border-radius: 1rem;
+        border: 1px solid var(--input-hex);
+        background: var(--card-hex);
+        color: var(--foreground-hex);
+        padding: 0.95rem 3rem 0.95rem 1rem;
+        font-size: 0.95rem;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    }
+
+    .auth-input:focus {
+        outline: none;
+        border-color: var(--primary-hex);
+        box-shadow: 0 0 0 4px rgba(var(--primary), 0.12);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="auth-shell bg-background px-4 py-10 sm:px-6 lg:px-8 lg:py-16">
+    <div class="relative mx-auto max-w-6xl">
+        <div class="grid items-center gap-8 overflow-hidden rounded-[2rem] border border-border bg-card shadow-soft lg:grid-cols-[0.95fr_1.05fr]">
+            <div class="p-6 sm:p-8 lg:p-10">
+                <div class="mx-auto max-w-md">
+                    <span class="inline-flex items-center gap-2 rounded-full bg-emerald-soft px-4 py-2 text-sm font-semibold text-primary dark:bg-ocean-soft/30 dark:text-emerald-300">
+                        <i class="fa-solid fa-user-plus text-xs"></i>
+                        Tạo tài khoản Vi Vu
+                    </span>
+                    <h2 class="mt-6 font-heading text-3xl font-bold text-foreground">Đăng ký</h2>
+                    <p class="mt-3 text-sm leading-6 text-muted-foreground">
+                        Tạo tài khoản để lưu lịch trình, theo dõi các gợi ý AI và đồng bộ hành trình của bạn trên nhiều thiết bị.
+                    </p>
+
+                    <form method="post" class="mt-8 space-y-5" novalidate>
+                        {% csrf_token %}
+
+                        <div class="space-y-2">
+                            <label for="id_username" class="text-sm font-semibold text-foreground">Tên đăng nhập</label>
+                            <div class="relative">
+                                {{ form.username }}
+                                <span class="pointer-events-none absolute inset-y-0 right-4 inline-flex items-center text-muted-foreground">
+                                    <i class="fa-regular fa-user"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label for="id_email" class="text-sm font-semibold text-foreground">Email</label>
+                            <div class="relative">
+                                {{ form.email }}
+                                <span class="pointer-events-none absolute inset-y-0 right-4 inline-flex items-center text-muted-foreground">
+                                    <i class="fa-regular fa-envelope"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label for="id_password1" class="text-sm font-semibold text-foreground">Mật khẩu</label>
+                            <div class="relative">
+                                {{ form.password1 }}
+                                <button type="button" class="absolute inset-y-0 right-3 inline-flex items-center rounded-full px-2 text-muted-foreground transition-colors hover:text-primary" onclick="togglePassword('id_password1', 'toggle-icon-password1')" aria-label="Hiện hoặc ẩn mật khẩu">
+                                    <i class="fa-solid fa-eye-slash" id="toggle-icon-password1"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label for="id_password2" class="text-sm font-semibold text-foreground">Xác nhận mật khẩu</label>
+                            <div class="relative">
+                                {{ form.password2 }}
+                                <button type="button" class="absolute inset-y-0 right-3 inline-flex items-center rounded-full px-2 text-muted-foreground transition-colors hover:text-primary" onclick="togglePassword('id_password2', 'toggle-icon-password2')" aria-label="Hiện hoặc ẩn mật khẩu">
+                                    <i class="fa-solid fa-eye-slash" id="toggle-icon-password2"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        {% if form.errors %}
+                        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/40 dark:bg-rose-950/40 dark:text-rose-200">
+                            {% for error in form.non_field_errors %}
+                                <div>{{ error }}</div>
+                            {% empty %}
+                                <div>Thông tin đăng ký chưa hợp lệ. Vui lòng kiểm tra lại các trường đã nhập.</div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <div class="flex flex-col gap-3 pt-2 sm:flex-row">
+                            <a href="{% url 'home' %}" class="inline-flex items-center justify-center rounded-2xl border border-border px-5 py-3.5 text-base font-semibold text-foreground transition-colors hover:border-primary hover:text-primary sm:flex-1">
+                                Quay lại
+                            </a>
+                            <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-primary px-5 py-3.5 text-base font-semibold text-primary-foreground transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary-hover hover:shadow-lg sm:flex-1">
+                                Đăng ký
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="mt-6 space-y-3 text-center text-sm text-muted-foreground">
+                        <p>
+                            Đã có tài khoản?
+                            <a href="{% url 'login' %}" class="font-semibold text-primary transition-colors hover:text-accent">Đăng nhập</a>
+                        </p>
+                        <p>Đăng ký để lưu lịch trình, xem lại lịch sử và đồng bộ hóa chuyến đi của bạn.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="relative hidden h-full min-h-[700px] overflow-hidden bg-gradient-to-br from-primary via-ocean-soft to-ocean p-10 text-white lg:flex lg:flex-col lg:justify-between">
+                <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle at top left, rgba(255,255,255,0.8), transparent 24%), radial-gradient(circle at bottom right, rgba(255,255,255,0.5), transparent 34%);"></div>
+                <div class="relative z-10">
+                    <span class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold">
+                        <i class="fa-solid fa-map-location-dot text-xs"></i>
+                        Đồng bộ hành trình
+                    </span>
+                    <h1 class="mt-8 font-heading text-4xl font-extrabold leading-tight">
+                        Bắt đầu hành trình thông minh cùng Vi Vu chỉ trong vài bước.
+                    </h1>
+                    <p class="mt-5 max-w-xl text-base leading-7 text-slate-200">
+                        Sau khi đăng ký, bạn có thể lưu itinerary, quản lý ngân sách, theo dõi thời tiết tại điểm đến và tái sử dụng các gợi ý AI hiệu quả hơn.
+                    </p>
+                </div>
+
+                <div class="relative z-10 space-y-4">
+                    <img
+                        src="{% static 'img/signup-image.jpg' %}"
+                        alt="Minh họa đăng ký Vi Vu"
+                        class="h-60 w-full rounded-[1.5rem] object-cover"
+                        onerror="this.onerror=null;this.src='{% static 'img/stitch-deep-ocean-landing.png' %}';"
+                    >
+                    <div class="glass-panel rounded-[1.5rem] border border-white/15 p-5">
+                        <p class="text-sm font-semibold text-white">Những gì bạn sẽ nhận được</p>
+                        <ul class="mt-3 space-y-2 text-sm leading-6 text-slate-200">
+                            <li>• Lưu và xem lại lịch trình AI đã tạo</li>
+                            <li>• Đồng bộ ngân sách, khách sạn và các điểm ghé thăm</li>
+                            <li>• Trải nghiệm đồng nhất trên trang chủ, tìm kiếm và travel plan</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function decorateAuthInput(input, placeholder) {
+        if (!input) {
+            return;
+        }
+        input.classList.add('auth-input');
+        if (placeholder && !input.placeholder) {
+            input.placeholder = placeholder;
         }
     }
-    </script>
-</body>
-</html>
 
+    window.addEventListener('DOMContentLoaded', () => {
+        decorateAuthInput(document.getElementById('id_username'), 'Nhập tên đăng nhập');
+        decorateAuthInput(document.getElementById('id_email'), 'Nhập email của bạn');
+        decorateAuthInput(document.getElementById('id_password1'), 'Tạo mật khẩu');
+        decorateAuthInput(document.getElementById('id_password2'), 'Nhập lại mật khẩu');
+    });
+
+    function togglePassword(fieldId, iconId) {
+        const passwordInput = document.getElementById(fieldId);
+        const toggleIcon = document.getElementById(iconId);
+        if (!passwordInput || !toggleIcon) {
+            return;
+        }
+
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleIcon.className = 'fa-solid fa-eye';
+        } else {
+            passwordInput.type = 'password';
+            toggleIcon.className = 'fa-solid fa-eye-slash';
+        }
+    }
+</script>
+{% endblock %}

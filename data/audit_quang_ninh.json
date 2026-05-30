@@ -4,8 +4,8 @@
     "name": "Tỉnh Quảng Ninh",
     "slug": "quang_ninh"
   },
-  "min_pois": 500,
-  "generated_at": "2026-05-24T06:46:08.925728+00:00",
+  "min_pois": 1000,
+  "generated_at": "2026-05-27T20:07:57.574592+00:00",
   "coverage": {
     "total_pois": 1289,
     "meets_min_pois": true,

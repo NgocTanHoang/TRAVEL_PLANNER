@@ -261,158 +261,259 @@ async function fetchSuggestions(query, dropdown) {
 // Mini map instance
 let originMap = null;
 let originMarker = null;
+let originAccuracyCircle = null;
+let destinationMarker = null;
+let routePreviewLine = null;
+let sovereigntyMarkersAdded = false;
+let isUpdatingMapViewport = false;
+let isResolvingCurrentLocation = false;
 
-// Current location handler with mini-map
-async function handleCurrentLocation() {
-    const btn = document.getElementById('use-current-location-btn');
-    const statusSpan = document.getElementById('location-status');
-    const originInput = document.getElementById('origin-input');
-    const chip = document.getElementById('detected-chip');
-    const addressSpan = document.getElementById('detected-address');
-    const miniMap = document.getElementById('origin-mini-map');
-    
-    if (!btn || !originInput || !statusSpan) return;
-    
-    // Update button state
-    btn.disabled = true;
-    const btnText = btn.querySelector('.btn-text');
-    const originalBtnText = btnText.textContent;
-    btnText.textContent = 'Đang xác định vị trí...';
-    statusSpan.textContent = '';
-    
-    try {
-        if (!navigator.geolocation) {
-            throw new Error('Trình duyệt không hỗ trợ vị trí. Vui lòng nhập thủ công.');
-        }
-        
-        navigator.geolocation.getCurrentPosition(async (position) => {
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
-            const accuracy = position.coords.accuracy || 0;
-            
-            try {
-                // Reverse geocode
-                const response = await fetch(`/api/v1/locations/reverse-geocode/?lat=${lat}&lon=${lon}`);
-                const data = await response.json();
-                
-                let displayAddress = '';
-                if (data.status === 'success' && data.address) {
-                    displayAddress = data.address;
-                } else if (data.location) {
-                    displayAddress = data.location;
-                } else {
-                    displayAddress = `Vị trí (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
-                }
-                
-                // Show chip with address and accuracy
-                const accuracyText = accuracy > 0 ? ` • ±${Math.round(accuracy)}m` : '';
-                if (addressSpan) {
-                    addressSpan.textContent = `${displayAddress}${accuracyText}`;
-                }
-                if (chip) {
-                    chip.classList.remove('hidden');
-                }
-                
-                // Store coordinates in a hidden way (can be used for API calls)
-                originInput.dataset.lat = lat;
-                originInput.dataset.lon = lon;
-                
-                // Show mini map
-                if (miniMap) {
-                    miniMap.classList.remove('hidden');
-                    miniMap.classList.add('visible');
-                    miniMap.setAttribute('aria-hidden', 'false');
-                    
-                    // Initialize or update map
-                    if (!originMap) {
-                        originMap = L.map('origin-mini-map', {
-                            zoomControl: true,
-                            scrollWheelZoom: true,
-                            doubleClickZoom: true,
-                            touchZoom: true,
-                            boxZoom: false,
-                            dragging: true
-                        }).setView([lat, lon], accuracy > 100 ? 13 : 15);
-                        
-                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                            attribution: '© OpenStreetMap contributors',
-                            maxZoom: 19
-                        }).addTo(originMap);
-                        
-                        // Create marker with accuracy circle
-                        originMarker = L.marker([lat, lon]).addTo(originMap);
-                        
-                        if (accuracy > 0) {
-                            L.circle([lat, lon], {
-                                radius: accuracy,
-                                color: 'var(--color-secondary)',
-                                fillColor: 'var(--color-secondary)',
-                                fillOpacity: 0.2,
-                                weight: 2
-                            }).addTo(originMap);
-                        }
-                    } else {
-                        originMap.setView([lat, lon], accuracy > 100 ? 13 : 15);
-                        if (originMarker) {
-                            originMarker.setLatLng([lat, lon]);
-                        }
-                    }
-                    
-                    // Ensure map is properly sized after showing
-                    setTimeout(() => {
-                        if (originMap) {
-                            originMap.invalidateSize();
-                        }
-                    }, 100);
-                }
-                
-                // Update status
-                statusSpan.textContent = 'Vị trí đã được phát hiện';
-                statusSpan.style.color = 'var(--color-secondary-dark)';
-                
-                // Don't auto-fill input - let user confirm first
-                // originInput.value = displayAddress;
-                
-            } catch (error) {
-                console.error('Error in reverse geocoding:', error);
-                statusSpan.textContent = 'Không thể tra địa chỉ. Vui lòng thử lại.';
-                statusSpan.style.color = '#dc2626';
-            } finally {
-                btn.disabled = false;
-                btnText.textContent = originalBtnText;
-            }
-        }, (error) => {
-            console.error('Geolocation error:', error);
-            let errorMessage = 'Không thể xác định vị trí.';
-            if (error.code === 1) {
-                errorMessage = 'Bạn đã từ chối quyền truy cập vị trí. Vui lòng nhập thủ công.';
-            } else if (error.code === 2) {
-                errorMessage = 'Không thể xác định vị trí. Vui lòng kiểm tra kết nối.';
-            } else if (error.code === 3) {
-                errorMessage = 'Hết thời gian chờ khi lấy vị trí.';
-            }
-            
-            statusSpan.textContent = errorMessage;
-            statusSpan.style.color = '#dc2626';
-            btn.disabled = false;
-            btnText.textContent = originalBtnText;
-            
-            // Focus on input for manual entry
-            if (originInput) {
-                originInput.focus();
-            }
-        }, {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 60000 // Cache for 1 minute
-        });
-    } catch (error) {
-        console.error('Error in handleCurrentLocation:', error);
-        statusSpan.textContent = 'Đã xảy ra lỗi: ' + error.message;
-        statusSpan.style.color = '#dc2626';
-        btn.disabled = false;
-        btnText.textContent = originalBtnText;
+const CARTO_DARK_TILE_URL = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+const VIETNAM_MAP_BOUNDS = L.latLngBounds(
+    [6.0, 102.0],
+    [24.0, 118.0]
+);
+const VIETNAM_MIN_ZOOM = 5;
+const VIETNAM_DEFAULT_CENTER = [16.2, 106.2];
+const VIETNAM_DEFAULT_ZOOM = 5;
+const SOVEREIGNTY_MARKERS = [
+    {
+        coords: [16.5, 112.0],
+        text: 'Quần đảo Hoàng Sa <br>(Thành phố Đà Nẵng, Việt Nam)'
+    },
+    {
+        coords: [10.0, 114.3],
+        text: 'Quần đảo Trường Sa <br>(Tỉnh Khánh Hòa, Việt Nam)'
     }
+];
+
+function addSovereigntyMarkers(mapInstance) {
+    if (!mapInstance || sovereigntyMarkersAdded) return;
+
+    SOVEREIGNTY_MARKERS.forEach((item) => {
+        L.marker(item.coords, {
+            interactive: false,
+            keyboard: false,
+            zIndexOffset: 1000,
+            icon: L.divIcon({
+                className: 'sovereignty-marker',
+                html: `
+                    <div class="sovereignty-label">
+                        <span class="sovereignty-label__flag">🇻🇳</span>
+                        <span>${item.text}</span>
+                    </div>
+                `,
+                iconSize: [216, 48],
+                iconAnchor: [108, 24]
+            })
+        }).addTo(mapInstance);
+    });
+
+    sovereigntyMarkersAdded = true;
+}
+
+function createRouteMarkerIcon(type, label = '') {
+    const palette = type === 'destination'
+        ? {
+            wrapper: 'travel-route-anchor travel-route-anchor--destination',
+            dot: 'travel-route-dot travel-route-dot--destination'
+        }
+        : {
+            wrapper: 'travel-route-anchor travel-route-anchor--origin',
+            dot: 'travel-route-dot travel-route-dot--origin'
+        };
+
+    const safeLabel = (label || (type === 'destination' ? 'Điểm đến' : 'Điểm đi của bạn'))
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+    return L.divIcon({
+        className: 'travel-route-marker',
+        html: `
+            <span class="${palette.wrapper}">
+                <span class="${palette.dot}"></span>
+                <span>${safeLabel}</span>
+            </span>
+        `,
+        iconSize: [150, 34],
+        iconAnchor: type === 'destination' ? [20, 17] : [130, 17],
+        popupAnchor: [0, -18]
+    });
+}
+
+function ensureOriginMap(center = VIETNAM_DEFAULT_CENTER, zoom = VIETNAM_DEFAULT_ZOOM) {
+    const miniMap = document.getElementById('origin-mini-map');
+    if (!miniMap) return null;
+
+    miniMap.classList.remove('hidden');
+    miniMap.classList.add('visible');
+    miniMap.setAttribute('aria-hidden', 'false');
+
+    if (!originMap) {
+        originMap = L.map('origin-mini-map', {
+            zoomControl: true,
+            scrollWheelZoom: true,
+            doubleClickZoom: true,
+            touchZoom: true,
+            boxZoom: false,
+            dragging: true,
+            minZoom: VIETNAM_MIN_ZOOM,
+            maxZoom: 16,
+            maxBounds: VIETNAM_MAP_BOUNDS,
+            maxBoundsViscosity: 1.0
+        }).setView(center, zoom);
+
+        L.tileLayer(CARTO_DARK_TILE_URL, {
+            attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; OpenStreetMap contributors',
+            minZoom: VIETNAM_MIN_ZOOM,
+            maxZoom: 16,
+            noWrap: true
+        }).addTo(originMap);
+
+        addSovereigntyMarkers(originMap);
+    }
+
+    setTimeout(() => {
+        if (originMap) {
+            originMap.invalidateSize();
+        }
+    }, 100);
+
+    return originMap;
+}
+
+function resetRoutePreviewLayers() {
+    if (!originMap) return;
+
+    if (routePreviewLine) {
+        originMap.removeLayer(routePreviewLine);
+        routePreviewLine = null;
+    }
+
+    if (destinationMarker) {
+        originMap.removeLayer(destinationMarker);
+        destinationMarker = null;
+    }
+}
+
+function setMapViewportSafely(map, callback) {
+    if (!map || typeof callback !== 'function') return;
+    if (isUpdatingMapViewport) return;
+
+    isUpdatingMapViewport = true;
+    try {
+        callback();
+    } finally {
+        window.setTimeout(() => {
+            isUpdatingMapViewport = false;
+        }, 0);
+    }
+}
+
+function updateOriginMap(lat, lon, options = {}) {
+    const {
+        accuracy = 0,
+        originLabel = 'Điểm đi hiện tại',
+        destination = null
+    } = options;
+
+    const map = ensureOriginMap([lat, lon], accuracy > 100 ? 13 : 15);
+    if (!map) return;
+
+    if (!originMarker) {
+        originMarker = L.marker([lat, lon], {
+            icon: createRouteMarkerIcon('origin', originLabel)
+        }).addTo(map);
+    } else {
+        originMarker.setLatLng([lat, lon]);
+        originMarker.setIcon(createRouteMarkerIcon('origin', originLabel));
+    }
+    originMarker.bindPopup(originLabel);
+
+    if (originAccuracyCircle) {
+        map.removeLayer(originAccuracyCircle);
+        originAccuracyCircle = null;
+    }
+
+    if (accuracy > 0) {
+        originAccuracyCircle = L.circle([lat, lon], {
+            radius: accuracy,
+            color: '#0f766e',
+            fillColor: '#14b8a6',
+            fillOpacity: 0.12,
+            weight: 2
+        }).addTo(map);
+    }
+
+    resetRoutePreviewLayers();
+
+    if (destination && Number.isFinite(destination.lat) && Number.isFinite(destination.lon)) {
+        destinationMarker = L.marker([destination.lat, destination.lon], {
+            icon: createRouteMarkerIcon('destination', destination.label || 'Điểm đến')
+        }).addTo(map);
+        destinationMarker.bindPopup(destination.label || 'Điểm đến');
+
+        routePreviewLine = L.polyline([
+            [lat, lon],
+            [destination.lat, destination.lon]
+        ], {
+            color: '#34d399',
+            weight: 4,
+            opacity: 0.8,
+            lineCap: 'round',
+            dashArray: '10, 10',
+            className: 'animated-route-line'
+        }).addTo(map);
+
+        const routeBounds = L.latLngBounds([
+            [lat, lon],
+            [destination.lat, destination.lon]
+        ]);
+        setMapViewportSafely(map, () => {
+            map.fitBounds(routeBounds.pad(0.2), {
+                padding: [28, 28],
+                maxZoom: 12,
+                animate: false
+            });
+            map.panInsideBounds(VIETNAM_MAP_BOUNDS, { animate: false });
+        });
+    } else {
+        setMapViewportSafely(map, () => {
+            map.setView([lat, lon], accuracy > 100 ? 13 : 15, {
+                animate: false
+            });
+        });
+    }
+}
+
+function updateRoutePreviewMap(data) {
+    if (!data || !data.origin || !data.destination) return;
+
+    const originInput = document.getElementById('origin-input');
+    const rawOriginLat = originInput?.dataset.lat;
+    const rawOriginLon = originInput?.dataset.lon;
+    const preferredOriginLat = rawOriginLat !== undefined && rawOriginLat !== '' ? Number(rawOriginLat) : NaN;
+    const preferredOriginLon = rawOriginLon !== undefined && rawOriginLon !== '' ? Number(rawOriginLon) : NaN;
+
+    const originLat = Number.isFinite(preferredOriginLat) ? preferredOriginLat : Number(data.origin.latitude);
+    const originLon = Number.isFinite(preferredOriginLon) ? preferredOriginLon : Number(data.origin.longitude);
+    const destinationLat = Number(data.destination.latitude);
+    const destinationLon = Number(data.destination.longitude);
+
+    if (!Number.isFinite(originLat) || !Number.isFinite(originLon) || !Number.isFinite(destinationLat) || !Number.isFinite(destinationLon)) {
+        return;
+    }
+
+    updateOriginMap(originLat, originLon, {
+        accuracy: 0,
+        originLabel: data.origin.name || 'Điểm đi',
+        destination: {
+            lat: destinationLat,
+            lon: destinationLon,
+            label: data.destination.name || 'Điểm đến'
+        }
+    });
 }
 
 // Step 1: Location Selection
@@ -754,6 +855,34 @@ function displayStep2Result(data) {
     resultDiv.style.display = 'block';
 }
 
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function renderEmptyState(message) {
+    return `<div class="empty-state-card">${escapeHtml(message)}</div>`;
+}
+
+function renderStepPanel({ icon, title, subtitle, content }) {
+    return `
+        <section class="step-panel">
+            <div class="step-panel-header">
+                <span class="step-panel-icon"><i class="${icon}"></i></span>
+                <div>
+                    <h3 class="step-panel-title">${escapeHtml(title)}</h3>
+                    <p class="step-panel-subtitle">${escapeHtml(subtitle)}</p>
+                </div>
+            </div>
+            ${content}
+        </section>
+    `;
+}
+
 // Step 3: Budget & Hotels
 async function loadStep3() {
     const resultDiv = document.getElementById('step3-result');
@@ -761,7 +890,24 @@ async function loadStep3() {
     
     if (!resultDiv) return;
     
-    resultDiv.innerHTML = '<div style="text-align: center; padding: 3rem;"><p>Đang tải thông tin...</p></div>';
+    resultDiv.innerHTML = `
+        <div class="step3-shell">
+            <div class="step3-grid">
+                ${renderStepPanel({
+                    icon: 'fa-solid fa-wallet',
+                    title: 'Bức tranh ngân sách',
+                    subtitle: 'Atlas đang phân tích các nhóm chi phí cốt lõi cho chuyến đi của bạn.',
+                    content: '<div class="loading-line lg"></div><div class="loading-line md" style="margin-top:0.85rem;"></div><div class="loading-line sm" style="margin-top:0.85rem;"></div>'
+                })}
+                ${renderStepPanel({
+                    icon: 'fa-solid fa-hotel',
+                    title: 'Khách sạn được tuyển chọn',
+                    subtitle: 'Danh sách lưu trú đang được xếp theo mức phù hợp với lịch trình và phong cách.',
+                    content: '<div class="loading-line lg"></div><div class="loading-line md" style="margin-top:0.85rem;"></div><div class="loading-line sm" style="margin-top:0.85rem;"></div>'
+                })}
+            </div>
+        </div>
+    `;
     
     try {
         const response = await fetch('/api/v1/travel-plans/step3/', {
@@ -788,11 +934,11 @@ async function loadStep3() {
             displayStep3Result(data);
             if (continueBtn) continueBtn.disabled = false;
         } else {
-            resultDiv.innerHTML = `<div style="color: red; padding: 2rem;">Lỗi: ${data.error || 'Không thể tải dữ liệu'}</div>`;
+            resultDiv.innerHTML = renderEmptyState(`Không thể tải dữ liệu bước 3: ${data.error || 'Vui lòng thử lại.'}`);
         }
     } catch (error) {
         console.error('Step 3 error:', error);
-        resultDiv.innerHTML = '<div style="color: red; padding: 2rem;">Lỗi kết nối. Vui lòng thử lại.</div>';
+        resultDiv.innerHTML = renderEmptyState('Lỗi kết nối khi tải ngân sách và khách sạn. Vui lòng thử lại.');
     }
 }
 
@@ -804,93 +950,106 @@ function displayStep3Result(data) {
     const breakdown = budget.breakdown || {};
     const hotels = data.hotels || [];
     
-    let budgetHTML = '';
+    let budgetHTML = renderEmptyState('Chưa có dữ liệu ngân sách chi tiết cho hành trình này.');
     if (budget.total_vnd) {
         budgetHTML = `
-            <div class="budget-breakdown">
-                <h4>💰 Phân tích ngân sách</h4>
-                <div class="budget-item">
-                    <span>Di chuyển</span>
-                    <span>${formatCurrency(breakdown.transport || 0)} VNĐ</span>
-                </div>
-                <div class="budget-item">
-                    <span>Lưu trú</span>
-                    <span>${formatCurrency(breakdown.accommodation || 0)} VNĐ</span>
-                </div>
-                <div class="budget-item">
-                    <span>Ăn uống</span>
-                    <span>${formatCurrency(breakdown.dining || 0)} VNĐ</span>
-                </div>
-                <div class="budget-item">
-                    <span>Hoạt động</span>
-                    <span>${formatCurrency(breakdown.activities || 0)} VNĐ</span>
-                </div>
-                <div class="budget-item">
-                    <span>Tổng cộng</span>
-                    <span>${formatCurrency(budget.total_vnd)} VNĐ</span>
-                </div>
-                <div class="budget-summary-footer">
-                    <p>
-                        <strong>/người:</strong> ${formatCurrency(budget.per_person || 0)} VNĐ
-                        <span style="margin-left: 1rem;">
-                            <strong>/ngày:</strong> ${formatCurrency(budget.per_day || 0)} VNĐ
-                        </span>
-                    </p>
-                </div>
+            <div class="budget-grid">
+                <article class="budget-stat-card">
+                    <span class="budget-stat-label">Di chuyển</span>
+                    <span class="budget-stat-value">${formatCurrency(breakdown.transport || 0)} VNĐ</span>
+                </article>
+                <article class="budget-stat-card">
+                    <span class="budget-stat-label">Lưu trú</span>
+                    <span class="budget-stat-value">${formatCurrency(breakdown.accommodation || 0)} VNĐ</span>
+                </article>
+                <article class="budget-stat-card">
+                    <span class="budget-stat-label">Ăn uống</span>
+                    <span class="budget-stat-value">${formatCurrency(breakdown.dining || 0)} VNĐ</span>
+                </article>
+                <article class="budget-stat-card">
+                    <span class="budget-stat-label">Hoạt động</span>
+                    <span class="budget-stat-value">${formatCurrency(breakdown.activities || 0)} VNĐ</span>
+                </article>
+                <article class="budget-stat-card">
+                    <span class="budget-stat-label">Bình quân / người</span>
+                    <span class="budget-stat-value">${formatCurrency(budget.per_person || 0)} VNĐ</span>
+                </article>
+                <article class="budget-stat-card is-highlight">
+                    <span class="budget-stat-label">Tổng ngân sách</span>
+                    <span class="budget-stat-value">${formatCurrency(budget.total_vnd)} VNĐ</span>
+                    <span class="budget-inline-meta">Khoảng ${formatCurrency(budget.per_day || 0)} VNĐ / ngày cho toàn bộ lịch trình.</span>
+                </article>
             </div>
         `;
     }
     
-    let hotelsHTML = '';
+    let hotelsHTML = renderEmptyState('Chưa có khách sạn phù hợp được trả về ở bước này.');
     if (hotels.length > 0) {
         hotelsHTML = `
-            <div style="margin-top: 2rem;">
-                <h4 style="margin-bottom: 1rem; color: var(--color-primary-dark);">🏨 Chọn khách sạn</h4>
-                <div class="hotels-list">
-                    ${hotels.map((hotel, index) => {
-                        // Lấy ảnh đầu tiên nếu có
-                        let imageUrl = '';
-                        if (hotel.images && hotel.images.length > 0) {
-                            imageUrl = hotel.images[0];
-                        } else if (hotel.image_url) {
-                            imageUrl = hotel.image_url;
-                        } else if (hotel.thumbnail) {
-                            imageUrl = hotel.thumbnail;
-                        }
-                        
-                        return `
-                        <div class="hotel-card" onclick="selectHotel(${index})" data-hotel-index="${index}">
-                            <div style="display: flex; gap: 1.5rem; align-items: flex-start;">
+            <div class="hotels-grid">
+                ${hotels.map((hotel, index) => {
+                    let imageUrl = '';
+                    if (hotel.images && hotel.images.length > 0) imageUrl = hotel.images[0];
+                    else if (hotel.image_url) imageUrl = hotel.image_url;
+                    else if (hotel.thumbnail) imageUrl = hotel.thumbnail;
+
+                    return `
+                        <article class="hotel-card" onclick="selectHotel(${index})" data-hotel-index="${index}">
+                            <div class="hotel-card-shell">
                                 ${imageUrl ? `
-                                <div style="flex-shrink: 0; width: 150px; height: 120px; border-radius: 8px; overflow: hidden;">
-                                    <img src="${imageUrl}" alt="${hotel.name || 'Hotel'}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'">
-                                </div>
-                                ` : ''}
-                                <div style="flex: 1; min-width: 0;">
-                                    <div class="hotel-name">${hotel.name || 'N/A'}</div>
-                                    ${hotel.stars ? `<div class="hotel-rating">${'⭐'.repeat(hotel.stars)} ${hotel.rating || ''}/5 ${hotel.reviews ? `(${hotel.reviews} đánh giá)` : ''}</div>` : ''}
-                                    ${hotel.hotel_class ? `<div style="font-size: 0.9rem; color: var(--color-gray-600); margin-top: 0.25rem;">${hotel.hotel_class} sao</div>` : ''}
-                                    ${hotel.address ? `<div style="font-size: 0.9rem; color: var(--color-gray-600); margin-top: 0.5rem;">📍 ${hotel.address}</div>` : ''}
-                                    ${hotel.phone ? `<div style="font-size: 0.9rem; color: var(--color-gray-600); margin-top: 0.25rem;">📞 ${hotel.phone}</div>` : ''}
-                                    ${hotel.email ? `<div style="font-size: 0.9rem; color: var(--color-gray-600); margin-top: 0.25rem;">✉️ ${hotel.email}</div>` : ''}
-                                    ${hotel.website ? `<div style="font-size: 0.9rem; color: var(--color-secondary); margin-top: 0.25rem;"><a href="${hotel.website}" target="_blank" onclick="event.stopPropagation();" style="color: var(--color-secondary); text-decoration: none;">🌐 Website</a></div>` : ''}
-                                    ${hotel.description ? `<div style="font-size: 0.85rem; color: var(--color-gray-600); margin-top: 0.5rem; line-height: 1.4;">${hotel.description.substring(0, 150)}${hotel.description.length > 150 ? '...' : ''}</div>` : ''}
-                                    ${hotel.amenities && hotel.amenities.length > 0 ? `<div style="font-size: 0.85rem; color: var(--color-gray-600); margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">${hotel.amenities.slice(0, 5).map(a => `<span style="background: var(--color-gray-100); padding: 0.25rem 0.5rem; border-radius: 4px;">${a}</span>`).join('')}</div>` : ''}
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.75rem;">
-                                        ${hotel.price_per_night ? `<div class="hotel-price">${formatCurrency(hotel.price_per_night)} VNĐ/đêm</div>` : ''}
-                                        ${hotel.source ? `<div style="font-size: 0.85rem; color: var(--color-gray-600);">Nguồn: ${hotel.source}</div>` : ''}
+                                    <div class="hotel-media">
+                                        <img src="${imageUrl}" alt="${escapeHtml(hotel.name || 'Khách sạn')}" onerror="this.closest('.hotel-media').style.display='none'">
                                     </div>
+                                ` : ''}
+                                <div>
+                                    <div class="hotel-header">
+                                        <div>
+                                            <div class="hotel-name">${escapeHtml(hotel.name || 'Chưa có tên khách sạn')}</div>
+                                            ${hotel.stars ? `<div class="budget-inline-meta">${'⭐'.repeat(hotel.stars)} ${hotel.rating || ''}/5 ${hotel.reviews ? `(${hotel.reviews} đánh giá)` : ''}</div>` : ''}
+                                        </div>
+                                        ${hotel.price_per_night ? `<div class="hotel-price">${formatCurrency(hotel.price_per_night)} VNĐ/đêm</div>` : ''}
+                                    </div>
+                                    <div class="hotel-meta-list">
+                                        ${hotel.hotel_class ? `<span>${escapeHtml(hotel.hotel_class)} sao</span>` : ''}
+                                        ${hotel.address ? `<span>📍 ${escapeHtml(hotel.address)}</span>` : ''}
+                                        ${hotel.phone ? `<span>📞 ${escapeHtml(hotel.phone)}</span>` : ''}
+                                        ${hotel.email ? `<span>✉️ ${escapeHtml(hotel.email)}</span>` : ''}
+                                        ${hotel.source ? `<span>Nguồn: ${escapeHtml(hotel.source)}</span>` : ''}
+                                        ${hotel.website ? `<span><a href="${hotel.website}" target="_blank" onclick="event.stopPropagation();">🌐 Xem website</a></span>` : ''}
+                                    </div>
+                                    ${hotel.description ? `<p class="budget-inline-meta">${escapeHtml(hotel.description.substring(0, 180))}${hotel.description.length > 180 ? '...' : ''}</p>` : ''}
+                                    ${hotel.amenities && hotel.amenities.length > 0 ? `
+                                        <div class="hotel-amenities">
+                                            ${hotel.amenities.slice(0, 5).map((amenity) => `<span class="hotel-amenity">${escapeHtml(amenity)}</span>`).join('')}
+                                        </div>
+                                    ` : ''}
                                 </div>
                             </div>
-                        </div>
-                        `;
-                    }).join('')}
-                </div>
+                        </article>
+                    `;
+                }).join('')}
             </div>
         `;
     }
     
-    resultDiv.innerHTML = budgetHTML + hotelsHTML;
+    resultDiv.innerHTML = `
+        <div class="step3-shell">
+            <div class="step3-grid">
+                ${renderStepPanel({
+                    icon: 'fa-solid fa-wallet',
+                    title: 'Bức tranh ngân sách',
+                    subtitle: 'Chi phí được chia theo từng nhóm chính để bạn cân đối nhanh trước khi chốt kế hoạch.',
+                    content: budgetHTML
+                })}
+                ${renderStepPanel({
+                    icon: 'fa-solid fa-hotel',
+                    title: 'Khách sạn được tuyển chọn',
+                    subtitle: 'Chọn một nơi lưu trú nếu bạn muốn Atlas ưu tiên gắn vào blueprint cuối cùng.',
+                    content: hotelsHTML
+                })}
+            </div>
+        </div>
+    `;
 }
 
 function selectHotel(index) {
@@ -914,45 +1073,24 @@ async function loadStep4() {
     
     if (!resultDiv) return;
     
-    resultDiv.innerHTML = '<div style="text-align: center; padding: 3rem;"><p style="color: #00838F; font-size: 1.1rem; font-weight: 500;">Đang tạo lịch trình...</p></div>';
+    resultDiv.innerHTML = renderStep4LoadingState();
     
     try {
-        const payload = {
-            origin: workflowState.step1Data.origin.name,
-            destination: workflowState.step1Data.destination.name,
-            start_date: workflowState.step2Data.start_date,
-            days: workflowState.step2Data.days,
-            travelers: workflowState.step2Data.travelers,
-            travel_style: workflowState.step2Data.travel_style,
-            rooms: 1,
-            interests: []
-        };
-        
-        if (workflowState.step3Data && workflowState.step3Data.selected_hotel) {
-            payload.selected_hotel = workflowState.step3Data.selected_hotel;
-        }
-        
-        const response = await fetch('/api/v1/travel-plans/step4/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            },
-            body: JSON.stringify(payload)
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok && data.status === 'success') {
-            workflowState.step4Data = data;
-            displayStep4Result(data);
-            if (createBtn) createBtn.disabled = false;
-        } else {
-            resultDiv.innerHTML = `<div style="color: red; padding: 2rem;">Lỗi: ${data.error || 'Không thể tạo lịch trình'}</div>`;
-        }
+        const payload = buildStep4GenerationPayload();
+        const data = await requestStep4Plan(payload);
+
+        workflowState.step4Data = data;
+        displayStep4Result(data);
+        if (createBtn) createBtn.disabled = false;
     } catch (error) {
         console.error('Step 4 error:', error);
-        resultDiv.innerHTML = '<div style="color: red; padding: 2rem;">Lỗi kết nối. Vui lòng thử lại.</div>';
+        const fallbackData = buildSafeFallbackStep4Data(
+            buildStep4GenerationPayload(),
+            'Không thể kết nối tới bộ tạo lịch trình. Hệ thống đã dựng bản xem trước an toàn để bạn tiếp tục.'
+        );
+        workflowState.step4Data = fallbackData;
+        displayStep4Result(fallbackData);
+        if (createBtn) createBtn.disabled = false;
     }
 }
 
@@ -973,28 +1111,23 @@ function displayStep4Result(data) {
     // Get total days - prioritize from itinerary, then dailyPlans length, then workflow state
     const totalDays = itinerary.total_days || dailyPlans.length || workflowState.step1Data?.days || 0;
     
-    // Destination header
-    let destinationHTML = `
-        <div style="margin-bottom: 2rem; padding: 1.5rem; background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%); border-radius: 12px; color: white;">
-            <h3 style="color: white; margin: 0; font-size: 1.5rem; font-weight: 600;">📍 ${destination}</h3>
-            <p style="color: rgba(255,255,255,0.9); margin-top: 0.5rem; margin: 0;">Lịch trình ${totalDays} ngày</p>
-        </div>
-    `;
+    const startDateText = document.getElementById('start-date')?.value || 'Chưa chọn ngày đi';
+    const travelers = workflowState.step2Data?.travelers || 0;
+    const styleLabel = document.getElementById('travel-style-display')?.value || 'Tiêu chuẩn';
+    const selectedHotel = workflowState.step3Data?.selected_hotel?.name || 'Bạn có thể tiếp tục mà không chọn khách sạn';
+    const routeLabel = `${workflowState.step1Data?.origin?.name || 'Điểm đi'} → ${destination}`;
     
     let activitiesHTML = '';
     if (activities.length > 0) {
         activitiesHTML = `
-            <div style="margin-top: 2rem;">
-                <h4 style="margin-bottom: 1rem; color: var(--color-primary-dark);">🎯 Hoạt động đề xuất</h4>
-                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                    ${activities.slice(0, 5).map(activity => `
-                        <div class="itinerary-activity" style="padding: 0.75rem; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">
-                            <strong style="color: #153D68; font-size: 1rem; display: block;">${activity.name || 'N/A'}</strong>
-                            ${activity.description ? `<div style="color: #6c757d; font-size: 0.9rem; margin-top: 0.25rem;">${activity.description}</div>` : ''}
-                            ${activity.cost_vnd ? `<div style="color: #6c757d; font-size: 0.9rem; margin-top: 0.25rem;">Chi phí: ${formatCurrency(activity.cost_vnd)} VNĐ</div>` : ''}
-                        </div>
-                    `).join('')}
-                </div>
+            <div class="timeline-list">
+                ${activities.slice(0, 6).map(activity => `
+                    <article class="itinerary-activity">
+                        <strong class="block text-sm text-foreground">${escapeHtml(activity.name || 'Hoạt động')}</strong>
+                        ${activity.description ? `<p class="budget-inline-meta">${escapeHtml(activity.description)}</p>` : ''}
+                        ${activity.cost_vnd ? `<p class="budget-inline-meta">Chi phí ước tính: ${formatCurrency(activity.cost_vnd)} VNĐ</p>` : ''}
+                    </article>
+                `).join('')}
             </div>
         `;
     }
@@ -1002,9 +1135,7 @@ function displayStep4Result(data) {
     let itineraryHTML = '';
     if (dailyPlans.length > 0) {
         itineraryHTML = `
-            <div style="margin-top: 2rem;">
-                <h4 style="margin-bottom: 1rem; color: var(--color-primary-dark);">📅 Lịch trình chi tiết</h4>
-                <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div class="timeline-shell">
                     ${dailyPlans.map((dayPlan, index) => {
                         const day = dayPlan.day || (index + 1);
                         const date = dayPlan.date || '';
@@ -1028,113 +1159,133 @@ function displayStep4Result(data) {
                                 drinks: 'Giải khát',
                                 afternoon_tea: 'Trà chiều'
                             };
-                            
-                            mealsHTML = '<div style="margin-top: 0.75rem;"><strong style="color: #153D68;">🍽️ Bữa ăn:</strong><div style="margin-top: 0.5rem; padding-left: 1rem;">';
+                            mealsHTML = '<section class="timeline-section"><div class="timeline-section-title"><i class="fa-solid fa-utensils"></i><span>Bữa ăn & điểm nghỉ</span></div><div class="timeline-list">';
                             Object.keys(mealLabels).forEach(mealType => {
                                 if (meals[mealType]) {
                                     const meal = meals[mealType];
                                     const mealName = typeof meal === 'string' ? meal : (meal.name || 'N/A');
-                                    mealsHTML += `<div style="margin-bottom: 0.25rem; color: #6c757d;">${mealLabels[mealType]}: ${mealName}</div>`;
+                                    mealsHTML += `<div class="budget-inline-meta"><strong>${mealLabels[mealType]}:</strong> ${escapeHtml(mealName)}</div>`;
                                 }
                             });
-                            mealsHTML += '</div></div>';
+                            mealsHTML += '</div></section>';
                         }
                         
                         let activitiesHTML_day = '';
                         if (activities_list.length > 0) {
-                            activitiesHTML_day = '<div style="margin-top: 0.75rem;"><strong style="color: #153D68;">🎯 Hoạt động:</strong><div style="margin-top: 0.5rem;">';
+                            activitiesHTML_day = '<section class="timeline-section"><div class="timeline-section-title"><i class="fa-solid fa-map-marker-alt"></i><span>Hoạt động theo khung giờ</span></div><div class="timeline-list">';
                             activities_list.forEach(actItem => {
                                 if (typeof actItem === 'string') {
-                                    activitiesHTML_day += `<div class="itinerary-activity" style="margin-bottom: 0.5rem; color: #153D68;">${actItem}</div>`;
+                                    activitiesHTML_day += `<div class="itinerary-activity"><div class="text-sm font-semibold text-foreground">${escapeHtml(actItem)}</div></div>`;
                                 } else if (typeof actItem === 'object') {
                                     const time = actItem.time || actItem.time_slot || '';
                                     const actDesc = actItem.description || '';
                                     const activity = actItem.activity || {};
                                     const actName = typeof activity === 'string' ? activity : (activity.name || 'Hoạt động');
                                     
-                                    activitiesHTML_day += `<div class="itinerary-activity" style="margin-bottom: 0.5rem; color: #153D68;">`;
+                                    activitiesHTML_day += `<div class="itinerary-activity">`;
                                     if (time) {
-                                        activitiesHTML_day += `<div style="font-weight: 600; color: #00838F; margin-bottom: 0.25rem;">${time}</div>`;
+                                        activitiesHTML_day += `<div class="timeline-chip">${escapeHtml(time)}</div>`;
                                     }
-                                    activitiesHTML_day += `<div style="font-weight: 600; color: #153D68;">${actName}</div>`;
+                                    activitiesHTML_day += `<div class="mt-2 text-sm font-semibold text-foreground">${escapeHtml(actName)}</div>`;
                                     if (actDesc) {
-                                        activitiesHTML_day += `<div style="color: #6c757d; font-size: 0.9rem; margin-top: 0.25rem;">${actDesc}</div>`;
+                                        activitiesHTML_day += `<div class="budget-inline-meta">${escapeHtml(actDesc)}</div>`;
                                     }
                                     activitiesHTML_day += `</div>`;
                                 }
                             });
-                            activitiesHTML_day += '</div></div>';
+                            activitiesHTML_day += '</div></section>';
                         }
                         
                         let tipsHTML = '';
                         if (tips.length > 0) {
-                            tipsHTML = '<div style="margin-top: 0.75rem;"><strong style="color: #153D68;">💡 Mẹo:</strong><ul style="margin-top: 0.5rem; padding-left: 1.5rem; color: #6c757d;">';
+                            tipsHTML = '<section class="timeline-section"><div class="timeline-section-title"><i class="fa-solid fa-lightbulb"></i><span>Mẹo địa phương</span></div><ul class="timeline-note-list">';
                             tips.slice(0, 3).forEach(tip => {
-                                tipsHTML += `<li style="margin-bottom: 0.25rem;">${tip}</li>`;
+                                tipsHTML += `<li>${escapeHtml(tip)}</li>`;
                             });
-                            tipsHTML += '</ul></div>';
+                            tipsHTML += '</ul></section>';
                         }
                         
                         return `
-                            <div class="day-card" style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); margin-bottom: 1rem;">
-                                <div class="day-card-header" onclick="toggleDay('${dayId}')" style="padding: 1rem 1.5rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: white; border-bottom: 1px solid #e0e0e0;">
+                            <article class="timeline-day">
+                                <div class="timeline-day-header" onclick="toggleDay('${dayId}')">
                                     <div>
-                                        <h4 style="color: #153D68; margin: 0; font-size: 1.1rem; font-weight: 600;">
+                                        <h4 class="text-base font-bold text-foreground">
                                             📆 Ngày ${day}${date ? ` (${date})` : ''}${theme ? `: ${theme}` : ''}
                                         </h4>
-                                        <div style="color: #6c757d; font-size: 0.85rem; margin-top: 0.25rem;">
-                                            ${activityCount} hoạt động • ${totalHours} tiếng
+                                        <div class="timeline-day-meta">
+                                            <span class="timeline-chip"><i class="fa-regular fa-clock"></i> ${activityCount} hoạt động</span>
+                                            <span class="timeline-chip"><i class="fa-solid fa-hourglass-half"></i> ${totalHours} tiếng</span>
+                                            ${theme ? `<span class="timeline-chip"><i class="fa-solid fa-star"></i> ${escapeHtml(theme)}</span>` : ''}
                                         </div>
                                     </div>
-                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                        <button style="background: #DAA520; color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.25rem;">
-                                            <i class="fa-solid fa-note-sticky"></i> Ghi chú
-                                        </button>
-                                        <span class="day-toggle-icon" id="icon-${dayId}" style="font-size: 1.2rem; color: #00838F; transition: transform 0.3s; cursor: pointer;">
+                                    <div class="flex items-center gap-2">
+                                        <span class="day-toggle-icon theme-text-muted" id="icon-${dayId}" style="font-size: 1.2rem; transition: transform 0.3s; cursor: pointer;">
                                             <i class="fa-solid fa-chevron-down"></i>
                                         </span>
                                     </div>
                                 </div>
-                                <div class="day-card-content" id="${dayId}" style="display: none; padding: 1.5rem; background: #f8f9fa;">
-                                    ${mealsHTML}
-                                    ${activitiesHTML_day}
-                                    ${tipsHTML}
+                                <div class="timeline-day-body" id="${dayId}" style="display: none;">
+                                    <div class="timeline-sections">
+                                        ${activitiesHTML_day}
+                                        ${mealsHTML}
+                                        ${tipsHTML}
+                                    </div>
                                 </div>
-                            </div>
+                            </article>
                         `;
                     }).join('')}
-                </div>
             </div>
         `;
+    } else {
+        itineraryHTML = renderEmptyState('Chưa có timeline chi tiết theo ngày được tạo ra ở bước này.');
     }
     
     resultDiv.innerHTML = `
-        ${destinationHTML}
-        <div class="budget-breakdown">
-            <h4>💰 Tổng kết chi phí</h4>
-            <div class="budget-item">
-                <span>Di chuyển</span>
-                <span>${formatCurrency(costs.transport || 0)} VNĐ</span>
+        <div class="step4-shell">
+            ${renderStepPanel({
+                icon: 'fa-solid fa-map-location-dot',
+                title: 'Tổng quan hành trình',
+                subtitle: 'Rà soát nhanh lộ trình, thời gian khởi hành, phong cách và khách sạn đã chọn trước khi hoàn tất.',
+                content: `
+                    <div class="plan-overview-grid">
+                        <article class="plan-overview-card"><span class="summary-label">Tuyến hành trình</span><span class="summary-value">${escapeHtml(routeLabel)}</span></article>
+                        <article class="plan-overview-card"><span class="summary-label">Thời gian</span><span class="summary-value">${escapeHtml(startDateText)} • ${escapeHtml(String(totalDays))} ngày</span></article>
+                        <article class="plan-overview-card"><span class="summary-label">Quy mô nhóm</span><span class="summary-value">${escapeHtml(String(travelers))} người</span></article>
+                        <article class="plan-overview-card"><span class="summary-label">Phong cách</span><span class="summary-value">${escapeHtml(styleLabel)}</span></article>
+                        <article class="plan-overview-card"><span class="summary-label">Khách sạn</span><span class="summary-value">${escapeHtml(selectedHotel)}</span></article>
+                        <article class="plan-overview-card"><span class="summary-label">Tổng chi phí</span><span class="summary-value">${formatCurrency(costs.total || 0)} VNĐ</span></article>
+                    </div>
+                `
+            })}
+            <div class="step4-grid">
+                ${renderStepPanel({
+                    icon: 'fa-solid fa-wallet',
+                    title: 'Tổng kết chi phí',
+                    subtitle: 'Các con số cốt lõi để bạn cân nhanh ngân sách trước khi tạo lịch trình.',
+                    content: `
+                        <div class="budget-grid">
+                            <article class="budget-stat-card"><span class="budget-stat-label">Di chuyển</span><span class="budget-stat-value">${formatCurrency(costs.transport || 0)} VNĐ</span></article>
+                            <article class="budget-stat-card"><span class="budget-stat-label">Lưu trú</span><span class="budget-stat-value">${formatCurrency(costs.accommodation || 0)} VNĐ</span></article>
+                            <article class="budget-stat-card"><span class="budget-stat-label">Hoạt động</span><span class="budget-stat-value">${formatCurrency(costs.activities || 0)} VNĐ</span></article>
+                            <article class="budget-stat-card"><span class="budget-stat-label">Ăn uống</span><span class="budget-stat-value">${formatCurrency(costs.dining || 0)} VNĐ</span></article>
+                            <article class="budget-stat-card is-highlight"><span class="budget-stat-label">Tổng cộng</span><span class="budget-stat-value">${formatCurrency(costs.total || 0)} VNĐ</span></article>
+                        </div>
+                    `
+                })}
+                ${renderStepPanel({
+                    icon: 'fa-solid fa-compass',
+                    title: 'Hoạt động nổi bật',
+                    subtitle: 'Những điểm nhấn Atlas ưu tiên đẩy lên đầu để chuyến đi cân bằng trải nghiệm và chi phí.',
+                    content: activitiesHTML || renderEmptyState('Chưa có hoạt động nổi bật được đề xuất.')
+                })}
             </div>
-            <div class="budget-item">
-                <span>Lưu trú</span>
-                <span>${formatCurrency(costs.accommodation || 0)} VNĐ</span>
-            </div>
-            <div class="budget-item">
-                <span>Hoạt động</span>
-                <span>${formatCurrency(costs.activities || 0)} VNĐ</span>
-            </div>
-            <div class="budget-item">
-                <span>Ăn uống</span>
-                <span>${formatCurrency(costs.dining || 0)} VNĐ</span>
-            </div>
-            <div class="budget-item">
-                <span>Tổng cộng</span>
-                <span>${formatCurrency(costs.total || 0)} VNĐ</span>
-            </div>
+            ${renderStepPanel({
+                icon: 'fa-solid fa-calendar-days',
+                title: 'Timeline theo ngày',
+                subtitle: 'Mở từng ngày để xem hoạt động, bữa ăn và các mẹo bản địa đi kèm.',
+                content: itineraryHTML
+            })}
         </div>
-        ${activitiesHTML}
-        ${itineraryHTML}
     `;
 }
 
@@ -1154,15 +1305,82 @@ function toggleDay(dayId) {
     }
 }
 
-function createFinalPlan() {
-    // This will be called when user clicks "Tạo lịch trình"
-    // For now, just show success message
-    showErrorModal('Lịch trình đã được tạo thành công! (Trong tương lai sẽ lưu vào database)', 'success');
-    
-    // In the future, you might want to:
-    // 1. Save to database
-    // 2. Redirect to itinerary detail page
-    // 3. Show success message with link
+async function createFinalPlan() {
+    const createBtn = document.getElementById('step4-create');
+    const resultDiv = document.getElementById('step4-result');
+    const payload = buildStep4GenerationPayload();
+
+    if (!payload.origin || !payload.destination || !payload.start_date) {
+        showErrorModal('Thiếu dữ liệu hành trình. Vui lòng kiểm tra lại 4 bước trước khi lưu lịch trình.');
+        return;
+    }
+
+    const originalLabel = createBtn ? createBtn.innerHTML : '';
+    if (createBtn) {
+        createBtn.disabled = true;
+        createBtn.innerHTML = '<span class="loading-spinner"></span> AI đang hoàn thiện lịch trình...';
+    }
+
+    if (resultDiv) {
+        resultDiv.innerHTML = renderStep4LoadingState(
+            'Atlas đang khóa blueprint cuối',
+            'Dữ liệu từ biểu mẫu đang được chuyển đến AI planner và lưu vào hồ sơ hành trình của bạn.'
+        );
+    }
+
+    try {
+        if (!workflowState.step4Data?.plan) {
+            workflowState.step4Data = await requestStep4Plan(payload);
+        }
+
+        const saveResponse = await fetch('/api/v1/travel-plans/step4/save/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                origin: payload.origin,
+                destination: payload.destination,
+                start_date: payload.start_date,
+                days: payload.days,
+                travelers: payload.travelers,
+                travel_style: payload.travel_style,
+                start_location: payload.start_location,
+                destination_location: payload.destination_location,
+                plan: workflowState.step4Data.plan || {},
+                costs: workflowState.step4Data.costs || {}
+            })
+        });
+
+        const saveData = await parseJsonResponse(saveResponse, 'Phản hồi lưu lịch trình không phải JSON hợp lệ.');
+
+        if (saveResponse.ok && saveData.status === 'success') {
+            displayStep4Result(workflowState.step4Data);
+            showErrorModal('Lịch trình đã được tạo và lưu thành công.', 'success');
+            return;
+        }
+
+        if (saveResponse.status === 401 || saveResponse.status === 403) {
+            displayStep4Result(workflowState.step4Data);
+            showErrorModal('Bạn cần đăng nhập để lưu lịch trình này vào tài khoản.');
+            return;
+        }
+
+        throw new Error(saveData.error || 'Không thể lưu lịch trình vào hệ thống.');
+    } catch (error) {
+        console.error('Create final plan error:', error);
+        if (!workflowState.step4Data?.plan) {
+            workflowState.step4Data = buildSafeFallbackStep4Data(payload, error.message || 'Không thể hoàn thiện lịch trình AI.');
+        }
+        displayStep4Result(workflowState.step4Data);
+        showErrorModal(error.message || 'Không thể hoàn tất lịch trình lúc này. Vui lòng thử lại.');
+    } finally {
+        if (createBtn) {
+            createBtn.disabled = false;
+            createBtn.innerHTML = originalLabel;
+        }
+    }
 }
 
 // Step Navigation
@@ -1219,6 +1437,207 @@ function getCookie(name) {
         }
     }
     return cookieValue;
+}
+
+function normalizeDateToIso(dateValue) {
+    const raw = String(dateValue || '').trim();
+    if (!raw) return '';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+
+    const vnMatch = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (!vnMatch) return raw;
+
+    const [, day, month, year] = vnMatch;
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+}
+
+function getNumericDatasetValue(element, key, fallbackValue = null) {
+    const rawValue = element?.dataset?.[key];
+    const numericValue = rawValue === undefined || rawValue === '' ? Number.NaN : Number(rawValue);
+    return Number.isFinite(numericValue) ? numericValue : fallbackValue;
+}
+
+function buildStep4GenerationPayload() {
+    const originInput = document.getElementById('origin-input');
+    const destinationInput = document.getElementById('destination-input');
+    const startDateInput = document.getElementById('start-date');
+    const daysInput = document.getElementById('days');
+    const travelersInput = document.getElementById('travelers');
+    const travelStyleInput = document.getElementById('travel-style');
+
+    const originName = workflowState.step1Data?.origin?.name || originInput?.value?.trim() || '';
+    const destinationName = workflowState.step1Data?.destination?.name || destinationInput?.value?.trim() || '';
+    const startDateIso = normalizeDateToIso(workflowState.step2Data?.start_date || startDateInput?.value || '');
+    const durationDays = Math.min(14, Math.max(1, Number(workflowState.step2Data?.days || daysInput?.value || 1)));
+    const groupSize = Math.min(20, Math.max(1, Number(workflowState.step2Data?.travelers || travelersInput?.value || 1)));
+    const travelStyle = workflowState.step2Data?.travel_style || travelStyleInput?.value || 'standard';
+
+    const originLat = getNumericDatasetValue(originInput, 'lat', Number(workflowState.step1Data?.origin?.latitude));
+    const originLng = getNumericDatasetValue(originInput, 'lon', Number(workflowState.step1Data?.origin?.longitude));
+    const destinationLat = getNumericDatasetValue(destinationInput, 'lat', Number(workflowState.step1Data?.destination?.latitude));
+    const destinationLng = getNumericDatasetValue(destinationInput, 'lon', Number(workflowState.step1Data?.destination?.longitude));
+
+    const payload = {
+        start_location: {
+            name: originName,
+            coordinates: [Number.isFinite(originLat) ? originLat : null, Number.isFinite(originLng) ? originLng : null]
+        },
+        destination_location: {
+            name: destinationName,
+            coordinates: [Number.isFinite(destinationLat) ? destinationLat : null, Number.isFinite(destinationLng) ? destinationLng : null]
+        },
+        start_date: startDateIso,
+        duration_days: durationDays,
+        group_size: groupSize,
+        travel_style: travelStyle,
+        origin: originName,
+        destination: destinationName,
+        days: durationDays,
+        travelers: groupSize,
+        rooms: 1,
+        interests: [],
+        telemetry_contract_version: 'v1'
+    };
+
+    if (workflowState.step3Data?.selected_hotel) {
+        payload.selected_hotel = workflowState.step3Data.selected_hotel;
+    }
+
+    return payload;
+}
+
+function renderStep4LoadingState(title = 'Atlas đang dựng blueprint', subtitle = 'Lịch trình tổng quan đang được ghép từ hoạt động, chi phí và gợi ý di chuyển.') {
+    return `
+        <div class="step4-shell animate-pulse">
+            ${renderStepPanel({
+                icon: 'fa-solid fa-road',
+                title,
+                subtitle,
+                content: '<div class="loading-line lg"></div><div class="loading-line md" style="margin-top:0.85rem;"></div><div class="loading-line sm" style="margin-top:0.85rem;"></div>'
+            })}
+        </div>
+    `;
+}
+
+async function parseJsonResponse(response, defaultErrorMessage = 'Phản hồi từ hệ thống AI không hợp lệ.') {
+    const rawText = await response.text();
+    if (!rawText.trim()) {
+        return {};
+    }
+
+    try {
+        return JSON.parse(rawText);
+    } catch (error) {
+        console.error('JSON parse error:', error, rawText);
+        throw new Error(defaultErrorMessage);
+    }
+}
+
+function buildSafeFallbackStep4Data(payload, reason = 'Atlas chưa trả về JSON hoàn chỉnh nên hệ thống dùng blueprint an toàn để bạn tiếp tục.') {
+    const totalDays = Math.max(1, Number(payload.duration_days || 1));
+    const destinationName = payload.destination_location?.name || payload.destination || 'Điểm đến';
+    const originName = payload.start_location?.name || payload.origin || 'Điểm đi';
+    const travelStyle = payload.travel_style || 'standard';
+    const budget = workflowState.step3Data?.budget || {};
+    const breakdown = budget.breakdown || {};
+    const total = Number(budget.total_vnd || 0);
+
+    const startDate = payload.start_date || normalizeDateToIso(document.getElementById('start-date')?.value || '');
+    const dailyPlans = Array.from({ length: totalDays }, (_, index) => {
+        const currentDate = new Date(startDate || new Date().toISOString().slice(0, 10));
+        if (!Number.isNaN(currentDate.getTime())) {
+            currentDate.setDate(currentDate.getDate() + index);
+        }
+
+        return {
+            day: index + 1,
+            date: Number.isNaN(currentDate.getTime()) ? '' : currentDate.toISOString().slice(0, 10),
+            theme: index === 0 ? 'Khởi động hành trình' : `Khám phá ${destinationName}`,
+            activities: [
+                {
+                    time: 'Sáng',
+                    activity: { name: `Di chuyển từ ${originName} đến ${destinationName}` },
+                    description: 'Ưu tiên kiểm tra thời tiết, nhận phòng và chốt tuyến tham quan gần nhau để hành trình mượt hơn.'
+                },
+                {
+                    time: 'Chiều',
+                    activity: { name: `Khám phá các điểm nổi bật phù hợp phong cách ${travelStyle}` },
+                    description: 'Đây là lịch trình an toàn tạm thời để bạn có thể tiếp tục thao tác khi phản hồi AI chính chưa sẵn sàng.'
+                },
+                {
+                    time: 'Tối',
+                    activity: { name: `Thưởng thức ẩm thực địa phương tại ${destinationName}` },
+                    description: 'Nên ưu tiên khu vực trung tâm hoặc gần nơi lưu trú để tối ưu thời gian di chuyển.'
+                }
+            ],
+            meals: {
+                lunch: `Bữa trưa gợi ý tại ${destinationName}`,
+                dinner: `Bữa tối đặc trưng tại ${destinationName}`
+            },
+            tips: [
+                reason,
+                'Bạn vẫn có thể lưu lịch trình này hoặc thử tạo lại để nhận phiên bản AI đầy đủ hơn.'
+            ]
+        };
+    });
+
+    return {
+        status: 'success',
+        is_fallback: true,
+        fallback_reason: reason,
+        plan: {
+            transport: workflowState.step2Data?.transport || {},
+            selected_hotel: workflowState.step3Data?.selected_hotel || null,
+            hotels: workflowState.step3Data?.hotels || [],
+            activities: [],
+            restaurants: [],
+            budget: budget,
+            itinerary: {
+                destination: destinationName,
+                total_days: totalDays,
+                daily_plans: dailyPlans
+            },
+            itinerary_json: {
+                destination: destinationName,
+                travel_style: travelStyle,
+                daily_plans: dailyPlans
+            },
+            itinerary_description: reason
+        },
+        costs: {
+            transport: Number(breakdown.transport || 0),
+            accommodation: Number(breakdown.accommodation || 0),
+            activities: Number(breakdown.activities || 0),
+            dining: Number(breakdown.dining || 0),
+            total
+        }
+    };
+}
+
+async function requestStep4Plan(payload) {
+    const response = await fetch('/api/v1/travel-plans/step4/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(payload)
+    });
+
+    let data;
+    try {
+        data = await parseJsonResponse(response, 'Phản hồi từ bộ tạo lịch trình không phải JSON hợp lệ.');
+    } catch (error) {
+        return buildSafeFallbackStep4Data(payload, error.message);
+    }
+
+    if (response.ok && data.status === 'success') {
+        return data;
+    }
+
+    const errorMessage = data?.error || 'Không thể tạo lịch trình tổng quan.';
+    console.error('Step 4 API error:', errorMessage, data);
+    return buildSafeFallbackStep4Data(payload, errorMessage);
 }
 
 // Load travel styles from API
@@ -1297,6 +1716,9 @@ async function loadTravelStyles() {
             if (smallText) {
                 smallText.style.display = 'none';
             }
+
+            travelStyleSelect.dispatchEvent(new Event('travel-styles:loaded', { bubbles: true }));
+            travelStyleSelect.dispatchEvent(new Event('change', { bubbles: true }));
         } else {
             // Fallback to basic styles if API fails
             if (smallText) {
@@ -1319,5 +1741,212 @@ window.goToStep = goToStep;
 window.selectHotel = selectHotel;
 window.createFinalPlan = createFinalPlan;
 window.toggleDay = toggleDay;
+
+// Override Step 1 interactions with cleaner map behavior and Vietnam-only bounds.
+async function handleCurrentLocation() {
+    const btn = document.getElementById('use-current-location-btn');
+    const statusSpan = document.getElementById('location-status');
+    const originInput = document.getElementById('origin-input');
+    const chip = document.getElementById('detected-chip');
+    const addressSpan = document.getElementById('detected-address');
+
+    if (!btn || !originInput || !statusSpan || isResolvingCurrentLocation) return;
+
+    isResolvingCurrentLocation = true;
+
+    btn.disabled = true;
+    const btnText = btn.querySelector('.btn-text');
+    const originalBtnText = btnText ? btnText.textContent : 'Dùng vị trí hiện tại';
+    if (btnText) btnText.textContent = 'Đang xác định vị trí...';
+    statusSpan.textContent = 'Trình duyệt sẽ yêu cầu quyền truy cập vị trí để dùng điểm đi hiện tại.';
+    statusSpan.style.color = '#475569';
+
+    try {
+        if (!navigator.geolocation) {
+            throw new Error('Trình duyệt không hỗ trợ định vị. Vui lòng nhập thủ công.');
+        }
+
+        navigator.geolocation.getCurrentPosition(async (position) => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            const accuracy = position.coords.accuracy || 0;
+
+            try {
+                const response = await fetch(`/api/v1/locations/reverse-geocode/?lat=${lat}&lon=${lon}`);
+                const data = await response.json();
+
+                let displayAddress = '';
+                if (data.status === 'success' && data.address) {
+                    displayAddress = data.address;
+                } else if (data.location) {
+                    displayAddress = data.location;
+                } else {
+                    displayAddress = `Vị trí (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
+                }
+
+                const accuracyText = accuracy > 0 ? ` • ±${Math.round(accuracy)}m` : '';
+                if (addressSpan) {
+                    addressSpan.textContent = `${displayAddress}${accuracyText}`;
+                }
+                if (chip) {
+                    chip.classList.remove('hidden');
+                }
+
+                originInput.dataset.lat = String(lat);
+                originInput.dataset.lon = String(lon);
+
+                const destinationInput = document.getElementById('destination-input');
+                const destinationLat = Number(destinationInput?.dataset.lat);
+                const destinationLon = Number(destinationInput?.dataset.lon);
+                const hasDestinationGeo = Number.isFinite(destinationLat) && Number.isFinite(destinationLon);
+
+                updateOriginMap(lat, lon, {
+                    accuracy,
+                    originLabel: displayAddress,
+                    destination: hasDestinationGeo ? {
+                        lat: destinationLat,
+                        lon: destinationLon,
+                        label: destinationInput?.value || 'Điểm đến'
+                    } : null
+                });
+
+                statusSpan.textContent = 'Đã lấy vị trí hiện tại. Bạn có thể xác nhận để dùng làm điểm đi.';
+                statusSpan.style.color = '#0f766e';
+            } catch (error) {
+                console.error('Error in reverse geocoding:', error);
+                statusSpan.textContent = 'Không thể tra địa chỉ từ vị trí hiện tại. Vui lòng thử lại.';
+                statusSpan.style.color = '#dc2626';
+            } finally {
+                isResolvingCurrentLocation = false;
+                btn.disabled = false;
+                if (btnText) btnText.textContent = originalBtnText;
+            }
+        }, (error) => {
+            console.error('Geolocation error:', error);
+            let errorMessage = 'Không thể xác định vị trí.';
+            if (error.code === 1) {
+                errorMessage = 'Bạn đã từ chối quyền truy cập vị trí. Vui lòng cho phép hoặc nhập thủ công.';
+            } else if (error.code === 2) {
+                errorMessage = 'Không thể xác định vị trí. Vui lòng kiểm tra kết nối hoặc GPS.';
+            } else if (error.code === 3) {
+                errorMessage = 'Hết thời gian chờ khi lấy vị trí hiện tại.';
+            }
+
+            statusSpan.textContent = errorMessage;
+            statusSpan.style.color = '#dc2626';
+            isResolvingCurrentLocation = false;
+            btn.disabled = false;
+            if (btnText) btnText.textContent = originalBtnText;
+            originInput.focus();
+        }, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 60000
+        });
+    } catch (error) {
+        console.error('Error in handleCurrentLocation:', error);
+        statusSpan.textContent = `Đã xảy ra lỗi: ${error.message}`;
+        statusSpan.style.color = '#dc2626';
+        isResolvingCurrentLocation = false;
+        btn.disabled = false;
+        if (btnText) btnText.textContent = originalBtnText;
+    }
+}
+
+async function handleStep1Submit(e) {
+    e.preventDefault();
+
+    const originInput = document.getElementById('origin-input');
+    const destinationInput = document.getElementById('destination-input');
+
+    const origin = originInput ? originInput.value.trim() : '';
+    const destination = destinationInput ? destinationInput.value.trim() : '';
+
+    if (!origin || origin.length < 2) {
+        showError('Vui lòng nhập điểm xuất phát (ít nhất 2 ký tự).');
+        if (originInput) originInput.focus();
+        return;
+    }
+
+    if (!destination || destination.length < 2) {
+        showError('Vui lòng nhập điểm đến (ít nhất 2 ký tự).');
+        if (destinationInput) destinationInput.focus();
+        return;
+    }
+
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn ? submitBtn.innerHTML : 'Tiếp tục';
+    const resultDiv = document.getElementById('step1-result');
+
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="loading-spinner"></span> Đang kiểm tra...';
+    }
+
+    if (resultDiv) {
+        resultDiv.innerHTML = '';
+        resultDiv.style.display = 'none';
+    }
+
+    try {
+        const response = await fetch('/api/v1/travel-plans/step1/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                origin,
+                destination
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.status === 'success') {
+            if (originInput && data.origin) {
+                if ((!originInput.dataset.lat || originInput.dataset.lat === '') && data.origin.latitude !== undefined && data.origin.latitude !== null) {
+                    originInput.dataset.lat = String(data.origin.latitude);
+                }
+                if ((!originInput.dataset.lon || originInput.dataset.lon === '') && data.origin.longitude !== undefined && data.origin.longitude !== null) {
+                    originInput.dataset.lon = String(data.origin.longitude);
+                }
+            }
+
+            if (destinationInput && data.destination) {
+                destinationInput.dataset.lat = data.destination.latitude ?? '';
+                destinationInput.dataset.lon = data.destination.longitude ?? '';
+            }
+
+            workflowState.step1Data = data;
+            displayStep1Result(data);
+            updateRoutePreviewMap(data);
+
+            setTimeout(() => {
+                goToStep(2);
+            }, 1000);
+        } else {
+            const errorMsg = data.error || 'Không thể xử lý yêu cầu.';
+            showError(errorMsg);
+
+            if (data.origin && !data.destination) {
+                if (destinationInput) destinationInput.style.borderColor = '#dc2626';
+            } else if (data.destination && !data.origin) {
+                if (originInput) originInput.style.borderColor = '#dc2626';
+            } else {
+                if (originInput) originInput.style.borderColor = '#dc2626';
+                if (destinationInput) destinationInput.style.borderColor = '#dc2626';
+            }
+        }
+    } catch (error) {
+        console.error('Step 1 error:', error);
+        showError('Lỗi kết nối. Vui lòng kiểm tra kết nối mạng và thử lại.');
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+    }
+}
 
 

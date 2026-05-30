@@ -189,7 +189,7 @@ def _register_openai_candidate(candidates: List[Dict[str, Any]]) -> None:
         if not openai_api_key:
             return
         from langchain_openai import ChatOpenAI
-        openai_model = os.getenv("MODEL", "gpt-4o-mini")
+        openai_model = os.getenv("PLANNING_OPENAI_MODEL") or os.getenv("MODEL", "gpt-4o")
         client = ChatOpenAI(
             model=openai_model,
             temperature=0.3,

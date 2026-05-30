@@ -1,0 +1,67 @@
+<div class="step-content" id="step-3">
+    <div class="step-header">
+        <span class="tp-badge tp-badge-primary mb-4">
+            <i class="fa-solid fa-hotel"></i>
+            Ngân sách & Khách sạn
+        </span>
+        <h2>Atlas đang phân tích ngân sách và lưu trú</h2>
+        <p>Hệ thống sẽ ước tính chi phí, so sánh khách sạn phù hợp và đề xuất lựa chọn cân bằng với phong cách du lịch của bạn.</p>
+    </div>
+
+    <div class="step3-loading-card">
+        <div class="flex items-center gap-3">
+            <span class="assistant-orb" style="width: 2.75rem; height: 2.75rem;">
+                <i class="fa-solid fa-brain"></i>
+            </span>
+            <div>
+                <p class="font-semibold text-slate-900 dark:text-slate-100">Atlas đang phân tích ngân sách...</p>
+                <p class="theme-text-muted text-sm">Đang so sánh khách sạn phù hợp và tối ưu theo phong cách du lịch...</p>
+            </div>
+        </div>
+        <div class="loading-line lg"></div>
+        <div class="loading-line md"></div>
+        <div class="loading-line sm"></div>
+    </div>
+
+    <div id="step3-result" class="mt-5">
+        <div class="step3-shell">
+            <div class="step3-grid">
+                <section class="step-panel">
+                    <div class="step-panel-header">
+                        <span class="step-panel-icon"><i class="fa-solid fa-wallet"></i></span>
+                        <div>
+                            <h3 class="step-panel-title">Bức tranh ngân sách</h3>
+                            <p class="step-panel-subtitle">Atlas sẽ tổng hợp chi phí di chuyển, lưu trú, ăn uống và hoạt động theo đúng dữ liệu hành trình hiện tại.</p>
+                        </div>
+                    </div>
+                    <div class="empty-state-card">Phân tích ngân sách sẽ xuất hiện tại đây ngay sau khi hoàn tất xử lý.</div>
+                </section>
+                <section class="step-panel">
+                    <div class="step-panel-header">
+                        <span class="step-panel-icon"><i class="fa-solid fa-hotel"></i></span>
+                        <div>
+                            <h3 class="step-panel-title">Khách sạn được tuyển chọn</h3>
+                            <p class="step-panel-subtitle">Danh sách lưu trú sẽ được sắp xếp theo mức phù hợp với phong cách du lịch và nhịp chuyến đi của bạn.</p>
+                        </div>
+                    </div>
+                    <div class="empty-state-card">Các đề xuất khách sạn sẽ hiển thị ở đây sau khi Atlas hoàn thành phân tích.</div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <div class="selection-note">
+        Bạn có thể tiếp tục mà không chọn khách sạn nếu muốn chỉ xem kế hoạch tổng quan trước.
+    </div>
+
+    <div class="workflow-actions">
+        <button type="button" class="btn-workflow btn-secondary" onclick="goToStep(2)">
+            <i class="fa-solid fa-arrow-left"></i>
+            Quay lại
+        </button>
+        <button type="button" class="btn-workflow btn-primary" id="step3-continue" onclick="goToStep(4)" disabled aria-disabled="true">
+            Tiếp tục
+            <i class="fa-solid fa-arrow-right"></i>
+        </button>
+    </div>
+</div>

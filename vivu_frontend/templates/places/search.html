@@ -193,6 +193,31 @@
         inset: 0;
         background: linear-gradient(to top, rgba(2, 6, 23, 0.85), rgba(2, 6, 23, 0.1));
     }
+
+    .sovereignty-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        max-width: 220px;
+        border-radius: 1rem;
+        padding: 0.5rem 0.75rem;
+        background: rgba(2, 6, 23, 0.88);
+        color: #f8fafc;
+        border: 1px solid rgba(52, 211, 153, 0.38);
+        box-shadow: 0 14px 28px rgba(2, 6, 23, 0.34);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        font-size: 0.72rem;
+        line-height: 1.35;
+        white-space: normal;
+        text-align: left;
+    }
+
+    .sovereignty-label__flag {
+        font-size: 1rem;
+        line-height: 1;
+        flex: 0 0 auto;
+    }
 </style>
 {% endblock %}
 
@@ -217,7 +242,7 @@
 
                     <div class="search-pill flex flex-col gap-3 rounded-full border border-slate-200 px-3 py-3 shadow-sm premium-easing hover:shadow-md sm:px-4 md:flex-row md:items-center md:gap-0">
                         <div class="search-input-shell relative min-w-0 flex-1 rounded-full">
-                            <i class="fa-solid fa-location-dot pointer-events-none absolute left-6 top-1/2 -translate-y-1/2 text-sm" style="color: rgb(var(--primary));"></i>
+                            <i class="fa-solid fa-map-marker-alt pointer-events-none absolute left-6 top-1/2 -translate-y-1/2 text-sm" style="color: rgb(var(--primary));"></i>
                             <input id="search-input"
                                    type="text"
                                    class="h-14 w-full rounded-full border-0 bg-transparent px-6 pl-14 text-sm shadow-none focus:outline-none focus:ring-0"
@@ -283,7 +308,7 @@
                         <div class="grid gap-3 sm:grid-cols-2">
                             <div class="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
                                 <p class="text-xs uppercase tracking-[0.18em] text-white/70">Map Ready</p>
-                                <p class="mt-2 text-sm leading-6 text-white/90">Khi có kết quả tìm kiếm, hệ thống sẽ ghim trực tiếp marker lên Leaflet/OpenStreetMap.</p>
+                                <p class="mt-2 text-sm leading-6 text-white/90">Khi có kết quả tìm kiếm, hệ thống sẽ ghim trực tiếp marker lên bản đồ Leaflet với nền Carto đồng bộ.</p>
                             </div>
                             <div class="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
                                 <p class="text-xs uppercase tracking-[0.18em] text-white/70">AI Context</p>
@@ -432,7 +457,7 @@
                     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <p class="theme-text-muted text-xs font-semibold uppercase tracking-[0.2em]">Bản đồ tương tác</p>
-                            <h2 id="map-heading" class="mt-1 text-xl font-semibold">Toàn cảnh điểm đến trên OpenStreetMap</h2>
+                            <h2 id="map-heading" class="mt-1 text-xl font-semibold">Toàn cảnh điểm đến trên bản đồ tương tác</h2>
                         </div>
                         <div class="theme-text-muted flex items-center gap-2 text-sm">
                             <span class="theme-muted-surface inline-flex items-center gap-2 rounded-full px-4 py-2">
@@ -528,6 +553,18 @@
     const toggleSidebarBtn = document.getElementById('toggle-sidebar-btn');
     const searchShell = document.getElementById('search-shell');
     const detailMapFocus = document.getElementById('detail-map-focus');
+    const CARTO_DARK_TILE_URL = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+    const VIETNAM_BOUNDS = L.latLngBounds(L.latLng(6.0, 102.0), L.latLng(24.0, 118.0));
+    const SOVEREIGNTY_MARKERS = [
+        {
+            coords: [16.5, 112.0],
+            text: 'Quần đảo Hoàng Sa <br>(Thành phố Đà Nẵng, Việt Nam)'
+        },
+        {
+            coords: [10.0, 114.3],
+            text: 'Quần đảo Trường Sa <br>(Tỉnh Khánh Hòa, Việt Nam)'
+        }
+    ];
 
     const WEATHER_CODES = {
         0: ['☀️', 'Trời quang'],
@@ -585,11 +622,36 @@
             zoom: 6,
             zoomControl: true,
             attributionControl: true,
+            maxBounds: VIETNAM_BOUNDS,
+            maxBoundsViscosity: 1.0,
         });
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors',
-            maxZoom: 19,
+        searchMap.setMinZoom(5);
+
+        L.tileLayer(CARTO_DARK_TILE_URL, {
+            attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; OpenStreetMap contributors',
+            minZoom: 5,
+            maxZoom: 16,
+            noWrap: true,
         }).addTo(searchMap);
+
+        SOVEREIGNTY_MARKERS.forEach((item) => {
+            L.marker(item.coords, {
+                interactive: false,
+                keyboard: false,
+                zIndexOffset: 1000,
+                icon: L.divIcon({
+                    className: 'sovereignty-marker',
+                    html: `
+                        <div class="sovereignty-label">
+                            <span class="sovereignty-label__flag">🇻🇳</span>
+                            <span>${item.text}</span>
+                        </div>
+                    `,
+                    iconSize: [216, 48],
+                    iconAnchor: [108, 24]
+                })
+            }).addTo(searchMap);
+        });
         setTimeout(() => searchMap.invalidateSize(), 150);
     }
 
@@ -795,7 +857,7 @@
             const marker = L.marker([lat, lon], {
                 icon: L.divIcon({
                     className: 'border-0 bg-transparent',
-                    html: `<div class="flex h-12 w-12 items-center justify-center rounded-full border-4 border-white text-lg text-white shadow-lg" style="background: rgb(var(--primary));"><i class="fa-solid fa-location-dot"></i></div>`,
+                    html: `<div class="flex h-12 w-12 items-center justify-center rounded-full border-4 border-white text-lg text-white shadow-lg" style="background: rgb(var(--primary));"><i class="fa-solid fa-map-marker-alt"></i></div>`,
                     iconSize: [48, 48],
                     iconAnchor: [24, 48]
                 })
@@ -816,7 +878,8 @@
             const bounds = results
                 .filter((place) => place.viDo && place.kinhDo)
                 .map((place) => [Number(place.viDo), Number(place.kinhDo)]);
-            if (bounds.length > 0) searchMap.fitBounds(bounds, { padding: [40, 40] });
+            if (bounds.length > 0) searchMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 11 });
+            searchMap.panInsideBounds(VIETNAM_BOUNDS, { animate: false });
         }
     }
 

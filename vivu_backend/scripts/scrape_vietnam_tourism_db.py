@@ -20,9 +20,11 @@ Ví dụ:
 from __future__ import annotations
 
 import argparse
+import csv
 import io
 import json
 import os
+import random
 import re
 import sqlite3
 import sys
@@ -66,13 +68,19 @@ CATEGORY_CONFIG: Dict[str, Dict[str, str]] = {
     "dest": {"label": "Điểm đến", "path": "/dest", "loai": "dia_danh"},
     "shop": {"label": "Điểm mua sắm", "path": "/shop", "loai": "mua_sam"},
     "vcgt": {"label": "Vui chơi giải trí", "path": "/vcgt", "loai": "giai_tri"},
-    "thethao": {"label": "Thể thao", "path": "/thethao", "loai": "giai_tri"},
-    "vantai": {"label": "Vận tải khách du lịch", "path": "/vantai", "loai": "khac"},
+    "tt": {"label": "Thể thao", "path": "/tt", "loai": "giai_tri"},
+    "thethao": {"label": "Thể thao", "path": "/tt", "loai": "giai_tri"},
+    "vtkdl": {"label": "Vận tải khách du lịch", "path": "/vtkdl", "loai": "khac"},
+    "vantai": {"label": "Vận tải khách du lịch", "path": "/vtkdl", "loai": "khac"},
     "cssk": {"label": "Chăm sóc sức khỏe", "path": "/cssk", "loai": "khac"},
-    "hiephoi": {"label": "Hiệp hội", "path": "/hiephoi", "loai": "khac"},
-    "daotao": {"label": "Cơ sở đào tạo", "path": "/daotao", "loai": "khac"},
-    "nhanluc": {"label": "Nhân lực du lịch", "path": "/nhanluc", "loai": "khac"},
-    "xuctien": {"label": "Xúc tiến du lịch", "path": "/xuctien", "loai": "khac"},
+    "hh": {"label": "Hiệp hội", "path": "/hh", "loai": "khac"},
+    "hiephoi": {"label": "Hiệp hội", "path": "/hh", "loai": "khac"},
+    "csdt": {"label": "Cơ sở đào tạo", "path": "/csdt", "loai": "khac"},
+    "daotao": {"label": "Cơ sở đào tạo", "path": "/csdt", "loai": "khac"},
+    "nldl": {"label": "Nhân lực du lịch", "path": "/nldl", "loai": "khac"},
+    "nhanluc": {"label": "Nhân lực du lịch", "path": "/nldl", "loai": "khac"},
+    "pro": {"label": "Xúc tiến du lịch", "path": "/pro", "loai": "khac"},
+    "xuctien": {"label": "Xúc tiến du lịch", "path": "/pro", "loai": "khac"},
 }
 
 LIST_CONTAINER_CLASSES = [
@@ -96,6 +104,23 @@ class ProvinceIndex:
 class ProvinceMatcher:
     province_dict: Dict[str, ProvinceIndex]
     match_keys: List[str]
+
+
+@dataclass
+class RequestPolicy:
+    min_delay_seconds: float = 2.0
+    max_delay_seconds: float = 4.5
+    max_retries: int = 3
+    request_timeout_seconds: int = 30
+    block_cooldown_seconds: float = 45.0
+    transient_backoff_seconds: float = 12.0
+    abort_after_consecutive_failures: int = 5
+
+
+@dataclass
+class CrawlState:
+    consecutive_failures: int = 0
+    total_requests: int = 0
 
 
 def normalize_text(value: str) -> str:
@@ -246,6 +271,85 @@ def get_session() -> requests.Session:
     return session
 
 
+def polite_sleep(min_seconds: float, max_seconds: float, reason: str) -> float:
+    delay = random.uniform(min_seconds, max_seconds)
+    print(f"[THROTTLE] {reason}: nghỉ {delay:.2f}s")
+    time.sleep(delay)
+    return delay
+
+
+def fetch_url(
+    session: requests.Session,
+    url: str,
+    policy: RequestPolicy,
+    state: CrawlState,
+    *,
+    label: str,
+) -> requests.Response:
+    last_error: Optional[Exception] = None
+    for attempt in range(1, policy.max_retries + 1):
+        polite_sleep(policy.min_delay_seconds, policy.max_delay_seconds, f"{label} | attempt {attempt}")
+        state.total_requests += 1
+        try:
+            response = session.get(url, timeout=policy.request_timeout_seconds)
+            if response.status_code == 200:
+                state.consecutive_failures = 0
+                response.encoding = "utf-8"
+                return response
+
+            if response.status_code in {403, 429}:
+                state.consecutive_failures += 1
+                print(
+                    f"[PROTECT] {label} trả HTTP {response.status_code}. "
+                    "Kích hoạt cooldown dài để tránh làm nóng server nguồn."
+                )
+                if state.consecutive_failures >= policy.abort_after_consecutive_failures:
+                    raise RuntimeError(
+                        f"Dừng crawl an toàn: nhận {state.consecutive_failures} lỗi chặn/giới hạn liên tiếp từ nguồn."
+                    )
+                polite_sleep(
+                    policy.block_cooldown_seconds,
+                    policy.block_cooldown_seconds + 30.0,
+                    f"cooldown sau HTTP {response.status_code}",
+                )
+                last_error = RuntimeError(f"HTTP {response.status_code} for {url}")
+                continue
+
+            if response.status_code >= 500 or response.status_code in {408, 425}:
+                state.consecutive_failures += 1
+                print(f"[RETRY] {label} trả HTTP {response.status_code}, sẽ thử lại chậm hơn.")
+                if state.consecutive_failures >= policy.abort_after_consecutive_failures:
+                    raise RuntimeError(
+                        f"Dừng crawl an toàn: nhận {state.consecutive_failures} lỗi server/timeout liên tiếp từ nguồn."
+                    )
+                polite_sleep(
+                    policy.transient_backoff_seconds,
+                    policy.transient_backoff_seconds + 10.0,
+                    f"backoff sau HTTP {response.status_code}",
+                )
+                last_error = RuntimeError(f"HTTP {response.status_code} for {url}")
+                continue
+
+            raise RuntimeError(f"HTTP {response.status_code} for {url}")
+        except requests.RequestException as exc:
+            state.consecutive_failures += 1
+            last_error = exc
+            print(f"[RETRY] {label} lỗi mạng: {exc!r}")
+            if state.consecutive_failures >= policy.abort_after_consecutive_failures:
+                raise RuntimeError(
+                    f"Dừng crawl an toàn: lỗi mạng liên tiếp đạt ngưỡng {policy.abort_after_consecutive_failures}."
+                ) from exc
+            polite_sleep(
+                policy.transient_backoff_seconds,
+                policy.transient_backoff_seconds + 10.0,
+                "backoff sau lỗi mạng",
+            )
+
+    if last_error:
+        raise RuntimeError(f"Không lấy được URL sau {policy.max_retries} lần: {url}") from last_error
+    raise RuntimeError(f"Không lấy được URL sau {policy.max_retries} lần: {url}")
+
+
 def extract_item_id(detail_url: str) -> Optional[str]:
     if not detail_url:
         return None
@@ -381,13 +485,23 @@ def parse_list_items(soup: BeautifulSoup) -> List[Tag]:
     return candidates
 
 
-def scrape_detail_page(session: requests.Session, detail_url: str, delay_seconds: float) -> Dict:
+def scrape_detail_page(
+    session: requests.Session,
+    detail_url: str,
+    delay_seconds: float,
+    request_policy: RequestPolicy,
+    crawl_state: CrawlState,
+) -> Dict:
     if not detail_url:
         return {}
 
-    response = session.get(detail_url, timeout=30)
-    response.raise_for_status()
-    response.encoding = "utf-8"
+    response = fetch_url(
+        session,
+        detail_url,
+        request_policy,
+        crawl_state,
+        label=f"detail {detail_url}",
+    )
     soup = BeautifulSoup(response.text, "html.parser")
 
     detail: Dict[str, object] = {"images": []}
@@ -452,6 +566,8 @@ def scrape_category(
     max_items: Optional[int],
     fetch_detail: bool,
     detail_delay_seconds: float,
+    request_policy: RequestPolicy,
+    crawl_state: CrawlState,
 ) -> List[Dict]:
     config = CATEGORY_CONFIG[category_slug]
     print(f"\n{'=' * 72}")
@@ -468,12 +584,13 @@ def scrape_category(
         url = f"{BASE_URL}{config['path']}" if page == 1 else f"{BASE_URL}{config['path']}?page={page}"
         print(f"[{category_slug}] Page {page}: {url}")
 
-        response = session.get(url, timeout=30)
-        if response.status_code != 200:
-            print(f"[{category_slug}] HTTP {response.status_code}, dừng.")
-            break
-
-        response.encoding = "utf-8"
+        response = fetch_url(
+            session,
+            url,
+            request_policy,
+            crawl_state,
+            label=f"{category_slug} page {page}",
+        )
         soup = BeautifulSoup(response.text, "html.parser")
         item_nodes = parse_list_items(soup)
         if not item_nodes:
@@ -488,7 +605,13 @@ def scrape_category(
 
             if fetch_detail and item.get("detail_url"):
                 try:
-                    detail = scrape_detail_page(session, item["detail_url"], detail_delay_seconds)
+                    detail = scrape_detail_page(
+                        session,
+                        item["detail_url"],
+                        detail_delay_seconds,
+                        request_policy,
+                        crawl_state,
+                    )
                     for key, value in detail.items():
                         if key == "images":
                             if value:
@@ -628,6 +751,73 @@ def build_place_payload(existing: Optional[sqlite3.Row], item: Dict, province_id
         "dacDiem": build_source_metadata(item),
         "tienNghi": existing_dict.get("tienNghi", "") or "",
     }
+
+
+def build_csv_rows(connection: sqlite3.Connection, items: Sequence[Dict]) -> Tuple[List[Dict[str, Any]], Dict[str, int]]:
+    """Chuẩn hóa dữ liệu scrape thành các dòng CSV theo schema bảng DIADIEM."""
+    province_matcher = build_province_matcher(connection)
+    rows: List[Dict[str, Any]] = []
+    stats = {
+        "mapped_province": 0,
+        "unmapped_province": 0,
+        "rows": 0,
+    }
+
+    for index, item in enumerate(items, start=1):
+        province = province_from_address(item.get("diaChi", ""), province_matcher)
+        province_id = province.province_id if province else 0
+        if province:
+            stats["mapped_province"] += 1
+        else:
+            stats["unmapped_province"] += 1
+
+        config = CATEGORY_CONFIG.get(item.get("category", ""), {"loai": "khac"})
+        payload = build_place_payload(
+            existing=None,
+            item=item,
+            province_id=province_id,
+            loai=config["loai"],
+        )
+        payload["maDiaDiem"] = index
+        rows.append(payload)
+
+    stats["rows"] = len(rows)
+    return rows, stats
+
+
+def export_places_to_csv(csv_path: Path, rows: Sequence[Dict[str, Any]]) -> None:
+    fieldnames = [
+        "maDiaDiem",
+        "tenDiaDiem",
+        "moTa",
+        "diaChi",
+        "maTinhThanh",
+        "loaiDiaDiem",
+        "viDo",
+        "kinhDo",
+        "giaVe",
+        "gioMoCua",
+        "gioDongCua",
+        "dienThoai",
+        "website",
+        "danhGiaTrungBinh",
+        "soLuotDanhGia",
+        "soLuotXem",
+        "maNguoiTao",
+        "ngayTao",
+        "lanCapNhatCuoi",
+        "trangThai",
+        "dacDiem",
+        "tienNghi",
+    ]
+    csv_path.parent.mkdir(parents=True, exist_ok=True)
+    with csv_path.open("w", encoding="utf-8-sig", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames, extrasaction="ignore")
+        writer.writeheader()
+        for row in rows:
+            normalized_row = dict(row)
+            normalized_row["maNguoiTao"] = normalized_row.get("maNguoiTao") or ""
+            writer.writerow(normalized_row)
 
 
 def upsert_place(connection: sqlite3.Connection, existing: Optional[sqlite3.Row], payload: Dict[str, Any]) -> int:
@@ -778,10 +968,17 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--categories", default="all", help="Danh mục, ví dụ: cslt,dest,rest hoặc all")
     parser.add_argument("--max-pages-per-category", type=int, default=None, help="Giới hạn số page mỗi danh mục")
     parser.add_argument("--max-items-per-category", type=int, default=None, help="Giới hạn số item mỗi danh mục")
-    parser.add_argument("--detail-delay", type=float, default=0.25, help="Delay giữa các request detail")
+    parser.add_argument("--detail-delay", type=float, default=0.0, help="Delay phụ trội sau khi đọc trang detail")
+    parser.add_argument("--min-delay", type=float, default=2.0, help="Delay tối thiểu sau mỗi request tới nguồn")
+    parser.add_argument("--max-delay", type=float, default=4.5, help="Delay tối đa sau mỗi request tới nguồn")
+    parser.add_argument("--max-retries", type=int, default=3, help="Số lần thử lại tối đa cho mỗi request")
+    parser.add_argument("--block-cooldown", type=float, default=45.0, help="Cooldown cơ bản khi gặp 403/429")
+    parser.add_argument("--transient-backoff", type=float, default=12.0, help="Backoff cơ bản cho lỗi mạng/5xx")
+    parser.add_argument("--abort-after-failures", type=int, default=5, help="Ngưỡng lỗi liên tiếp để dừng crawl an toàn")
     parser.add_argument("--no-detail", action="store_true", help="Không gọi trang detail")
     parser.add_argument("--dry-run", action="store_true", help="Chỉ parse và map, không ghi DB")
     parser.add_argument("--output", default=str(DEFAULT_OUTPUT), help="File JSON output")
+    parser.add_argument("--csv-output", default=None, help="File CSV export theo schema DIADIEM")
     return parser
 
 
@@ -789,6 +986,8 @@ def main() -> None:
     parser = build_arg_parser()
     args = parser.parse_args()
     categories = parse_categories(args.categories)
+    if args.min_delay < 2.0 or args.max_delay < args.min_delay:
+        raise SystemExit("--min-delay phải >= 2.0 và --max-delay phải >= --min-delay để giữ crawl an toàn.")
 
     print("=" * 72)
     print("CRAWL CSDL DU LỊCH VIỆT NAM")
@@ -798,9 +997,20 @@ def main() -> None:
     print(f"Max items/category: {args.max_items_per_category or 'không giới hạn'}")
     print(f"Fetch detail: {'không' if args.no_detail else 'có'}")
     print(f"Dry run: {'có' if args.dry_run else 'không'}")
+    print(f"Delay/request: {args.min_delay:.1f}s - {args.max_delay:.1f}s")
+    print(f"Retry tối đa: {args.max_retries}")
     print("=" * 72)
 
     session = get_session()
+    request_policy = RequestPolicy(
+        min_delay_seconds=args.min_delay,
+        max_delay_seconds=args.max_delay,
+        max_retries=args.max_retries,
+        block_cooldown_seconds=args.block_cooldown,
+        transient_backoff_seconds=args.transient_backoff,
+        abort_after_consecutive_failures=args.abort_after_failures,
+    )
+    crawl_state = CrawlState()
     all_places: List[Dict] = []
 
     for category_slug in categories:
@@ -811,12 +1021,20 @@ def main() -> None:
             max_items=args.max_items_per_category,
             fetch_detail=not args.no_detail,
             detail_delay_seconds=args.detail_delay,
+            request_policy=request_policy,
+            crawl_state=crawl_state,
         )
         all_places.extend(places)
 
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(all_places, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    csv_stats: Optional[Dict[str, int]] = None
+    if args.csv_output:
+        with get_connection() as connection:
+            csv_rows, csv_stats = build_csv_rows(connection, all_places)
+        export_places_to_csv(Path(args.csv_output), csv_rows)
 
     stats = import_places(all_places, dry_run=args.dry_run)
 
@@ -829,6 +1047,13 @@ def main() -> None:
     print(f"Lỗi: {stats['errors']}")
     print(f"Ảnh mới: {stats['images_created']}")
     print(f"JSON output: {output_path}")
+    if args.csv_output:
+        print(f"CSV output: {args.csv_output}")
+        if csv_stats:
+            print(
+                "CSV province mapping: "
+                f"{csv_stats['mapped_province']} mapped / {csv_stats['unmapped_province']} unmapped"
+            )
     print("=" * 72)
 
 

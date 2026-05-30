@@ -1,0 +1,231 @@
+:root {
+  --background: 255 255 255;
+  --foreground: 15 23 42;
+  --muted: 248 250 252;
+  --muted-foreground: 100 116 139;
+  --card: 255 255 255;
+  --card-foreground: 15 23 42;
+  --border: 226 232 240;
+  --input: 226 232 240;
+  --primary: 15 118 110;
+  --primary-hover: 13 148 136;
+  --primary-foreground: 255 255 255;
+  --secondary: 224 242 254;
+  --secondary-foreground: 7 89 133;
+  --accent: 5 150 105;
+  --accent-hover: 4 120 87;
+  --accent-foreground: 255 255 255;
+  --ocean: 15 23 42;
+  --ocean-soft: 22 78 99;
+  --emerald-soft: 236 253 245;
+  --warning: 245 158 11;
+  --warning-soft: 255 251 235;
+  --warning-foreground: 120 53 15;
+
+  --background-hex: #FFFFFF;
+  --foreground-hex: #0F172A;
+  --muted-hex: #F8FAFC;
+  --muted-foreground-hex: #64748B;
+  --card-hex: #FFFFFF;
+  --card-foreground-hex: #0F172A;
+  --border-hex: #E2E8F0;
+  --input-hex: #E2E8F0;
+  --primary-hex: #0F766E;
+  --primary-hover-hex: #0D9488;
+  --primary-foreground-hex: #FFFFFF;
+  --secondary-hex: #E0F2FE;
+  --secondary-foreground-hex: #075985;
+  --accent-hex: #059669;
+  --accent-hover-hex: #047857;
+  --accent-foreground-hex: #FFFFFF;
+  --ocean-hex: #0F172A;
+  --ocean-soft-hex: #164E63;
+  --emerald-soft-hex: #ECFDF5;
+  --warning-hex: #F59E0B;
+  --warning-soft-hex: #FFFBEB;
+  --warning-foreground-hex: #78350F;
+
+  --surface-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+  --surface-shadow-strong: 0 28px 80px rgba(15, 23, 42, 0.12);
+}
+
+html.dark,
+html[data-theme="dark"] {
+  --background: 2 6 23;
+  --foreground: 248 250 252;
+  --muted: 15 23 42;
+  --muted-foreground: 148 163 184;
+  --card: 15 23 42;
+  --card-foreground: 248 250 252;
+  --border: 30 41 59;
+  --input: 51 65 85;
+  --primary: 20 184 166;
+  --primary-hover: 45 212 191;
+  --primary-foreground: 4 47 46;
+  --secondary: 8 47 73;
+  --secondary-foreground: 186 230 253;
+  --accent: 16 185 129;
+  --accent-hover: 52 211 153;
+  --accent-foreground: 2 44 34;
+  --ocean: 2 6 23;
+  --ocean-soft: 14 116 144;
+  --emerald-soft: 5 46 43;
+  --warning: 251 191 36;
+  --warning-soft: 69 26 3;
+  --warning-foreground: 254 243 199;
+
+  --background-hex: #020617;
+  --foreground-hex: #F8FAFC;
+  --muted-hex: #0F172A;
+  --muted-foreground-hex: #94A3B8;
+  --card-hex: #0F172A;
+  --card-foreground-hex: #F8FAFC;
+  --border-hex: #1E293B;
+  --input-hex: #334155;
+  --primary-hex: #14B8A6;
+  --primary-hover-hex: #2DD4BF;
+  --primary-foreground-hex: #042F2E;
+  --secondary-hex: #082F49;
+  --secondary-foreground-hex: #BAE6FD;
+  --accent-hex: #10B981;
+  --accent-hover-hex: #34D399;
+  --accent-foreground-hex: #022C22;
+  --ocean-hex: #020617;
+  --ocean-soft-hex: #0E7490;
+  --emerald-soft-hex: #052E2B;
+  --warning-hex: #FBBF24;
+  --warning-soft-hex: #451A03;
+  --warning-foreground-hex: #FEF3C7;
+
+  --surface-shadow: 0 22px 65px rgba(2, 6, 23, 0.45);
+  --surface-shadow-strong: 0 34px 90px rgba(2, 6, 23, 0.55);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Inter", system-ui, sans-serif;
+  background-color: var(--background-hex);
+  color: var(--foreground-hex);
+}
+
+body.drawer-open {
+  overflow: hidden;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Plus Jakarta Sans", "Inter", sans-serif;
+  color: var(--foreground-hex);
+}
+
+.theme-surface {
+  background: color-mix(in srgb, var(--card-hex) 88%, transparent);
+  color: var(--card-foreground-hex);
+  border: 1px solid color-mix(in srgb, var(--border-hex) 90%, transparent);
+  box-shadow: var(--surface-shadow);
+  backdrop-filter: blur(18px);
+}
+
+.theme-surface-strong {
+  background: color-mix(in srgb, var(--card-hex) 92%, transparent);
+  color: var(--card-foreground-hex);
+  border: 1px solid color-mix(in srgb, var(--border-hex) 92%, transparent);
+  box-shadow: var(--surface-shadow-strong);
+  backdrop-filter: blur(24px);
+}
+
+.theme-muted-surface {
+  background: color-mix(in srgb, var(--muted-hex) 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border-hex) 80%, transparent);
+}
+
+.theme-warning-surface {
+  background: color-mix(in srgb, var(--warning-soft-hex) 92%, transparent);
+  color: var(--warning-foreground-hex);
+  border: 1px solid color-mix(in srgb, var(--warning-hex) 28%, transparent);
+}
+
+.theme-input {
+  background: color-mix(in srgb, var(--background-hex) 85%, transparent);
+  color: var(--foreground-hex);
+  border: 1px solid var(--input-hex);
+  transition: all 0.2s ease-out;
+}
+
+.theme-input::placeholder {
+  color: var(--muted-foreground-hex);
+}
+
+.theme-input:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--primary-hex) 70%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary-hex) 14%, transparent);
+}
+
+.theme-btn-primary {
+  background: var(--primary-hex);
+  color: var(--primary-foreground-hex);
+  transition: all 0.2s ease-out;
+}
+
+.theme-btn-primary:hover {
+  background: var(--primary-hover-hex);
+  transform: translateY(-1px);
+}
+
+.theme-btn-secondary {
+  background: color-mix(in srgb, var(--card-hex) 72%, transparent);
+  color: var(--foreground-hex);
+  border: 1px solid var(--border-hex);
+  transition: all 0.2s ease-out;
+}
+
+.theme-btn-secondary:hover {
+  background: color-mix(in srgb, var(--muted-hex) 95%, transparent);
+  border-color: color-mix(in srgb, var(--primary-hex) 30%, transparent);
+  color: var(--foreground-hex);
+  transform: translateY(-1px);
+}
+
+.theme-badge {
+  background: color-mix(in srgb, var(--secondary-hex) 85%, transparent);
+  color: var(--secondary-foreground-hex);
+  border: 1px solid color-mix(in srgb, var(--secondary-foreground-hex) 10%, transparent);
+}
+
+.theme-icon-badge {
+  background: color-mix(in srgb, var(--secondary-hex) 90%, transparent);
+  color: var(--primary-hex);
+  border: 1px solid color-mix(in srgb, var(--border-hex) 75%, transparent);
+}
+
+.theme-card-hover {
+  transition: all 0.2s ease-out;
+}
+
+.theme-card-hover:hover {
+  box-shadow: var(--surface-shadow-strong);
+  transform: translateY(-2px);
+}
+
+.theme-text-muted {
+  color: var(--muted-foreground-hex);
+}
+
+.theme-divider {
+  border-color: color-mix(in srgb, var(--border-hex) 90%, transparent);
+}
+
+.glass-panel {
+  background: color-mix(in srgb, var(--card-hex) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border-hex) 80%, transparent);
+  box-shadow: var(--surface-shadow);
+  backdrop-filter: blur(18px);
+}
