@@ -9,12 +9,18 @@ from typing import List, Dict, Any, Optional
 from pathlib import Path
 import sys
 import logging
+import concurrent.futures
 
 # Add parent to path
 sys.path.append(str(Path(__file__).parent.parent))
 
 from agents.travel_agents.vector_db import get_vector_db_agent
 from ..base_agent import BaseAgent
+from tools.planning_tools import (
+    get_llm_candidates,
+    invoke_candidate_text_with_timeout,
+    DEFAULT_PROVIDER_TIMEOUT_SECONDS,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -46,59 +52,21 @@ class RAGAgent(BaseAgent):
         # Vector Database
         self.vector_db = get_vector_db_agent()
         
-        # LLM với fallback: Groq -> GPT OSS 120B -> OpenAI
+        # Canonical LLM fallback: Groq -> Gemini -> OpenRouter -> OpenAI
+        self.llm_candidates = get_llm_candidates()
+        self.llm_timeout_seconds = DEFAULT_PROVIDER_TIMEOUT_SECONDS
         self.llm = None
-        try:
-            # Priority 1: Try Groq
-            GROQ_API_KEY = os.getenv('GROQ_API_KEY')
-            if GROQ_API_KEY:
-                try:
-                    from langchain_groq import ChatGroq
-                    groq_model = os.getenv('GROQ_MODEL', 'llama-3.1-70b-versatile')
-                    self.llm = ChatGroq(
-                        model=groq_model,
-                        temperature=0.7,
-                        groq_api_key=GROQ_API_KEY
-                    )
-                    logger.info(f"RAG Agent initialized with Groq: {groq_model}")
-                except ImportError:
-                    logger.debug("langchain-groq not available, trying fallback")
-                except Exception as e:
-                    logger.warning(f"Groq initialization failed: {e}, trying fallback")
-            
-            # Priority 2: Try GPT OSS 120B (fallback model)
-            if not self.llm:
-                FALLBACK_MODEL = os.getenv('FALLBACK_MODEL', 'gpt-oss-120b')
-                OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-                if OPENAI_API_KEY and FALLBACK_MODEL:
-                    try:
-                        from langchain_openai import ChatOpenAI
-                        self.llm = ChatOpenAI(
-                            model=FALLBACK_MODEL,
-                            temperature=0.7,
-                            api_key=OPENAI_API_KEY
-                        )
-                        logger.info(f"RAG Agent initialized with Fallback LLM: {FALLBACK_MODEL}")
-                    except Exception as e:
-                        logger.warning(f"Fallback LLM initialization failed: {e}, trying OpenAI")
-            
-            # Priority 3: Fallback to OpenAI
-            if not self.llm:
-                OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-                MODEL = os.getenv('MODEL', 'gpt-4o-mini')
-                if OPENAI_API_KEY:
-                    from langchain_openai import ChatOpenAI
-                    self.llm = ChatOpenAI(
-                        model=MODEL,
-                        temperature=0.7,
-                        api_key=OPENAI_API_KEY
-                    )
-                    logger.info(f"RAG Agent initialized with OpenAI: {MODEL}")
-                else:
-                    logger.warning("No LLM API keys found, LLM disabled")
-        except Exception as e:
-            logger.warning(f"LLM initialization warning: {e}")
-            self.llm = None
+        for candidate in self.llm_candidates:
+            if candidate.get("type") == "langchain":
+                self.llm = candidate.get("client")
+                break
+        if self.llm_candidates:
+            logger.info(
+                "RAG Agent initialized with %s LLM candidates for fallback routing",
+                len(self.llm_candidates),
+            )
+        else:
+            logger.warning("No LLM API keys found for RAG fallback chain")
         
         # Tavily (optional)
         self.tavily_api_key = os.getenv('TAVILY_API_KEY')
@@ -214,6 +182,34 @@ class RAGAgent(BaseAgent):
             requests.exceptions.HTTPError,
         )
         return isinstance(e, retryable_exceptions) or "rate limit" in str(e).lower()
+
+    def _invoke_llm_with_fallback(self, prompt: str, temperature: float = 0.7) -> str:
+        """Invoke canonical LLM fallback chain with hard per-provider timeouts."""
+        if not self.llm_candidates:
+            raise RuntimeError("No LLM candidates available for RAG fallback chain")
+
+        errors = []
+        for candidate in self.llm_candidates:
+            candidate_name = candidate.get("name", "unknown")
+            try:
+                return invoke_candidate_text_with_timeout(
+                    candidate,
+                    prompt,
+                    temperature=temperature,
+                    timeout_seconds=self.llm_timeout_seconds,
+                )
+            except concurrent.futures.TimeoutError:
+                logger.warning(
+                    "RAG LLM provider %s timed out after %.1fs",
+                    candidate_name,
+                    self.llm_timeout_seconds,
+                )
+                errors.append(f"{candidate_name}: timeout after {self.llm_timeout_seconds:.1f}s")
+            except Exception as exc:
+                logger.warning("RAG LLM provider %s failed: %s", candidate_name, exc)
+                errors.append(f"{candidate_name}: {exc}")
+
+        raise RuntimeError("All RAG LLM providers failed: " + " | ".join(errors))
     
     def generate(
         self,
@@ -262,7 +258,7 @@ class RAGAgent(BaseAgent):
             ])
             
             # Generate answer with LLM
-            if self.llm:
+            if self.llm_candidates:
                 prompt = f"""Bạn là trợ lý du lịch chuyên nghiệp cho Việt Nam.
 
 Câu hỏi của người dùng: {query}
@@ -273,8 +269,7 @@ Thông tin từ database:
 Hãy trả lời câu hỏi dựa trên thông tin trên. Nếu không có thông tin đủ, hãy nói rõ.
 Hãy trả lời bằng tiếng Việt, thân thiện và chi tiết."""
 
-                response = self.llm.invoke(prompt)
-                answer = response.content if hasattr(response, 'content') else str(response)
+                answer = self._invoke_llm_with_fallback(prompt, temperature=0.7)
             else:
                 # Fallback answer
                 answer = f"Dựa trên {len(context_docs)} kết quả tìm kiếm, tôi có thể giúp bạn với: {query}. "
@@ -526,8 +521,7 @@ Hãy đưa ra 3 insights ngắn gọn (mỗi insight 1-2 câu) để giúp du kh
                 exceptions=(Exception,)
             )
             def _invoke_with_retry():
-                response = self.llm.invoke(prompt)
-                return response.content if hasattr(response, 'content') else str(response)
+                return self._invoke_llm_with_fallback(prompt, temperature=0.7)
             
             try:
                 return _invoke_with_retry()

@@ -25,7 +25,11 @@ import requests
 import os
 from functools import lru_cache
 
+from tools.geo_tools import sanitize_external_address_text
+
 logger = logging.getLogger(__name__)
+
+VIETMAP_REQUEST_TIMEOUT_SECONDS = 10
 
 
 class VietMapTools:
@@ -56,6 +60,13 @@ class VietMapTools:
             "cần thơ", "can tho", "thành phố cần thơ",
         ]
         return any(k in loc for k in keywords)
+
+    def _sanitize_place_payload(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        normalized = dict(payload or {})
+        for key in ("formatted_address", "address", "display", "name", "label", "display_name"):
+            if key in normalized:
+                normalized[key] = sanitize_external_address_text(normalized.get(key))
+        return normalized
 
     def _score_geocode_result(self, result: dict, query: str) -> float:
         """
@@ -156,7 +167,11 @@ class VietMapTools:
                 'apikey': self.vietmap_api_key,
                 'text': location
             }
-            search_resp = requests.get(search_v3_url, params=search_params, timeout=10)
+            search_resp = requests.get(
+                search_v3_url,
+                params=search_params,
+                timeout=VIETMAP_REQUEST_TIMEOUT_SECONDS,
+            )
             if search_resp.status_code == 401:
                 logger.warning("VietMap API 401 Unauthorized for /search/v3 - check API key")
             else:
@@ -247,7 +262,11 @@ class VietMapTools:
                         'apikey': self.vietmap_api_key,
                         'refid': ref_id
                     }
-                    place_resp = requests.get(place_v3_url, params=place_params, timeout=10)
+                    place_resp = requests.get(
+                        place_v3_url,
+                        params=place_params,
+                        timeout=VIETMAP_REQUEST_TIMEOUT_SECONDS,
+                    )
                     if place_resp.status_code == 401:
                         logger.warning("VietMap API 401 Unauthorized for /place/v3 - check API key")
                     else:
@@ -266,12 +285,12 @@ class VietMapTools:
                         lat = place_data.get('lat') or place_data.get('latitude') or place_data.get('y')
                         lon = place_data.get('lng') or place_data.get('lon') or place_data.get('longitude') or place_data.get('x')
                         if lat is not None and lon is not None:
-                            return {
+                            return self._sanitize_place_payload({
                                 'lat': float(lat),
                                 'lon': float(lon),
                                 'formatted_address': place_data.get('display') or place_data.get('address') or place_data.get('name') or location,
                                 'confidence': 0.9
-                            }
+                            })
         except requests.exceptions.RequestException as e:
             logger.debug(f"VietMap /search/v3 or /place/v3 failed: {e}")
         except Exception as e:
@@ -287,7 +306,11 @@ class VietMapTools:
         for endpoint, params in endpoints_to_try:
             try:
                 url = f"{self.base_url}{endpoint}"
-                response = requests.get(url, params=params, timeout=10)
+                response = requests.get(
+                    url,
+                    params=params,
+                    timeout=VIETMAP_REQUEST_TIMEOUT_SECONDS,
+                )
                 
                 # Nếu 401 Unauthorized, có thể là API key sai hoặc endpoint không đúng
                 if response.status_code == 401:
@@ -322,12 +345,12 @@ class VietMapTools:
                                 if geometry and geometry.get('coordinates'):
                                     coords = geometry.get('coordinates', [])
                                     if len(coords) >= 2:
-                                        return {
+                                        return self._sanitize_place_payload({
                                             'lat': float(coords[1]),
                                             'lon': float(coords[0]),
                                             'formatted_address': data.get('display', data.get('address', boundary.get('full_name', location))),
                                             'confidence': 0.9
-                                        }
+                                        })
                         
                         # Nếu không có geometry trong boundary, thử geocode lại với tên thành phố từ boundary
                         for boundary in boundaries:
@@ -343,7 +366,11 @@ class VietMapTools:
                                             'apikey': self.vietmap_api_key,
                                             'text': city_name
                                         }
-                                        city_search_resp = requests.get(city_search_url, params=city_search_params, timeout=10)
+                                        city_search_resp = requests.get(
+                                            city_search_url,
+                                            params=city_search_params,
+                                            timeout=VIETMAP_REQUEST_TIMEOUT_SECONDS,
+                                        )
                                         if city_search_resp.status_code == 200:
                                             city_search_data = city_search_resp.json()
                                             city_results = []
@@ -362,18 +389,22 @@ class VietMapTools:
                                                         'apikey': self.vietmap_api_key,
                                                         'refid': city_ref_id
                                                     }
-                                                    city_place_resp = requests.get(city_place_url, params=city_place_params, timeout=10)
+                                                    city_place_resp = requests.get(
+                                                        city_place_url,
+                                                        params=city_place_params,
+                                                        timeout=VIETMAP_REQUEST_TIMEOUT_SECONDS,
+                                                    )
                                                     if city_place_resp.status_code == 200:
                                                         city_place_data = city_place_resp.json()
                                                         lat = city_place_data.get('lat') or city_place_data.get('latitude') or city_place_data.get('y')
                                                         lon = city_place_data.get('lng') or city_place_data.get('lon') or city_place_data.get('longitude') or city_place_data.get('x')
                                                         if lat is not None and lon is not None:
-                                                            return {
+                                                            return self._sanitize_place_payload({
                                                                 'lat': float(lat),
                                                                 'lon': float(lon),
                                                                 'formatted_address': city_place_data.get('display', city_place_data.get('address', city_name)),
                                                                 'confidence': 0.9
-                                                            }
+                                                            })
                                                     break
                                     except Exception as e:
                                         logger.debug(f"Failed to geocode city from boundary: {e}")
@@ -431,12 +462,12 @@ class VietMapTools:
                                     props = best_feature.get('properties', {})
                                     
                                     if coords and len(coords) >= 2:
-                                        return {
+                                        return self._sanitize_place_payload({
                                             'lat': float(coords[1]),  # GeoJSON: [lon, lat]
                                             'lon': float(coords[0]),
                                             'formatted_address': props.get('label', props.get('name', location)),
                                             'confidence': 0.8
-                                        }
+                                        })
                 
                 # Format 3: List of results
                 if isinstance(data, list) and len(data) > 0:
@@ -445,12 +476,12 @@ class VietMapTools:
                     lon = result.get('lon') or result.get('longitude') or result.get('lng') or result.get('x')
                     
                     if lat is not None and lon is not None:
-                        return {
+                        return self._sanitize_place_payload({
                             'lat': float(lat),
                             'lon': float(lon),
                             'formatted_address': result.get('display_name') or result.get('address') or result.get('name') or location,
                             'confidence': result.get('confidence', 0.8)
-                        }
+                        })
                 
                 # Format 4: Dict with 'data' key (format cũ)
                 elif isinstance(data, dict):
@@ -465,12 +496,12 @@ class VietMapTools:
                         lon = result.get('lon') or result.get('longitude') or result.get('lng') or result.get('x')
                         
                         if lat is not None and lon is not None:
-                            return {
+                            return self._sanitize_place_payload({
                                 'lat': float(lat),
                                 'lon': float(lon),
                                 'formatted_address': result.get('display_name') or result.get('address') or result.get('name') or data.get('display', location),
                                 'confidence': result.get('confidence', 0.7)
-                            }
+                            })
                 
                 # Nếu không parse được coordinates, log và tiếp tục thử endpoint khác
                 logger.debug(f"VietMap {endpoint} returned data but no coordinates found: {type(data)}")
@@ -511,18 +542,23 @@ class VietMapTools:
                 'lon': lon
             }
             
-            response = requests.get(url, headers=headers, params=params, timeout=10)
+            response = requests.get(
+                url,
+                headers=headers,
+                params=params,
+                timeout=VIETMAP_REQUEST_TIMEOUT_SECONDS,
+            )
             response.raise_for_status()
             data = response.json()
             
             # Parse response
             if isinstance(data, dict):
                 result = data.get('data') or data
-                return {
+                return self._sanitize_place_payload({
                     'formatted_address': result.get('display_name') or result.get('address'),
                     'lat': lat,
                     'lon': lon
-                }
+                })
         except Exception as e:
             logger.error(f"VietMap reverse geocoding error for ({lat}, {lon}): {e}")
             
@@ -611,11 +647,14 @@ class VietMapTools:
             query_string = urlencode(params_list)
             url_with_params = f"{url}?{query_string}"
             
-            response = requests.get(url_with_params, timeout=10)
+            response = requests.get(
+                url_with_params,
+                timeout=VIETMAP_REQUEST_TIMEOUT_SECONDS,
+            )
             
             # Nếu 401, log và return None để fallback
             if response.status_code == 401:
-                logger.error(f"VietMap API 401 Unauthorized - Check API key: {self.vietmap_api_key[:10]}...")
+                logger.error("VietMap API 401 Unauthorized - Khong the xac thuc khoa truy cap.")
                 return None
             
             response.raise_for_status()
@@ -719,7 +758,12 @@ class VietMapTools:
                 'limit': limit
             }
             
-            response = requests.get(url, headers=headers, params=params, timeout=10)
+            response = requests.get(
+                url,
+                headers=headers,
+                params=params,
+                timeout=VIETMAP_REQUEST_TIMEOUT_SECONDS,
+            )
             response.raise_for_status()
             data = response.json()
             
@@ -732,12 +776,12 @@ class VietMapTools:
             
             formatted_results = []
             for item in results[:limit]:
-                formatted_results.append({
+                formatted_results.append(self._sanitize_place_payload({
                     'display_name': item.get('display_name') or item.get('address') or item.get('name'),
                     'lat': item.get('lat') or item.get('latitude'),
                     'lon': item.get('lon') or item.get('longitude') or item.get('lng'),
                     'address': item.get('address') or item.get('display_name')
-                })
+                }))
             
             return formatted_results
         except Exception as e:
@@ -864,7 +908,11 @@ class VietMapTools:
                     if radius:
                         params['radius'] = radius * 1000  # Convert km to meters
             
-            response = requests.get(url, params=params, timeout=10)
+            response = requests.get(
+                url,
+                params=params,
+                timeout=VIETMAP_REQUEST_TIMEOUT_SECONDS,
+            )
             response.raise_for_status()
             data = response.json()
             
@@ -892,7 +940,7 @@ class VietMapTools:
                 except (ValueError, TypeError) as e:
                     logger.debug(f"Could not parse coordinates from item: {item.get('name', 'unknown')}, error: {e}")
                 
-                formatted_results.append({
+                formatted_results.append(self._sanitize_place_payload({
                     'name': item.get('name') or item.get('display_name') or item.get('address'),
                     'address': item.get('address') or item.get('display_name'),
                     'lat': lat,
@@ -903,7 +951,7 @@ class VietMapTools:
                     'website': item.get('website'),
                     'distance': item.get('distance'),  # Khoảng cách nếu có location
                     'source': 'vietmap'
-                })
+                }))
             
             return formatted_results
         except Exception as e:

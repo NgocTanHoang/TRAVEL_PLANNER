@@ -38,7 +38,7 @@ sys.path.insert(0, str(BACKEND_DIR))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "vivu_core.settings")
 django.setup()
 
-from apps.itineraries.models import DongGop, LichTrinhAIDiaDiem, LichTrinhDiaDiem  # noqa: E402
+from apps.itineraries.models import DongGop, LichTrinhDiaDiem  # noqa: E402
 from apps.places.models import DanhGia, DiaDiem, DiaDiemYeuThich, HinhAnhDiaDiem, TinhThanh  # noqa: E402
 from apps.users.models import LichSuTimKiem  # noqa: E402
 
@@ -356,27 +356,6 @@ def reassign_itinerary_rows(primary: DiaDiem, secondary: DiaDiem, stats: dict[st
             row.maDiaDiem = primary
             row.save(update_fields=["maDiaDiem"])
             stats["dedupe_itinerary_rows_reassigned"] += 1
-
-    for row in LichTrinhAIDiaDiem.objects.filter(maDiaDiem=secondary):
-        exists = LichTrinhAIDiaDiem.objects.filter(
-            maLichTrinhAI=row.maLichTrinhAI,
-            maDiaDiem=primary,
-            ngayThamQuan=row.ngayThamQuan,
-        ).exclude(pk=row.pk).first()
-        if exists:
-            if not (exists.ghiChu or "").strip() and (row.ghiChu or "").strip():
-                exists.ghiChu = row.ghiChu
-            if exists.chiPhiUocTinh in (None, 0) and row.chiPhiUocTinh not in (None, 0):
-                exists.chiPhiUocTinh = row.chiPhiUocTinh
-            if exists.thuTu is None and row.thuTu is not None:
-                exists.thuTu = row.thuTu
-            exists.save(update_fields=["ghiChu", "chiPhiUocTinh", "thuTu"])
-            row.delete()
-            stats["dedupe_ai_itinerary_conflicts_resolved"] += 1
-        else:
-            row.maDiaDiem = primary
-            row.save(update_fields=["maDiaDiem"])
-            stats["dedupe_ai_itinerary_rows_reassigned"] += 1
 
 
 def reassign_misc_tables(primary: DiaDiem, secondary: DiaDiem, stats: dict[str, int]) -> None:

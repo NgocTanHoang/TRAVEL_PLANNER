@@ -11,6 +11,7 @@ import logging
 import math
 import re
 import asyncio
+import os
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -29,6 +30,7 @@ from utils.location_resolver import normalize_location_text
 from utils.semantic_place_classifier import understand_place_semantics
 
 logger = logging.getLogger(__name__)
+DEFAULT_PROVIDER_TIMEOUT_SECONDS = float(os.getenv("PLANNING_LLM_TIMEOUT_SECONDS", "10"))
 
 
 class PlanningAgent(BaseAgent):
@@ -211,20 +213,29 @@ class PlanningAgent(BaseAgent):
                         )
                     structured_llm = client.with_structured_output(FullTravelPlanOutput)
                     if hasattr(structured_llm, "ainvoke"):
-                        result = await structured_llm.ainvoke(prompt)
+                        result = await asyncio.wait_for(
+                            structured_llm.ainvoke(prompt),
+                            timeout=DEFAULT_PROVIDER_TIMEOUT_SECONDS,
+                        )
                     else:
-                        result = structured_llm.invoke(prompt)
+                        result = await asyncio.wait_for(
+                            asyncio.to_thread(structured_llm.invoke, prompt),
+                            timeout=DEFAULT_PROVIDER_TIMEOUT_SECONDS,
+                        )
                     validated = (
                         result
                         if isinstance(result, FullTravelPlanOutput)
                         else FullTravelPlanOutput.model_validate(result)
                     )
                 else:
-                    validated = await asyncio.to_thread(
-                        invoke_candidate_structured,
-                        candidate,
-                        prompt,
-                        FullTravelPlanOutput,
+                    validated = await asyncio.wait_for(
+                        asyncio.to_thread(
+                            invoke_candidate_structured,
+                            candidate,
+                            prompt,
+                            FullTravelPlanOutput,
+                        ),
+                        timeout=DEFAULT_PROVIDER_TIMEOUT_SECONDS,
                     )
 
                 logger.info("Structured planning output succeeded with provider: %s", candidate_name)
@@ -233,6 +244,13 @@ class PlanningAgent(BaseAgent):
                     validated,
                     state,
                 )
+            except asyncio.TimeoutError:
+                logger.warning(
+                    "Structured planning output timed out with provider %s after %.1fs",
+                    candidate_name,
+                    DEFAULT_PROVIDER_TIMEOUT_SECONDS,
+                )
+                errors.append(f"{candidate_name}: timeout after {DEFAULT_PROVIDER_TIMEOUT_SECONDS:.1f}s")
             except Exception as exc:
                 logger.warning("Structured planning output failed with provider %s: %s", candidate_name, exc)
                 errors.append(f"{candidate_name}: {exc}")

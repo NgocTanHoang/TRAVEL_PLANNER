@@ -1,6 +1,6 @@
 """
 Django settings for Vi Vu project.
-Minimal production-ready configuration with SQLite for development.
+Minimal production-ready configuration with PostgreSQL by default.
 """
 
 import os
@@ -113,25 +113,32 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'vivu_core.wsgi.application'
 
-# Database - SQLite for development
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'vivudb.sqlite3',
-    }
-}
+# Database - PostgreSQL by default, SQLite only for controlled migration utilities.
+DATABASE_ENGINE = os.getenv('DATABASE_ENGINE', 'django.db.backends.postgresql')
+SQLITE_DB_PATH = os.getenv('SQLITE_DB_PATH', str(BASE_DIR / 'vivudb.sqlite3'))
 
-# Note: For production, use PostgreSQL:
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': os.getenv('DB_NAME', 'vivu'),
-#         'USER': os.getenv('DB_USER', 'postgres'),
-#         'PASSWORD': os.getenv('DB_PASSWORD'),
-#         'HOST': os.getenv('DB_HOST', 'localhost'),
-#         'PORT': os.getenv('DB_PORT', '5432'),
-#     }
-# }
+if DATABASE_ENGINE == 'django.db.backends.sqlite3':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': SQLITE_DB_PATH,
+        }
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DATABASE_NAME', os.getenv('POSTGRES_DB', 'vivu')),
+            'USER': os.getenv('DATABASE_USER', os.getenv('POSTGRES_USER', 'vivu')),
+            'PASSWORD': os.getenv('DATABASE_PASSWORD', os.getenv('POSTGRES_PASSWORD', '')),
+            'HOST': os.getenv('DATABASE_HOST', 'localhost'),
+            'PORT': os.getenv('DATABASE_PORT', '5432'),
+            'CONN_MAX_AGE': int(os.getenv('DATABASE_CONN_MAX_AGE', '60')),
+            'OPTIONS': {
+                'client_encoding': 'UTF8',
+            },
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

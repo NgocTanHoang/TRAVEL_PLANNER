@@ -25,6 +25,17 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+LEGACY_DONG_NAI_TOKEN = "Thành phố Đồng Nai"
+NORMALIZED_DONG_NAI_TOKEN = "Tỉnh Đồng Nai"
+
+
+def sanitize_external_address_text(value: Optional[str]) -> str:
+    """Chuẩn hóa chuỗi địa chỉ trả về từ external API theo hierarchy hiện hành."""
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    return text.replace(LEGACY_DONG_NAI_TOKEN, NORMALIZED_DONG_NAI_TOKEN)
+
 
 def normalize_location_name(location: str) -> List[str]:
     """
@@ -173,7 +184,7 @@ class GeoTools:
             return {
                 "lat": parsed[0],
                 "lon": parsed[1],
-                "formatted_address": (value or "").strip(),
+                "formatted_address": sanitize_external_address_text((value or "").strip()),
                 "confidence": 1.0,
             }
         return self.geocode(value, country=country)
@@ -195,7 +206,7 @@ class GeoTools:
             return {
                 "lat": direct_coords[0],
                 "lon": direct_coords[1],
-                "formatted_address": (location or "").strip(),
+                "formatted_address": sanitize_external_address_text((location or "").strip()),
                 "confidence": 1.0,
             }
 
@@ -227,7 +238,9 @@ class GeoTools:
                     result = {
                         "lat": float(item["lat"]),
                         "lon": float(item["lon"]),
-                        "formatted_address": item.get("display_name", location),
+                        "formatted_address": sanitize_external_address_text(
+                            item.get("display_name", location)
+                        ),
                         "confidence": 1.0,
                     }
                     if CACHE_AVAILABLE:

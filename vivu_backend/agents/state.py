@@ -53,6 +53,7 @@ class TravelPlanningState(TypedDict, total=False):
 
     # ========== PLANNING AGENT OUTPUT ==========
     itinerary: Optional[Dict[str, Any]]
+    itinerary_json: Optional[Dict[str, Any]]
 
     # ========== WORKFLOW METADATA ==========
     status: Optional[str]
@@ -61,6 +62,14 @@ class TravelPlanningState(TypedDict, total=False):
     current_step: Optional[str]
     completed_steps: Optional[List[str]]
     error_type: Optional[str]
+    thread_id: Optional[str]
+    analytics_request_id: Optional[int]
+    workflow_started_at: Optional[str]
+    workflow_duration_ms: Optional[int]
+    llm_token_usage: Optional[Dict[str, int]]
+    server_flags: Optional[Dict[str, Any]]
+    map_completion_status: Optional[Dict[str, Any]]
+    activities_payload_valid: Optional[bool]
 
     # ========== ERRORS ==========
     transport_error: Optional[str]

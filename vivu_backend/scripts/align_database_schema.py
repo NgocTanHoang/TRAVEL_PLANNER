@@ -249,7 +249,12 @@ def ensure_diadiem_children(conn: sqlite3.Connection) -> None:
 
 def ensure_lichtrinh(conn: sqlite3.Connection) -> None:
     sql = read_table_sql(conn, "LICHTRINH")
-    fk_ok = "REFERENCES TINHTHANH" in sql and "ON DELETE RESTRICT" in sql and "ON DELETE SET NULL" in sql
+    fk_ok = (
+        "REFERENCES TINHTHANH" in sql
+        and "ON DELETE RESTRICT" in sql
+        and "ON DELETE SET NULL" in sql
+        and "is_ai_generated" in sql
+    )
     if fk_ok:
         print("[LICHTRINH] Foreign keys already aligned")
     else:
@@ -267,6 +272,7 @@ def ensure_lichtrinh(conn: sqlite3.Connection) -> None:
         chiPhiUocTinh REAL NULL,
         trangThai varchar(20) NOT NULL,
         laCongKhai bool NOT NULL,
+        is_ai_generated bool NOT NULL DEFAULT 0,
         soLuotXem INTEGER NOT NULL,
         soLuotThich INTEGER NOT NULL,
         ngayTao datetime NOT NULL,
@@ -292,6 +298,7 @@ def ensure_lichtrinh(conn: sqlite3.Connection) -> None:
             "chiPhiUocTinh",
             "trangThai",
             "laCongKhai",
+            "is_ai_generated",
             "soLuotXem",
             "soLuotThich",
             "ngayTao",
@@ -337,121 +344,11 @@ def ensure_lichtrinh(conn: sqlite3.Connection) -> None:
     )
 
 
-def ensure_lichtrinhai(conn: sqlite3.Connection) -> None:
-    sql = read_table_sql(conn, "LICHTRINHAI")
-    if sql and "ON DELETE SET NULL" in sql and "ON DELETE RESTRICT" in sql:
-        print("[LICHTRINHAI] Foreign keys already aligned")
-    else:
-        print("[LICHTRINHAI] Rebuilding with new FK behaviours")
-        create_sql = """
-        CREATE TABLE LICHTRINHAI (
-            maLichTrinhAI INTEGER PRIMARY KEY AUTOINCREMENT,
-            maLichTrinh INTEGER NULL,
-            maTinhThanh INTEGER NULL,
-            maNguoiDung INTEGER NULL,
-            tieuDe varchar(255) NOT NULL,
-            moTa TEXT NULL,
-            ngayBatDau date NULL,
-            ngayKetThuc date NULL,
-            soNgay INTEGER NULL,
-            soNguoi INTEGER NULL,
-            nganSach REAL NULL,
-            trangThai varchar(20) NOT NULL DEFAULT 'generated',
-            chiTiet TEXT NULL,
-            ngayTao datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            lanCapNhatCuoi datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (maLichTrinh) REFERENCES LICHTRINH(maLichTrinh)
-                ON DELETE SET NULL ON UPDATE CASCADE,
-            FOREIGN KEY (maTinhThanh) REFERENCES TINHTHANH(maTinhThanh)
-                ON DELETE RESTRICT ON UPDATE CASCADE,
-            FOREIGN KEY (maNguoiDung) REFERENCES NGUOIDUNG(maNguoiDung)
-                ON DELETE SET NULL ON UPDATE CASCADE
-        );
-        CREATE INDEX IF NOT EXISTS LICHTRINHAI_maNguoiDung_idx
-            ON LICHTRINHAI(maNguoiDung, ngayTao DESC);
-        CREATE INDEX IF NOT EXISTS LICHTRINHAI_maLichTrinh_idx
-            ON LICHTRINHAI(maLichTrinh);
-        CREATE INDEX IF NOT EXISTS LICHTRINHAI_maTinhThanh_idx
-            ON LICHTRINHAI(maTinhThanh);
-        """
-        columns = [
-            "maLichTrinhAI",
-            "maLichTrinh",
-            "maTinhThanh",
-            "maNguoiDung",
-            "tieuDe",
-            "moTa",
-            "ngayBatDau",
-            "ngayKetThuc",
-            "soNgay",
-            "soNguoi",
-            "nganSach",
-            "trangThai",
-            "chiTiet",
-            "ngayTao",
-            "lanCapNhatCuoi",
-        ]
-        rebuild_table(conn, "LICHTRINHAI", create_sql, columns)
-
-    if not table_exists(conn, "LICHTRINHAI_DIADIEM"):
-        print("[LICHTRINHAI_DIADIEM] Tạo mới bảng")
-        conn.executescript(
-            """
-            CREATE TABLE LICHTRINHAI_DIADIEM (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                maLichTrinhAI INTEGER NOT NULL,
-                maDiaDiem INTEGER NOT NULL,
-                ngayThamQuan date NULL,
-                thoiGianThamQuan varchar(50) NULL,
-                thuTu INTEGER NULL,
-                ghiChu TEXT NULL,
-                chiPhiUocTinh REAL NULL,
-                FOREIGN KEY (maLichTrinhAI) REFERENCES LICHTRINHAI(maLichTrinhAI)
-                    ON DELETE CASCADE ON UPDATE CASCADE,
-                FOREIGN KEY (maDiaDiem) REFERENCES DIADIEM(maDiaDiem)
-                    ON DELETE CASCADE ON UPDATE CASCADE
-            );
-            CREATE UNIQUE INDEX IF NOT EXISTS LICHTRINHAI_DIADIEM_unique
-                ON LICHTRINHAI_DIADIEM(maLichTrinhAI, maDiaDiem, ngayThamQuan);
-            """
-        )
-    else:
-        sql_link = read_table_sql(conn, "LICHTRINHAI_DIADIEM")
-        if "REFERENCES LICHTRINHAI" not in sql_link or "ON DELETE CASCADE" not in sql_link:
-            print("[LICHTRINHAI_DIADIEM] Rebuilding to cascade deletions")
-            create_sql = """
-            CREATE TABLE LICHTRINHAI_DIADIEM (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                maLichTrinhAI INTEGER NOT NULL,
-                maDiaDiem INTEGER NOT NULL,
-                ngayThamQuan date NULL,
-                thoiGianThamQuan varchar(50) NULL,
-                thuTu INTEGER NULL,
-                ghiChu TEXT NULL,
-                chiPhiUocTinh REAL NULL,
-                FOREIGN KEY (maLichTrinhAI) REFERENCES LICHTRINHAI(maLichTrinhAI)
-                    ON DELETE CASCADE ON UPDATE CASCADE,
-                FOREIGN KEY (maDiaDiem) REFERENCES DIADIEM(maDiaDiem)
-                    ON DELETE CASCADE ON UPDATE CASCADE
-            );
-            CREATE UNIQUE INDEX IF NOT EXISTS LICHTRINHAI_DIADIEM_unique
-                ON LICHTRINHAI_DIADIEM(maLichTrinhAI, maDiaDiem, ngayThamQuan);
-            """
-            columns = [
-                "id",
-                "maLichTrinhAI",
-                "maDiaDiem",
-                "ngayThamQuan",
-                "thoiGianThamQuan",
-                "thuTu",
-                "ghiChu",
-                "chiPhiUocTinh",
-            ]
-            rebuild_table(conn, "LICHTRINHAI_DIADIEM", create_sql, columns)
-
-
 def ensure_ai_tables(conn: sqlite3.Connection) -> None:
-    ensure_lichtrinhai(conn)
+    for table_name in ("LICHTRINHAI_DIADIEM", "LICHTRINHAI"):
+        if table_exists(conn, table_name):
+            print(f"[{table_name}] Gỡ bỏ bảng AI đã deprecate")
+            conn.execute(f"DROP TABLE {table_name}")
 
 
 def drop_legacy_tables(conn: sqlite3.Connection) -> None:

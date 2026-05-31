@@ -23,8 +23,10 @@ import os
 from datetime import datetime, timedelta
 import hashlib
 import json
+import concurrent.futures
 
 logger = logging.getLogger(__name__)
+EXTERNAL_API_TIMEOUT_SECONDS = 5.0
 
 # Import cache utility
 try:
@@ -177,6 +179,10 @@ class FlightTools:
                 else:
                     logger.warning(f"✗ {api_name} returned invalid result, trying next API...")
                     
+            except (requests.exceptions.Timeout, concurrent.futures.TimeoutError) as e:
+                logger.warning(f"Provider {api_name} timed out after {EXTERNAL_API_TIMEOUT_SECONDS:.1f}s: {e}. Falling back.")
+                last_error = e
+                continue
             except requests.exceptions.RequestException as e:
                 logger.warning(f"✗ {api_name} network error: {e}, trying next API...")
                 last_error = e
@@ -368,7 +374,7 @@ class FlightTools:
             
             # Gửi request (không có params, tất cả đã ở trong URL)
             logger.debug(f"FlightAPI endpoint: {endpoint}")
-            response = requests.get(endpoint, timeout=30)  # Tăng timeout vì API có thể mất thời gian
+            response = requests.get(endpoint, timeout=EXTERNAL_API_TIMEOUT_SECONDS)
             
             if response.status_code == 200:
                 try:

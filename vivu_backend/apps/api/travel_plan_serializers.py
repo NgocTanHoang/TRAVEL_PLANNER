@@ -27,6 +27,47 @@ class TravelPlanRequestSerializer(serializers.Serializer):
     selected_hotel = serializers.DictField(required=False, help_text="Khách sạn đã chọn")
 
 
+class TravelPlanPreviewQuerySerializer(serializers.Serializer):
+    """Query serializer cho preview travel plan."""
+
+    origin = serializers.CharField(required=True, help_text="Điểm xuất phát")
+    destination = serializers.CharField(required=True, help_text="Điểm đến")
+    days = serializers.IntegerField(required=True, min_value=1, max_value=14, help_text="Số ngày")
+    travelers = serializers.IntegerField(required=False, default=2, min_value=1, max_value=20, help_text="Số người")
+    travel_style = serializers.CharField(required=False, default='standard', help_text="Phong cách du lịch")
+
+
+class Step2TravelInfoSerializer(serializers.Serializer):
+    """Request serializer cho Step 2."""
+
+    origin = serializers.CharField(required=True, help_text="Điểm xuất phát")
+    destination = serializers.CharField(required=True, help_text="Điểm đến")
+    start_date = serializers.DateField(required=True, help_text="Ngày bắt đầu (YYYY-MM-DD)")
+    days = serializers.IntegerField(required=True, min_value=1, max_value=14, help_text="Số ngày")
+    travelers = serializers.IntegerField(required=True, min_value=1, max_value=20, help_text="Số người")
+
+
+class Step3BudgetSuggestionSerializer(Step2TravelInfoSerializer):
+    """Request serializer cho Step 3."""
+
+    travel_style = serializers.CharField(required=False, default='standard', help_text="Phong cách du lịch")
+    rooms = serializers.IntegerField(required=False, default=1, min_value=1, max_value=10, help_text="Số phòng")
+    selected_transport = serializers.DictField(required=False, help_text="Phương tiện đã chọn")
+
+
+class Step4ConfirmPlanSerializer(Step3BudgetSuggestionSerializer):
+    """Request serializer cho Step 4 plan generation."""
+
+    selected_hotel = serializers.DictField(required=False, help_text="Khách sạn đã chọn")
+    interests = serializers.ListField(
+        child=serializers.CharField(),
+        required=False,
+        default=list,
+        help_text="Sở thích du lịch"
+    )
+    budget = serializers.JSONField(required=False, help_text="Ngân sách hoặc breakdown từ client")
+
+
 class TransportSerializer(serializers.Serializer):
     """Transport information"""
     origin = serializers.CharField()

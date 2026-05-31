@@ -8,8 +8,10 @@ import logging
 from typing import Dict, List, Optional, Any
 import requests
 from datetime import datetime
+import concurrent.futures
 
 logger = logging.getLogger(__name__)
+EXTERNAL_API_TIMEOUT_SECONDS = 5.0
 
 # Kiểm tra xem có thư viện amadeus không
 try:
@@ -50,6 +52,11 @@ class AmadeusTools:
     def is_available(self) -> bool:
         """Kiểm tra xem Amadeus API có khả dụng không"""
         return self.client is not None
+
+    def _run_with_timeout(self, func, *args, **kwargs):
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(func, *args, **kwargs)
+            return future.result(timeout=EXTERNAL_API_TIMEOUT_SECONDS)
     
     def search_flights(
         self,
@@ -101,7 +108,10 @@ class AmadeusTools:
                 params['infants'] = infants
             
             logger.info(f"Searching Amadeus flights: {origin}->{destination} on {departure_date}")
-            response = self.client.shopping.flight_offers_search.get(**params)
+            response = self._run_with_timeout(
+                self.client.shopping.flight_offers_search.get,
+                **params,
+            )
             
             # Parse response
             flights = []
@@ -161,6 +171,13 @@ class AmadeusTools:
                 'count': len(flights)
             }
             
+        except concurrent.futures.TimeoutError:
+            logger.error("Amadeus API timeout sau %.1f giây", EXTERNAL_API_TIMEOUT_SECONDS)
+            return {
+                'error': f'Amadeus timeout sau {EXTERNAL_API_TIMEOUT_SECONDS:.1f} giây',
+                'flights': [],
+                'status': 'error'
+            }
         except ResponseError as error:
             logger.error(f"Amadeus API ResponseError: {error.description} (Code: {error.response.status_code})")
             return {
@@ -206,8 +223,9 @@ class AmadeusTools:
         try:
             # Bước 1: Tìm hotel IDs trong thành phố
             logger.info(f"Searching Amadeus hotels in {city_code}")
-            hotel_ids_response = self.client.reference_data.locations.hotels.by_city.get(
-                cityCode=city_code.upper()
+            hotel_ids_response = self._run_with_timeout(
+                self.client.reference_data.locations.hotels.by_city.get,
+                cityCode=city_code.upper(),
             )
             
             if not hotel_ids_response.data:
@@ -229,11 +247,12 @@ class AmadeusTools:
                 }
             
             # Bước 2: Tìm offers cho các hotels
-            offers_response = self.client.shopping.hotel_offers_search.get(
+            offers_response = self._run_with_timeout(
+                self.client.shopping.hotel_offers_search.get,
                 hotelIds=','.join(hotel_ids),
                 checkInDate=check_in,
                 checkOutDate=check_out,
-                adults=adults
+                adults=adults,
             )
             
             # Parse response
@@ -280,6 +299,13 @@ class AmadeusTools:
                 'count': len(hotels)
             }
             
+        except concurrent.futures.TimeoutError:
+            logger.error("Amadeus hotel API timeout sau %.1f giây", EXTERNAL_API_TIMEOUT_SECONDS)
+            return {
+                'error': f'Amadeus timeout sau {EXTERNAL_API_TIMEOUT_SECONDS:.1f} giây',
+                'hotels': [],
+                'status': 'error'
+            }
         except ResponseError as error:
             logger.error(f"Amadeus API ResponseError: {error.description} (Code: {error.response.status_code})")
             return {

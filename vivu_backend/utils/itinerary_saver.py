@@ -8,9 +8,11 @@ from django.db import transaction
 from apps.itineraries.models import LichTrinh, LichTrinhDiaDiem
 from apps.places.models import DiaDiem, TinhThanh
 from django.contrib.auth import get_user_model
+from utils.security import ensure_sensitive_log_filter, sanitize_sensitive_string
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
+ensure_sensitive_log_filter(logger)
 
 
 def normalize_destination_name(dest: str) -> str:
@@ -144,6 +146,7 @@ def save_itinerary_to_database(
                 trangThai='active',
                 chiTiet=str(itinerary_data)  # Store full itinerary data as JSON string
             )
+            lich_trinh = LichTrinh.objects.select_for_update().get(pk=lich_trinh.pk)
             
             logger.info(f"Created LichTrinh: {lich_trinh.maLichTrinh} - {lich_trinh.tieuDe}")
             
@@ -188,7 +191,7 @@ def save_itinerary_to_database(
                     
                     # Create LichTrinhDiaDiem
                     try:
-                        lich_trinh_dia_diem, created = LichTrinhDiaDiem.objects.get_or_create(
+                        lich_trinh_dia_diem, created = LichTrinhDiaDiem.objects.update_or_create(
                             maLichTrinh=lich_trinh,
                             maDiaDiem=dia_diem,
                             ngayThamQuan=day_date,
@@ -202,14 +205,14 @@ def save_itinerary_to_database(
                         if created:
                             logger.debug(f"Created LichTrinhDiaDiem: {dia_diem.tenDiaDiem} on day {day_idx}")
                     except Exception as e:
-                        logger.warning(f"Error creating LichTrinhDiaDiem: {e}")
+                        logger.warning("Error creating LichTrinhDiaDiem: %s", sanitize_sensitive_string(str(e)))
                         continue
             
             logger.info(f"Successfully saved itinerary {lich_trinh.maLichTrinh} with {LichTrinhDiaDiem.objects.filter(maLichTrinh=lich_trinh).count()} places")
             return lich_trinh
             
     except Exception as e:
-        logger.error(f"Error saving itinerary to database: {e}", exc_info=True)
+        logger.error("Error saving itinerary to database: %s", sanitize_sensitive_string(str(e)), exc_info=True)
         return None
 
 

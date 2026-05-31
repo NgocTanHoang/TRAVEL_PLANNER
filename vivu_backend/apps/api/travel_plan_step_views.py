@@ -13,12 +13,14 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.exceptions import ValidationError
 from django.utils import timezone
 from django.core.cache import cache
+from django.db import IntegrityError
 import logging
 import asyncio
 import traceback
 
 from apps.analytics.models import YeuCauLoTrinh
 from apps.analytics.services import ghi_nhan_yeu_cau_lo_trinh_async
+from utils.security import ensure_sensitive_log_filter, sanitize_sensitive_string
 
 # Add backend directory to path for agents, tools, utils, etc.
 # BASE_DIR (vivu_backend) is already added in settings.py, but adding here for safety
@@ -28,8 +30,18 @@ if str(BACKEND_DIR) not in sys.path:
 
 # Import caching utilities
 from utils.cache import cache_get, cache_set, generate_cache_key
+from .travel_plan_serializers import (
+    Step2TravelInfoSerializer,
+    Step3BudgetSuggestionSerializer,
+    Step4ConfirmPlanSerializer,
+)
+from .travel_plan_views import (
+    _require_authenticated_request,
+    _save_structured_travel_plan_for_user,
+)
 
 logger = logging.getLogger(__name__)
+ensure_sensitive_log_filter(logger)
 
 
 def rate_limit_check(user_id: int, limit: int = 20, window: int = 60) -> bool:
@@ -70,6 +82,10 @@ class Step1LocationSelectionView(APIView):
     def post(self, request):
         """Validate locations and calculate distance"""
         try:
+            auth_response = _require_authenticated_request(request)
+            if auth_response is not None:
+                return auth_response
+
             origin = request.data.get('origin', '').strip()
             destination = request.data.get('destination', '').strip()
             
@@ -183,29 +199,21 @@ class Step2TravelInfoView(APIView):
     def post(self, request):
         """Get transport options and recommendations"""
         try:
-            origin = request.data.get('origin')
-            destination = request.data.get('destination')
-            start_date = request.data.get('start_date')
-            days = int(request.data.get('days', 1))
-            travelers = int(request.data.get('travelers', 1))
-            
-            if not origin or not destination or not start_date:
-                return Response({
-                    'error': 'Vui lòng điền đầy đủ thông tin'
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Validate days
-            if days < 1 or days > 14:
-                return Response({
-                    'error': 'Số ngày phải từ 1 đến 14'
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Validate travelers
-            if travelers < 1 or travelers > 20:
-                return Response({
-                    'error': 'Số người phải từ 1 đến 20'
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
+            auth_response = _require_authenticated_request(request)
+            if auth_response is not None:
+                return auth_response
+
+            serializer = Step2TravelInfoSerializer(data=request.data)
+            if not serializer.is_valid():
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+            validated_data = serializer.validated_data
+            origin = validated_data['origin']
+            destination = validated_data['destination']
+            start_date = validated_data['start_date'].strftime('%Y-%m-%d')
+            days = validated_data['days']
+            travelers = validated_data['travelers']
+
             # Get transport options
             from tools.transport_tools import get_transport_tools
             transport_tools = get_transport_tools()
@@ -280,21 +288,25 @@ class Step3BudgetSuggestionView(APIView):
     def post(self, request):
         """Get budget suggestions and hotels"""
         try:
-            origin = request.data.get('origin')
-            destination = request.data.get('destination')
-            start_date = request.data.get('start_date')
-            days = int(request.data.get('days', 1))
-            travelers = int(request.data.get('travelers', 1))
-            travel_style = request.data.get('travel_style', 'standard')
-            rooms = int(request.data.get('rooms', 1))
-            
-            if not origin or not destination or not start_date:
-                return Response({
-                    'error': 'Vui lòng điền đầy đủ thông tin'
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
+            auth_response = _require_authenticated_request(request)
+            if auth_response is not None:
+                return auth_response
+
+            serializer = Step3BudgetSuggestionSerializer(data=request.data)
+            if not serializer.is_valid():
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+            validated_data = serializer.validated_data
+            origin = validated_data['origin']
+            destination = validated_data['destination']
+            start_date = validated_data['start_date'].strftime('%Y-%m-%d')
+            days = validated_data['days']
+            travelers = validated_data['travelers']
+            travel_style = validated_data.get('travel_style', 'standard')
+            rooms = validated_data.get('rooms', 1)
+
             # Get selected transport from request (if user selected in Step 2)
-            selected_transport = request.data.get('selected_transport')
+            selected_transport = validated_data.get('selected_transport')
             
             # Use orchestrator to get budget and hotels
             from agents.travel_agents.orchestrator_agent import OrchestratorAgent
@@ -385,20 +397,24 @@ class Step4ConfirmAndPlanView(APIView):
     def post(self, request):
         """Create full travel plan"""
         try:
-            origin = request.data.get('origin')
-            destination = request.data.get('destination')
-            start_date = request.data.get('start_date')
-            days = int(request.data.get('days', 1))
-            travelers = int(request.data.get('travelers', 1))
-            travel_style = request.data.get('travel_style', 'standard')
-            rooms = int(request.data.get('rooms', 1))
-            selected_hotel = request.data.get('selected_hotel')
-            interests = request.data.get('interests', [])
-            
-            if not origin or not destination or not start_date:
-                return Response({
-                    'error': 'Vui lòng điền đầy đủ thông tin'
-                }, status=status.HTTP_400_BAD_REQUEST)
+            auth_response = _require_authenticated_request(request)
+            if auth_response is not None:
+                return auth_response
+
+            serializer = Step4ConfirmPlanSerializer(data=request.data)
+            if not serializer.is_valid():
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+            validated_data = serializer.validated_data
+            origin = validated_data['origin']
+            destination = validated_data['destination']
+            start_date = validated_data['start_date'].strftime('%Y-%m-%d')
+            days = validated_data['days']
+            travelers = validated_data['travelers']
+            travel_style = validated_data.get('travel_style', 'standard')
+            rooms = validated_data.get('rooms', 1)
+            selected_hotel = validated_data.get('selected_hotel')
+            interests = validated_data.get('interests', [])
             
             # Check cache first
             cache_key = generate_cache_key('travel_step4', origin, destination, start_date, days, travelers, travel_style, rooms, str(interests))
@@ -491,7 +507,7 @@ class Step4ConfirmAndPlanView(APIView):
                 diem_den=destination,
                 so_ngay_di=days,
                 so_nguoi=travelers,
-                ngan_sach_du_kien=request.data.get('budget') or response_data.get('costs', {}).get('total'),
+                ngan_sach_du_kien=validated_data.get('budget') or response_data.get('costs', {}).get('total'),
                 ngay_khoi_hanh_du_kien=start_date,
                 du_lieu_phan_hoi={
                     'transport': result_state.get('transport', {}),
@@ -507,26 +523,26 @@ class Step4ConfirmAndPlanView(APIView):
                 },
             )
             
-            return Response(response_data, status=status.HTTP_201_CREATED)
+            return Response(response_data, status=status.HTTP_200_OK)
             
         except ValidationError as e:
             return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             try:
-                request_data = request.data if hasattr(request, 'data') else {}
+                request_data = request.data if hasattr(request, 'data') and isinstance(request.data, dict) else {}
                 ghi_nhan_yeu_cau_lo_trinh_async(
                     user_id=request.user.pk if request.user.is_authenticated else None,
                     loai_yeu_cau=YeuCauLoTrinh.LoaiYeuCau.BUOC_4,
                     trang_thai=YeuCauLoTrinh.TrangThaiXuLy.THAT_BAI,
                     diem_di=locals().get('origin') or request_data.get('origin', ''),
                     diem_den=locals().get('destination') or request_data.get('destination', ''),
-                    so_ngay_di=locals().get('days') or int(request_data.get('days', 1) or 1),
-                    so_nguoi=locals().get('travelers') or int(request_data.get('travelers', 1) or 1),
+                    so_ngay_di=locals().get('days') or request_data.get('days'),
+                    so_nguoi=locals().get('travelers') or request_data.get('travelers'),
                     ngan_sach_du_kien=request_data.get('budget'),
                     ngay_khoi_hanh_du_kien=locals().get('start_date') or request_data.get('start_date'),
                     du_lieu_phan_hoi={
-                        'error_message': str(e),
-                        'traceback': traceback.format_exc(),
+                        'error_message': sanitize_sensitive_string(str(e)),
+                        'error_type': e.__class__.__name__,
                         'travel_style': locals().get('travel_style') or request_data.get('travel_style', 'standard'),
                         'interests': locals().get('interests') or request_data.get('interests', []),
                         'from_step4': True,
@@ -536,7 +552,7 @@ class Step4ConfirmAndPlanView(APIView):
                 logger.exception("Không thể ghi analytics lỗi cho step4 request")
             logger.error(f"Error in Step 4: {e}", exc_info=True)
             return Response({
-                'error': str(e)
+                'error': sanitize_sensitive_string(str(e))
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -545,180 +561,52 @@ class Step4SaveItineraryView(APIView):
     Save itinerary from Step 4 to database
     POST /api/v1/travel-plans/step4/save/
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     
     def post(self, request):
         """Save itinerary to database"""
         try:
-            plan = request.data.get('plan', {})
-            costs = request.data.get('costs', {})
-            itinerary_json = plan.get('itinerary_json', {})
-            itinerary_description = plan.get('itinerary_description', '')
-            
-            # Get basic info
-            origin = request.data.get('origin')
-            destination = request.data.get('destination')
-            start_date = request.data.get('start_date')
-            days = request.data.get('days', 1)
-            travelers = request.data.get('travelers', 2)
-            travel_style = request.data.get('travel_style', 'standard')
-            
-            if not destination or not start_date:
+            auth_response = _require_authenticated_request(request)
+            if auth_response is not None:
+                return auth_response
+
+            request_data = request.data if isinstance(request.data, dict) else {}
+            plan = request_data.get('plan', {}) if isinstance(request_data.get('plan'), dict) else {}
+            canonical_plan = plan.get('itinerary_json') if isinstance(plan.get('itinerary_json'), dict) else None
+            if canonical_plan is None and isinstance(plan, dict) and 'trip_overview' in plan:
+                canonical_plan = plan
+
+            if not isinstance(canonical_plan, dict):
                 return Response({
-                    'error': 'Missing required fields: destination, start_date'
+                    'error': 'Payload plan không đúng định dạng structured output.'
                 }, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Parse dates
-            from datetime import datetime, timedelta
-            try:
-                start = datetime.strptime(start_date, '%Y-%m-%d')
-                end = start + timedelta(days=days - 1)
-            except ValueError:
-                return Response({
-                    'error': 'Invalid date format. Expected YYYY-MM-DD'
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Find TinhThanh from destination name
-            from apps.places.models import TinhThanh
-            from agents.travel_agents.activities_agent import _normalize_location_name, _tokenize_normalized_name
-            
-            tinh_thanh = None
-            dest_norm = _normalize_location_name(destination)
-            if dest_norm:
-                dest_tokens = _tokenize_normalized_name(dest_norm)
-                if dest_tokens:
-                    all_tinh_thanhs = list(TinhThanh.objects.all())
-                    best_tinh_thanh = None
-                    best_score = 0.0
-                    
-                    for tt in all_tinh_thanhs:
-                        tt_norm = _normalize_location_name(tt.tenTinhThanh)
-                        tt_tokens = _tokenize_normalized_name(tt_norm)
-                        if not tt_tokens:
-                            continue
-                        common = dest_tokens & tt_tokens
-                        if not common:
-                            continue
-                        union = dest_tokens | tt_tokens
-                        if not union:
-                            continue
-                        score = len(common) / len(union)
-                        if score > best_score:
-                            best_score = score
-                            best_tinh_thanh = tt
-                    
-                    if best_tinh_thanh and best_score >= 0.4:
-                        tinh_thanh = best_tinh_thanh
-            
-            # Create title
-            style_labels = {
-                'budget': 'Tiết kiệm',
-                'standard': 'Tiêu chuẩn',
-                'luxury': 'Cao cấp',
-                'eco': 'Sinh thái',
-                'romantic': 'Lãng mạn',
-                'adventure': 'Phiêu lưu',
-                'cultural': 'Văn hóa',
-                'gastronomy': 'Ẩm thực',
-                'wellness': 'Sức khỏe',
-                'family': 'Gia đình'
-            }
-            style_label = style_labels.get(travel_style, 'Tiêu chuẩn')
-            title = f"Lịch trình {days} ngày đến {destination} - {style_label}"
-            
-            # Create description from LLM-generated text or fallback
-            description = itinerary_description or plan.get('itinerary', {}).get('summary', '')
-            
-            # Prepare chiTiet JSON (full state data)
-            chi_tiet_data = {
-                'itinerary_json': itinerary_json,
-                'itinerary_description': itinerary_description,
-                'plan': plan,
-                'costs': costs,
-                'origin': origin,
-                'destination': destination,
-                'travel_style': travel_style
-            }
-            
-            # Save to database
-            from apps.itineraries.models import LichTrinh
-            import json
-            
-            lich_trinh = LichTrinh.objects.create(
-                maNguoiDung=request.user,
-                maTinhThanh=tinh_thanh,
-                tieuDe=title,
-                moTa=description[:1000] if description else '',  # Limit description length
-                ngayBatDau=start.date(),
-                ngayKetThuc=end.date(),
-                soNgay=days,
-                soNguoi=travelers,
-                nganSach=None,  # Can be added later
-                chiPhiUocTinh=costs.get('total', 0),
-                trangThai='published',
-                laCongKhai=False,
-                chiTiet=json.dumps(chi_tiet_data, ensure_ascii=False)
+
+            delegated_payload = dict(request_data)
+            delegated_payload['plan'] = canonical_plan
+            save_result = _save_structured_travel_plan_for_user(
+                user=request.user,
+                request_data=delegated_payload,
             )
-            
-            # Save itinerary places (LichTrinhDiaDiem) if we have itinerary_json
-            if itinerary_json and 'DIADIEM' in itinerary_json and 'LICHTRINH_DIADIEM' in itinerary_json:
-                from apps.places.models import DiaDiem
-                from apps.itineraries.models import LichTrinhDiaDiem
-                
-                diadiem_map = {}  # Map place name to DiaDiem object
-                for diadiem_data in itinerary_json.get('DIADIEM', []):
-                    ten_dia_diem = diadiem_data.get('tenDiaDiem', '')
-                    if ten_dia_diem:
-                        # Try to find in database
-                        dia_diem = DiaDiem.objects.filter(
-                            tenDiaDiem__icontains=ten_dia_diem,
-                            trangThai='active'
-                        ).first()
-                        if dia_diem:
-                            diadiem_map[ten_dia_diem] = dia_diem
-                
-                # Create LichTrinhDiaDiem entries
-                for ltdd_data in itinerary_json.get('LICHTRINH_DIADIEM', []):
-                    ten_dia_diem = ltdd_data.get('tenDiaDiem', '')
-                    if ten_dia_diem in diadiem_map:
-                        try:
-                            ngay_tham_quan_str = ltdd_data.get('ngayThamQuan', '')
-                            if ngay_tham_quan_str:
-                                # Parse date from string (format: YYYY-MM-DD)
-                                ngay_tham_quan = datetime.strptime(ngay_tham_quan_str, '%Y-%m-%d').date()
-                            else:
-                                # Fallback to start_date + ngayThu - 1
-                                ngay_thu = ltdd_data.get('ngayThu', 1)
-                                ngay_tham_quan = start.date() + timedelta(days=ngay_thu - 1)
-                            
-                            LichTrinhDiaDiem.objects.create(
-                                maLichTrinh=lich_trinh,
-                                maDiaDiem=diadiem_map[ten_dia_diem],
-                                ngayThamQuan=ngay_tham_quan,
-                                thoiGianThamQuan=ltdd_data.get('thoiGianThamQuan', ''),
-                                thuTu=ltdd_data.get('thuTu', 1),
-                                ghiChu=ltdd_data.get('ghiChu', ''),
-                                chiPhiUocTinh=ltdd_data.get('chiPhiUocTinh', 0)
-                            )
-                        except (ValueError, KeyError) as e:
-                            logger.warning(f"Error creating LichTrinhDiaDiem: {e}")
-                            continue
-            
+
             return Response({
-                'status': 'success',
-                'message': 'Lịch trình đã được lưu thành công',
-                'itinerary_id': lich_trinh.maLichTrinh,
+                'status': save_result.get('status', 'success'),
+                'message': save_result.get('message', 'Đã lưu lịch trình thành công'),
+                'itinerary_id': save_result.get('maLichTrinh'),
                 'itinerary': {
-                    'id': lich_trinh.maLichTrinh,
-                    'title': lich_trinh.tieuDe,
-                    'destination': destination,
-                    'start_date': start_date,
-                    'days': days
-                }
+                    'id': save_result.get('maLichTrinh'),
+                    'destination': request_data.get('destination'),
+                    'start_date': request_data.get('start_date'),
+                    'days': request_data.get('days')
+                },
+                'canonical_gateway': 'SaveTravelPlanView'
             }, status=status.HTTP_201_CREATED)
             
+        except IntegrityError:
+            return Response({
+                'error': 'Dữ liệu lịch trình đang được cập nhật đồng thời. Vui lòng thử lại.'
+            }, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             logger.error(f"Error saving itinerary: {e}", exc_info=True)
             return Response({
-                'error': str(e)
+                'error': sanitize_sensitive_string(str(e))
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

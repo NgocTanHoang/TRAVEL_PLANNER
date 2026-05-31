@@ -8,6 +8,7 @@ import os
 import json
 import hashlib
 import logging
+import time
 from typing import Any, Optional, Dict
 from functools import wraps
 from datetime import datetime, timedelta
@@ -35,39 +36,77 @@ except ImportError:
 
 # Global redis client
 _redis_client = None
+_redis_last_failure_at = None
+
+
+def _get_redis_retry_settings() -> Dict[str, float]:
+    return {
+        "max_attempts": max(1, int(os.getenv("REDIS_CONNECT_RETRIES", "3"))),
+        "retry_delay_seconds": max(0.1, float(os.getenv("REDIS_RETRY_DELAY_SECONDS", "1.0"))),
+        "failure_cooldown_seconds": max(1.0, float(os.getenv("REDIS_FAILURE_COOLDOWN_SECONDS", "30.0"))),
+    }
 
 
 def get_redis_client():
     """Get or create Redis client."""
-    global _redis_client
+    global _redis_client, _redis_last_failure_at
     
     if not REDIS_AVAILABLE:
         return None
     
     if _redis_client is None:
+        retry_settings = _get_redis_retry_settings()
+        if _redis_last_failure_at is not None:
+            cooldown_elapsed = time.monotonic() - _redis_last_failure_at
+            if cooldown_elapsed < retry_settings["failure_cooldown_seconds"]:
+                return None
+
         try:
             redis_host = os.getenv('REDIS_HOST', 'localhost')
             redis_port = int(os.getenv('REDIS_PORT', 6379))
             redis_db = int(os.getenv('REDIS_DB', 0))
             redis_password = os.getenv('REDIS_PASSWORD', None)
-            
-            _redis_client = redis.Redis(
-                host=redis_host,
-                port=redis_port,
-                db=redis_db,
-                password=redis_password,
-                decode_responses=True,
-                socket_connect_timeout=5,
-                socket_timeout=5
-            )
-            
-            # Test connection
-            _redis_client.ping()
-            logger.info(f"Redis connected: {redis_host}:{redis_port}")
-        
+
+            last_error = None
+            for attempt in range(1, int(retry_settings["max_attempts"]) + 1):
+                try:
+                    candidate = redis.Redis(
+                        host=redis_host,
+                        port=redis_port,
+                        db=redis_db,
+                        password=redis_password,
+                        decode_responses=True,
+                        socket_connect_timeout=5,
+                        socket_timeout=5
+                    )
+                    candidate.ping()
+                    _redis_client = candidate
+                    _redis_last_failure_at = None
+                    logger.info(f"Redis connected: {redis_host}:{redis_port} (attempt {attempt})")
+                    break
+                except Exception as exc:
+                    last_error = exc
+                    logger.warning(
+                        "Redis connection attempt %s/%s failed: %s",
+                        attempt,
+                        retry_settings["max_attempts"],
+                        exc,
+                    )
+                    if attempt < retry_settings["max_attempts"]:
+                        time.sleep(retry_settings["retry_delay_seconds"])
+
+            if _redis_client is None:
+                _redis_last_failure_at = time.monotonic()
+                logger.warning(
+                    "Failed to connect to Redis after %s attempts, using in-memory cache fallback",
+                    retry_settings["max_attempts"],
+                )
+                if last_error:
+                    logger.debug("Final Redis connection error: %s", last_error)
         except Exception as e:
             logger.warning(f"Failed to connect to Redis: {e}, using in-memory cache")
             _redis_client = None
+            _redis_last_failure_at = time.monotonic()
     
     return _redis_client
 

@@ -52,6 +52,18 @@ def load_sample_payload() -> Dict[str, Any]:
         return json.load(handle)
 
 
+def ensure_fixture_province(name: str) -> TinhThanh:
+    province, _created = TinhThanh.objects.get_or_create(
+        tenTinhThanh=name,
+        defaults={
+            "moTa": f"{name} phục vụ fixture kiểm thử SaveTravelPlanView.",
+            "viDo": 10.0,
+            "kinhDo": 106.0,
+        },
+    )
+    return province
+
+
 def resolve_province(name: str) -> TinhThanh:
     province = TinhThanh.objects.filter(tenTinhThanh__iexact=name).first()
     if province:
@@ -61,7 +73,7 @@ def resolve_province(name: str) -> TinhThanh:
     if province:
         return province
 
-    raise SystemExit(f"Không tìm thấy tỉnh/thành phù hợp cho '{name}'.")
+    return ensure_fixture_province(name)
 
 
 def ensure_test_user() -> NguoiDung:
@@ -85,6 +97,41 @@ def ensure_test_user() -> NguoiDung:
     return user
 
 
+def ensure_fixture_places(province: TinhThanh, required_count: int) -> List[DiaDiem]:
+    existing = list(
+        DiaDiem.objects.filter(maTinhThanh=province, trangThai="active")
+        .order_by("maDiaDiem")[:required_count]
+    )
+    if len(existing) >= required_count:
+        return existing
+
+    for index in range(required_count - len(existing)):
+        ordinal = len(existing) + index + 1
+        DiaDiem.objects.create(
+            tenDiaDiem=f"Fixture Địa Điểm {ordinal}",
+            moTa="Bản ghi fixture phục vụ kiểm thử lưu lịch trình.",
+            diaChi=f"Số {ordinal} Đường Kiểm Thử, {province.tenTinhThanh}",
+            maTinhThanh=province,
+            loaiDiaDiem="dia_danh",
+            viDo=10.0 + ordinal / 1000,
+            kinhDo=106.0 + ordinal / 1000,
+            giaVe=0,
+            gioMoCua="08:00",
+            gioDongCua="22:00",
+            website="https://example.com",
+            danhGiaTrungBinh=4.5,
+            soLuotDanhGia=1,
+            soLuotXem=1,
+            trangThai="active",
+            dacDiem=json.dumps({"fixture": True}, ensure_ascii=False),
+        )
+
+    return list(
+        DiaDiem.objects.filter(maTinhThanh=province, trangThai="active")
+        .order_by("maDiaDiem")[:required_count]
+    )
+
+
 def count_timeline_items(plan_payload: Dict[str, Any]) -> int:
     total = 0
     for day in plan_payload.get("daily_itinerary", []):
@@ -95,23 +142,7 @@ def count_timeline_items(plan_payload: Dict[str, Any]) -> int:
 def normalize_payload(plan_payload: Dict[str, Any], province: TinhThanh) -> Dict[str, Any]:
     normalized = copy.deepcopy(plan_payload)
     total_items = count_timeline_items(normalized)
-
-    province_places = list(
-        DiaDiem.objects.filter(maTinhThanh=province, trangThai="active")
-        .order_by("maDiaDiem")[:total_items]
-    )
-    if len(province_places) < total_items:
-        fallback_places = list(
-            DiaDiem.objects.filter(trangThai="active")
-            .exclude(maDiaDiem__in=[place.maDiaDiem for place in province_places])
-            .order_by("maDiaDiem")[: total_items - len(province_places)]
-        )
-        province_places.extend(fallback_places)
-
-    if len(province_places) < total_items:
-        raise SystemExit(
-            f"Không đủ DiaDiem active để map {total_items} timeline items. Chỉ có {len(province_places)}."
-        )
+    province_places = ensure_fixture_places(province, total_items)
 
     place_index = 0
     for day in normalized.get("daily_itinerary", []):
@@ -187,7 +218,7 @@ def main() -> int:
 
     print(f"maLichTrinh mới: {response_data.get('maLichTrinh')}")
     print(f"soDiaDiemDaLuu: {response_data.get('soDiaDiemDaLuu')}")
-    print("[SUCCESS] Luồng dữ liệu quan hệ từ AI gán vào SQLite hoạt động hoàn hảo!")
+    print("[SUCCESS] Luồng dữ liệu quan hệ từ AI gắn vào SQLite hoạt động hoàn hảo!")
     return 0
 
 

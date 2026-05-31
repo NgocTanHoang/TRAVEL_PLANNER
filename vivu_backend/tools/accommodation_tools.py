@@ -11,6 +11,7 @@ import requests
 import os
 import json
 from pathlib import Path
+import concurrent.futures
 
 # Import caching utilities
 try:
@@ -20,6 +21,7 @@ except ImportError:
     CACHE_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
+EXTERNAL_API_TIMEOUT_SECONDS = 5.0
 
 
 class AccommodationTools:
@@ -108,6 +110,10 @@ class AccommodationTools:
                 else:
                     logger.warning(f"✗ {api_name} returned no hotels, trying next API...")
                     
+            except (requests.exceptions.Timeout, concurrent.futures.TimeoutError) as e:
+                logger.warning(f"Provider {api_name} timed out after {EXTERNAL_API_TIMEOUT_SECONDS:.1f}s: {e}. Falling back.")
+                last_error = e
+                continue
             except requests.exceptions.RequestException as e:
                 logger.warning(f"✗ {api_name} network error: {e}, trying next API...")
                 last_error = e

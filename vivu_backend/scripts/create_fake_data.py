@@ -352,10 +352,10 @@ def create_fake_contributions(count=20):
         return 0
     
     contribution_types = [
-        ('them_dia_diem', 'Thêm địa điểm mới: {place}'),
-        ('sua_thong_tin', 'Sửa thông tin địa điểm: {place}'),
-        ('bao_cao_loi', 'Báo cáo lỗi thông tin: {place}'),
-        ('khac', 'Đề xuất cải thiện: {place}')
+        ('THEM_MOI_POI', 'Thêm địa điểm mới: {place}'),
+        ('SUA_DOI_POI', 'Sửa thông tin địa điểm: {place}'),
+        ('BAO_CAO_LOI', 'Báo cáo lỗi thông tin: {place}'),
+        ('KHAC', 'Đề xuất cải thiện: {place}')
     ]
     
     created = 0
@@ -373,6 +373,10 @@ def create_fake_contributions(count=20):
                 maDiaDiem=place,
                 loaiDongGop=loai,
                 noiDung=content,
+                duLieuBoSung={
+                    'fixture': True,
+                    'de_xuat_hinh_anh': [],
+                },
                 trangThai=random.choice(['pending', 'pending', 'approved', 'rejected']),
                 phanHoi=random.choice(['', '', 'Cảm ơn bạn đã đóng góp!', 'Đã xử lý.']) if random.random() < 0.3 else '',
                 ngayXuLy=timezone.now() - timedelta(days=random.randint(0, 7)) if random.random() < 0.5 else None

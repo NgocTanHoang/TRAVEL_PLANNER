@@ -45,6 +45,7 @@ urlpatterns = [
     # Travel Planning API với 7 Agents (RESTful)
     path('travel-plans/preview/', views.TravelPlanPreviewView.as_view(), name='travel-plan-preview'),
     path('travel-plans/', views.TravelPlanCreateView.as_view(), name='travel-plan-create'),
+    path('travel-plans/stream/<str:thread_id>/', views.TravelPlanStreamView.as_view(), name='travel-plan-stream'),
     path('travel-plans/save/', views.SaveTravelPlanView.as_view(), name='travel-plan-save'),
     
     # Workflow 4 Bước - API riêng cho từng step (chỉ dùng VietMap)

@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.db.models import Count, Avg, Q
 from django.core.cache import cache
+from django.shortcuts import get_object_or_404
 import logging
 
 from apps.users.models import NguoiDung, LichSuTimKiem
@@ -22,6 +23,7 @@ from .travel_plan_views import (
     TravelPlanPreviewView,
     TravelPlanCreateView,
     SaveTravelPlanView,
+    TravelPlanStreamView,
 )
 # Import 4-step workflow views
 from .travel_plan_step_views import (
@@ -261,6 +263,13 @@ class ItineraryDetailView(generics.RetrieveUpdateDestroyAPIView):
     
     def get_queryset(self):
         return LichTrinh.objects.filter(maNguoiDung=self.request.user)
+
+    def get_object(self):
+        lookup_value = self.kwargs.get(self.lookup_url_kwarg)
+        return get_object_or_404(
+            LichTrinh.objects.filter(maNguoiDung=self.request.user),
+            maLichTrinh=lookup_value,
+        )
 
 
 class AnalyticsView(APIView):

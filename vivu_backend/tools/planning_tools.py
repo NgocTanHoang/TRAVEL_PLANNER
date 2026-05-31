@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 from math import exp, radians, sin, cos, sqrt, atan2
 import os
 import json
+import concurrent.futures
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,7 @@ except ImportError:
 # Không dùng để generate content hoặc cung cấp thông tin chính
 _llm = None
 _llm_candidates = None
+DEFAULT_PROVIDER_TIMEOUT_SECONDS = float(os.getenv("PLANNING_LLM_TIMEOUT_SECONDS", "10"))
 
 
 def _is_llm_enabled() -> bool:
@@ -49,7 +51,8 @@ def _is_llm_enabled() -> bool:
 
 def get_llm():
     """
-    Get LLM instance với fallback: Groq -> GPT OSS 120B -> OpenAI
+    Get primary LangChain-compatible LLM instance from canonical fallback chain:
+    Groq -> Gemini -> OpenRouter (free) -> OpenAI.
     
     ⚠️ LƯU Ý: Chỉ dùng khi thực sự cần format/combine thông tin thành văn bản mượt mà.
     KHÔNG dùng để generate content hoặc cung cấp thông tin chính.
@@ -276,6 +279,32 @@ def invoke_candidate_structured(candidate: Dict[str, Any], prompt: str, schema_m
         return schema_model.model_validate(payload)
 
     raise RuntimeError(f"Unsupported LLM candidate type: {candidate_type}")
+
+
+def invoke_candidate_text_with_timeout(
+    candidate: Dict[str, Any],
+    prompt: str,
+    temperature: float = 0.7,
+    timeout_seconds: Optional[float] = None,
+) -> str:
+    """Invoke one candidate with a hard timeout in sync contexts."""
+    timeout = timeout_seconds or DEFAULT_PROVIDER_TIMEOUT_SECONDS
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(invoke_candidate_text, candidate, prompt, temperature)
+        return future.result(timeout=timeout)
+
+
+def invoke_candidate_structured_with_timeout(
+    candidate: Dict[str, Any],
+    prompt: str,
+    schema_model: Any,
+    timeout_seconds: Optional[float] = None,
+) -> Any:
+    """Invoke one structured candidate with a hard timeout in sync contexts."""
+    timeout = timeout_seconds or DEFAULT_PROVIDER_TIMEOUT_SECONDS
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(invoke_candidate_structured, candidate, prompt, schema_model)
+        return future.result(timeout=timeout)
 
 
 def _extract_json_payload(raw_text: str) -> Any:

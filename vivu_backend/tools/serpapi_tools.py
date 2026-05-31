@@ -10,8 +10,10 @@ import os
 import logging
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta
+import concurrent.futures
 
 logger = logging.getLogger(__name__)
+EXTERNAL_API_TIMEOUT_SECONDS = 5.0
 
 # Lazy import để tránh lỗi nếu chưa cài đặt
 try:
@@ -41,6 +43,15 @@ class SerpAPITools:
         
         if not SERPAPI_AVAILABLE:
             logger.warning("serpapi package not installed. SerpAPI tools will be disabled.")
+
+    def _run_search_with_timeout(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        def _execute() -> Dict[str, Any]:
+            search = GoogleSearch(params)
+            return search.get_dict()
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(_execute)
+            return future.result(timeout=EXTERNAL_API_TIMEOUT_SECONDS)
     
     def search_flights(
         self,
@@ -96,8 +107,7 @@ class SerpAPITools:
             if return_date:
                 params["return_date"] = return_date
             
-            search = GoogleSearch(params)
-            results = search.get_dict()
+            results = self._run_search_with_timeout(params)
             
             # Parse results
             flights_data = {
@@ -192,6 +202,12 @@ class SerpAPITools:
             
             return result
             
+        except concurrent.futures.TimeoutError:
+            logger.error("SerpAPI flights timeout sau %.1f giây", EXTERNAL_API_TIMEOUT_SECONDS)
+            return {
+                'error': f'SerpAPI timeout sau {EXTERNAL_API_TIMEOUT_SECONDS:.1f} giây',
+                'flights': []
+            }
         except Exception as e:
             logger.error(f"SerpAPI flights search error: {e}", exc_info=True)
             return {
@@ -250,8 +266,7 @@ class SerpAPITools:
                 "api_key": self.api_key
             }
             
-            search = GoogleSearch(params)
-            results = search.get_dict()
+            results = self._run_search_with_timeout(params)
             
             # Debug: Log available keys in first hotel to see what data is available
             hotels_list = results.get('properties', [])
@@ -384,6 +399,12 @@ class SerpAPITools:
             
             return result
             
+        except concurrent.futures.TimeoutError:
+            logger.error("SerpAPI hotels timeout sau %.1f giây", EXTERNAL_API_TIMEOUT_SECONDS)
+            return {
+                'error': f'SerpAPI timeout sau {EXTERNAL_API_TIMEOUT_SECONDS:.1f} giây',
+                'hotels': []
+            }
         except Exception as e:
             logger.error(f"SerpAPI hotels search error: {e}", exc_info=True)
             return {
@@ -458,8 +479,7 @@ class SerpAPITools:
                 "num": num_results * 2  # Lấy nhiều hơn để filter
             }
             
-            search = GoogleSearch(params)
-            results = search.get_dict()
+            results = self._run_search_with_timeout(params)
             
             restaurants = []
 
@@ -574,6 +594,12 @@ class SerpAPITools:
             
             return result
             
+        except concurrent.futures.TimeoutError:
+            logger.error("SerpAPI restaurants timeout sau %.1f giây", EXTERNAL_API_TIMEOUT_SECONDS)
+            return {
+                'error': f'SerpAPI timeout sau {EXTERNAL_API_TIMEOUT_SECONDS:.1f} giây',
+                'restaurants': []
+            }
         except Exception as e:
             logger.error(f"SerpAPI restaurants search error: {e}", exc_info=True)
             return {

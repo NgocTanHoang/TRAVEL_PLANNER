@@ -1333,7 +1333,8 @@ async function createFinalPlan() {
             workflowState.step4Data = await requestStep4Plan(payload);
         }
 
-        const saveResponse = await fetch('/api/v1/travel-plans/step4/save/', {
+        const canonicalPlan = workflowState.step4Data.plan?.itinerary_json || workflowState.step4Data.plan || {};
+        const saveResponse = await fetch('/api/v1/travel-plans/save/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1348,7 +1349,7 @@ async function createFinalPlan() {
                 travel_style: payload.travel_style,
                 start_location: payload.start_location,
                 destination_location: payload.destination_location,
-                plan: workflowState.step4Data.plan || {},
+                plan: canonicalPlan,
                 costs: workflowState.step4Data.costs || {}
             })
         });

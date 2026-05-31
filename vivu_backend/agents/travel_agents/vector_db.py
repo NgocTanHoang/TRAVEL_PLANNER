@@ -11,8 +11,9 @@ import json
 import logging
 import threading
 import unicodedata
+import sqlite3
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Set
 
 import pandas as pd
 
@@ -47,6 +48,14 @@ def _build_chroma_client(persist_directory: str):
         path=str(persist_dir),
         settings=Settings(anonymized_telemetry=False)
     )
+
+
+def _default_sqlite_path() -> Path:
+    repo_root = Path(__file__).resolve().parents[3]
+    candidate = repo_root / "vivu_backend" / "vivudb.sqlite3"
+    if candidate.exists():
+        return candidate
+    return repo_root / "vivudb.sqlite3"
 
 
 class VectorDatabaseAgent(BaseAgent):
@@ -172,6 +181,7 @@ class VectorDatabaseAgent(BaseAgent):
             description="Vector database agent for semantic search"
         )
         self.persist_dir = Path(persist_directory)
+        self.sqlite_path = _default_sqlite_path()
         
         # Initialize ChromaDB client (lazy)
         self.client = None
@@ -201,6 +211,41 @@ class VectorDatabaseAgent(BaseAgent):
                 )
         else:
             logger.warning("ChromaDB client not available, vector search will be disabled")
+
+    def _coerce_place_id(self, value: Any) -> Optional[int]:
+        if value is None or value == "":
+            return None
+        try:
+            return int(str(value).strip())
+        except (TypeError, ValueError):
+            return None
+
+    def _extract_relational_place_id(self, metadata: Optional[Dict[str, Any]], raw_id: Any = None) -> Optional[int]:
+        if isinstance(metadata, dict):
+            for key in ("place_id", "maDiaDiem", "source_id"):
+                place_id = self._coerce_place_id(metadata.get(key))
+                if place_id is not None:
+                    return place_id
+        return self._coerce_place_id(raw_id)
+
+    def _resolve_active_place_ids(self, candidate_ids: Set[int]) -> Set[int]:
+        if not candidate_ids:
+            return set()
+        placeholders = ",".join("?" for _ in candidate_ids)
+        connection = sqlite3.connect(str(self.sqlite_path))
+        try:
+            rows = connection.execute(
+                f"""
+                SELECT maDiaDiem
+                FROM DIADIEM
+                WHERE trangThai = 'active'
+                  AND maDiaDiem IN ({placeholders})
+                """,
+                [int(place_id) for place_id in sorted(candidate_ids)],
+            ).fetchall()
+            return {int(row[0]) for row in rows}
+        finally:
+            connection.close()
     
     def add_places_from_csv(self, csv_path: str, batch_size: int = 100):
         """
@@ -230,6 +275,7 @@ class VectorDatabaseAgent(BaseAgent):
                     'name': str(row.get('name', '')),
                     'city': str(row.get('city', '')),
                     'category': str(row.get('category', '')),
+                    'place_id': self._coerce_place_id(row.get('place_id') or row.get('maDiaDiem') or row.get('id')),
                     'rating': float(row.get('rating', 0)),
                     'price': float(row.get('price', 0)),
                     'price_level': int(row.get('price_level', 0)),
@@ -240,7 +286,8 @@ class VectorDatabaseAgent(BaseAgent):
                 
                 documents.append(doc_text)
                 metadatas.append(metadata)
-                ids.append(f"place_{idx}")
+                place_id = self._coerce_place_id(row.get('place_id') or row.get('maDiaDiem') or row.get('id'))
+                ids.append(str(place_id) if place_id is not None else f"place_{idx}")
                 
                 # Add batch when reached batch_size - thread-safe
                 if len(documents) >= batch_size:
@@ -321,6 +368,9 @@ class VectorDatabaseAgent(BaseAgent):
                     'name': str(place_data.get('name', ''))[:200],
                     'city': normalized_city,
                     'category': str(place_data.get('category', 'attraction')),
+                    'place_id': self._coerce_place_id(
+                        place_data.get('place_id') or place_data.get('maDiaDiem') or place_data.get('id')
+                    ),
                     'rating': float(place_data.get('rating', 0)),
                     'price': float(place_data.get('price', 0)),
                     'price_level': int(place_data.get('price_level', 0)),
@@ -335,7 +385,10 @@ class VectorDatabaseAgent(BaseAgent):
                 
                 documents.append(doc_text)
                 metadatas.append(metadata)
-                ids.append(f"json_{place_data.get('source', 'json')}_{idx}")
+                place_id = self._coerce_place_id(
+                    place_data.get('place_id') or place_data.get('maDiaDiem') or place_data.get('id')
+                )
+                ids.append(str(place_id) if place_id is not None else f"json_{place_data.get('source', 'json')}_{idx}")
                 
                 # Add batch when reached batch_size - thread-safe
                 if len(documents) >= batch_size:
@@ -461,8 +514,30 @@ class VectorDatabaseAgent(BaseAgent):
                 # Format results
                 places = []
                 if results and results.get('metadatas') and len(results['metadatas'][0]) > 0:
-                    for i, metadata in enumerate(results['metadatas'][0]):
+                    metadata_rows = results['metadatas'][0]
+                    raw_ids = results.get('ids', [[]])
+                    raw_id_rows = raw_ids[0] if raw_ids and isinstance(raw_ids[0], list) else []
+                    candidate_place_ids: Set[int] = set()
+                    for index, metadata in enumerate(metadata_rows):
+                        raw_id = raw_id_rows[index] if len(raw_id_rows) > index else None
+                        place_id = self._extract_relational_place_id(metadata, raw_id)
+                        if place_id is not None:
+                            candidate_place_ids.add(place_id)
+                    valid_place_ids = self._resolve_active_place_ids(candidate_place_ids)
+
+                    for i, metadata in enumerate(metadata_rows):
+                        raw_id = raw_id_rows[i] if len(raw_id_rows) > i else None
+                        relational_place_id = self._extract_relational_place_id(metadata, raw_id)
+                        if relational_place_id is None or relational_place_id not in valid_place_ids:
+                            logger.debug(
+                                "Skipping vector hit without valid maDiaDiem mapping: raw_id=%s metadata_keys=%s",
+                                raw_id,
+                                list(metadata.keys()) if isinstance(metadata, dict) else [],
+                            )
+                            continue
                         place = {
+                            'place_id': relational_place_id,
+                            'chroma_id': raw_id,
                             'name': metadata.get('name', ''),
                             'city': metadata.get('city', ''),
                             'category': metadata.get('category', ''),

@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Đồng bộ các địa điểm crawl từ csdl.vietnamtourism.gov.vn sang ChromaDB.
+Đồng bộ delta địa điểm active từ SQLite sang ChromaDB qua HttpClient.
 
-Ví dụ:
-    python vivu_backend/scripts/sync_to_vector_db.py
-    python vivu_backend/scripts/sync_to_vector_db.py --limit 100
-    python vivu_backend/scripts/sync_to_vector_db.py --purge-only
+Mục tiêu:
+- So sánh tập `maDiaDiem` active trong SQLite với `place_id` đã có trong collection.
+- Chỉ upsert các bản ghi còn thiếu vào `vietnam_places`.
+- Chunk size mặc định: 100.
 """
 from __future__ import annotations
 
@@ -17,10 +17,9 @@ import os
 import sqlite3
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple
 
 import chromadb
-from chromadb.config import Settings
 
 
 if sys.platform == "win32":
@@ -29,74 +28,26 @@ if sys.platform == "win32":
 
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent
-REPO_ROOT = BACKEND_DIR.parent
 SQLITE_PATH = BACKEND_DIR / "vivudb.sqlite3"
-CHROMA_DIRS = [
-    REPO_ROOT / "vector_db",
-    BACKEND_DIR / "vector_db",
-]
 COLLECTION_NAME = "vietnam_places"
-SOURCE_URL = "csdl.vietnamtourism.gov.vn"
+CHROMA_HOST = os.getenv("CHROMA_HOST", "127.0.0.1")
+CHROMA_PORT = int(os.getenv("CHROMA_PORT", "8000"))
+DEFAULT_BATCH_SIZE = 100
 
 
 def get_sqlite_connection() -> sqlite3.Connection:
-    conn = sqlite3.connect(str(SQLITE_PATH))
-    conn.row_factory = sqlite3.Row
-    return conn
+    connection = sqlite3.connect(str(SQLITE_PATH))
+    connection.row_factory = sqlite3.Row
+    return connection
 
 
 def get_chroma_collection():
-    chroma_host = os.getenv("CHROMA_HOST")
-    if chroma_host:
-        chroma_port = int(os.getenv("CHROMA_PORT", "8000"))
-        client = chromadb.HttpClient(host=chroma_host, port=chroma_port)
-        collection = client.get_or_create_collection(
-            name=COLLECTION_NAME,
-            metadata={"hnsw:space": "cosine"},
-        )
-        return collection, f"http://{chroma_host}:{chroma_port}"
-
-    last_error: Optional[BaseException] = None
-    for chroma_dir in CHROMA_DIRS:
-        try:
-            client = chromadb.PersistentClient(
-                path=str(chroma_dir),
-                settings=Settings(anonymized_telemetry=False),
-            )
-            collection = client.get_or_create_collection(
-                name=COLLECTION_NAME,
-                metadata={"hnsw:space": "cosine"},
-            )
-            return collection, chroma_dir
-        except BaseException as exc:
-            last_error = exc
-            continue
-    raise RuntimeError(f"Không thể mở ChromaDB ở các path cấu hình: {last_error}")
-
-
-def iter_collection_ids(collection, page_size: int = 1000) -> List[str]:
-    ids: List[str] = []
-    total = collection.count()
-    offset = 0
-    while offset < total:
-        batch = collection.get(limit=page_size, offset=offset, include=[])
-        batch_ids = batch.get("ids", []) if batch else []
-        if not batch_ids:
-            break
-        ids.extend(batch_ids)
-        offset += len(batch_ids)
-    return ids
-
-
-def purge_legacy_ids(collection, page_size: int = 1000) -> Dict[str, int]:
-    all_ids = iter_collection_ids(collection, page_size=page_size)
-    legacy_ids = [value for value in all_ids if isinstance(value, str) and value.startswith("place_")]
-    if legacy_ids:
-        collection.delete(ids=legacy_ids)
-    return {
-        "scanned": len(all_ids),
-        "deleted": len(legacy_ids),
-    }
+    client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT)
+    collection = client.get_or_create_collection(
+        name=COLLECTION_NAME,
+        metadata={"hnsw:space": "cosine"},
+    )
+    return collection
 
 
 def parse_source_metadata(raw_value: Optional[str]) -> Dict[str, Any]:
@@ -109,60 +60,120 @@ def parse_source_metadata(raw_value: Optional[str]) -> Dict[str, Any]:
         return {}
 
 
-def load_source_places(limit: Optional[int] = None) -> List[sqlite3.Row]:
-    conn = get_sqlite_connection()
+def load_active_place_ids() -> List[int]:
+    connection = get_sqlite_connection()
     try:
-        sql = """
-        SELECT
-            d.maDiaDiem,
-            d.tenDiaDiem,
-            d.moTa,
-            d.diaChi,
-            d.loaiDiaDiem,
-            d.viDo,
-            d.kinhDo,
-            d.giaVe,
-            d.danhGiaTrungBinh,
-            d.dacDiem,
-            t.tenTinhThanh
-        FROM DIADIEM d
-        JOIN TINHTHANH t ON t.maTinhThanh = d.maTinhThanh
-        WHERE d.dacDiem LIKE ?
-        ORDER BY d.maDiaDiem
-        """
-        params: List[Any] = [f"%{SOURCE_URL}%"]
-        if limit is not None:
-            sql += " LIMIT ?"
-            params.append(limit)
-        return conn.execute(sql, params).fetchall()
+        rows = connection.execute(
+            """
+            SELECT maDiaDiem
+            FROM DIADIEM
+            WHERE trangThai = 'active'
+            ORDER BY maDiaDiem
+            """
+        ).fetchall()
+        return [int(row["maDiaDiem"]) for row in rows]
     finally:
-        conn.close()
+        connection.close()
 
 
-def build_document(row: sqlite3.Row, metadata: Dict[str, Any]) -> str:
-    source_features = row["dacDiem"] or "{}"
-    base = f"{row['tenDiaDiem']} tại {row['tenTinhThanh']}. Đặc điểm: {source_features}"
-    description = (row["moTa"] or "").strip()
+def load_active_places_by_ids(place_ids: Sequence[int]) -> List[sqlite3.Row]:
+    if not place_ids:
+        return []
+
+    placeholders = ",".join("?" for _ in place_ids)
+    connection = get_sqlite_connection()
+    try:
+        rows = connection.execute(
+            f"""
+            SELECT
+                d.maDiaDiem,
+                d.tenDiaDiem,
+                d.moTa,
+                d.diaChi,
+                d.loaiDiaDiem,
+                d.viDo,
+                d.kinhDo,
+                d.giaVe,
+                d.danhGiaTrungBinh,
+                d.dacDiem,
+                t.tenTinhThanh
+            FROM DIADIEM d
+            JOIN TINHTHANH t ON t.maTinhThanh = d.maTinhThanh
+            WHERE d.trangThai = 'active'
+              AND d.maDiaDiem IN ({placeholders})
+            ORDER BY d.maDiaDiem
+            """,
+            [int(place_id) for place_id in place_ids],
+        ).fetchall()
+        return list(rows)
+    finally:
+        connection.close()
+
+
+def iter_existing_place_ids(collection, page_size: int = 500) -> Tuple[Set[int], int]:
+    existing_place_ids: Set[int] = set()
+    total = collection.count()
+    offset = 0
+
+    while offset < total:
+        batch = collection.get(limit=page_size, offset=offset, include=["metadatas"])
+        metadatas = batch.get("metadatas", []) if batch else []
+        ids = batch.get("ids", []) if batch else []
+        if not ids:
+            break
+
+        for metadata, raw_id in zip(metadatas, ids):
+            place_id = None
+            if isinstance(metadata, dict):
+                place_id = metadata.get("place_id")
+            if place_id is None:
+                place_id = raw_id
+
+            try:
+                existing_place_ids.add(int(place_id))
+            except (TypeError, ValueError):
+                continue
+
+        offset += len(ids)
+
+    return existing_place_ids, total
+
+
+def build_document(row: sqlite3.Row, source_meta: Dict[str, Any]) -> str:
+    description = str(row["moTa"] or "").strip()
+    address = str(row["diaChi"] or "").strip()
+    category = str(source_meta.get("category") or row["loaiDiaDiem"] or "").strip()
+    base_parts = [
+        f"Tên: {row['tenDiaDiem']}",
+        f"Tỉnh thành: {row['tenTinhThanh']}",
+        f"Khu vực: {row['tenTinhThanh']}",
+    ]
+    if category:
+        base_parts.append(f"Loại: {category}")
+    if address:
+        base_parts.append(f"Địa chỉ: {address}")
     if description:
-        return f"{base}. Mô tả: {description}"
-    return base
+        base_parts.append(f"Mô tả: {description}")
+    return ". ".join(base_parts)
 
 
 def build_metadata(row: sqlite3.Row, source_meta: Dict[str, Any]) -> Dict[str, Any]:
-    item_id = source_meta.get("item_id")
-    detail_url = source_meta.get("detail_url", "")
-    category = source_meta.get("category", row["loaiDiaDiem"])
+    detail_url = str(source_meta.get("detail_url") or "").strip()
+    item_id = str(source_meta.get("item_id") or "").strip()
+    source = str(source_meta.get("source") or source_meta.get("source_url") or "sqlite_active_sync").strip()
+    category = str(source_meta.get("category") or row["loaiDiaDiem"] or "").strip()
+
     return {
         "name": str(row["tenDiaDiem"])[:200],
         "city": str(row["tenTinhThanh"])[:100],
-        "category": str(category)[:100],
-        "description": str(row["moTa"] or "")[:500],
-        "address": str(row["diaChi"] or "")[:300],
-        "source": SOURCE_URL,
-        "place_id": int(row["maDiaDiem"]),
-        "item_id": str(item_id) if item_id is not None else "",
-        "detail_url": str(detail_url)[:500],
         "province": str(row["tenTinhThanh"])[:100],
+        "category": category[:100],
+        "description": str(row["moTa"] or "")[:1000],
+        "address": str(row["diaChi"] or "")[:500],
+        "source": source[:100],
+        "place_id": int(row["maDiaDiem"]),
+        "item_id": item_id[:100],
+        "detail_url": detail_url[:500],
         "price": float(row["giaVe"] or 0.0),
         "rating": float(row["danhGiaTrungBinh"] or 0.0),
         "latitude": float(row["viDo"] or 0.0),
@@ -170,68 +181,60 @@ def build_metadata(row: sqlite3.Row, source_meta: Dict[str, Any]) -> Dict[str, A
     }
 
 
-def sync_places(
-    limit: Optional[int] = None,
-    batch_size: int = 100,
-    purge_legacy: bool = True,
-) -> Dict[str, int]:
-    rows = load_source_places(limit=limit)
-    collection, chroma_dir = get_chroma_collection()
+def iter_chunks(values: Sequence[int], chunk_size: int) -> Iterable[Sequence[int]]:
+    for start in range(0, len(values), chunk_size):
+        yield values[start:start + chunk_size]
 
-    synced = 0
-    skipped = 0
+
+def sync_missing_places(batch_size: int = DEFAULT_BATCH_SIZE, limit: Optional[int] = None) -> Dict[str, Any]:
+    collection = get_chroma_collection()
+    sqlite_place_ids = load_active_place_ids()
+    existing_place_ids, collection_count_before = iter_existing_place_ids(collection)
+
+    missing_place_ids = [place_id for place_id in sqlite_place_ids if place_id not in existing_place_ids]
+    if limit is not None:
+        missing_place_ids = missing_place_ids[:limit]
+
+    upserted = 0
     batches = 0
-    purge_stats = {"scanned": 0, "deleted": 0}
 
-    if purge_legacy:
-        purge_stats = purge_legacy_ids(collection)
-
-    ids: List[str] = []
-    documents: List[str] = []
-    metadatas: List[Dict[str, Any]] = []
-
-    def flush() -> None:
-        nonlocal ids, documents, metadatas, batches, synced
-        if not ids:
-            return
-        collection.upsert(ids=ids, documents=documents, metadatas=metadatas)
-        synced += len(ids)
-        batches += 1
-        ids, documents, metadatas = [], [], []
-
-    for row in rows:
-        source_meta = parse_source_metadata(row["dacDiem"])
-        item_id = source_meta.get("item_id")
-        if item_id is None or str(item_id).strip() == "":
-            skipped += 1
+    for place_id_chunk in iter_chunks(missing_place_ids, batch_size):
+        rows = load_active_places_by_ids(place_id_chunk)
+        if not rows:
             continue
 
-        ids.append(str(item_id))
-        documents.append(build_document(row, source_meta))
-        metadatas.append(build_metadata(row, source_meta))
+        ids: List[str] = []
+        documents: List[str] = []
+        metadatas: List[Dict[str, Any]] = []
 
-        if len(ids) >= batch_size:
-            flush()
+        for row in rows:
+            source_meta = parse_source_metadata(row["dacDiem"])
+            ids.append(str(int(row["maDiaDiem"])))
+            documents.append(build_document(row, source_meta))
+            metadatas.append(build_metadata(row, source_meta))
 
-    flush()
+        collection.upsert(ids=ids, documents=documents, metadatas=metadatas)
+        upserted += len(ids)
+        batches += 1
+
+    collection_count_after = collection.count()
     return {
-        "selected": len(rows),
-        "synced": synced,
-        "skipped": skipped,
+        "sqlite_active_total": len(sqlite_place_ids),
+        "collection_count_before": collection_count_before,
+        "collection_count_after": collection_count_after,
+        "existing_place_ids": len(existing_place_ids),
+        "missing_detected": len(missing_place_ids),
+        "upserted": upserted,
         "batches": batches,
-        "collection_count": collection.count(),
-        "chroma_dir": str(chroma_dir),
-        "legacy_scanned": purge_stats["scanned"],
-        "legacy_deleted": purge_stats["deleted"],
+        "batch_size": batch_size,
+        "chroma_endpoint": f"http://{CHROMA_HOST}:{CHROMA_PORT}",
     }
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Sync địa điểm crawl từ SQLite sang ChromaDB.")
-    parser.add_argument("--limit", type=int, default=None, help="Giới hạn số bản ghi cần sync")
-    parser.add_argument("--batch-size", type=int, default=100, help="Số bản ghi mỗi batch upsert")
-    parser.add_argument("--no-purge-legacy", action="store_true", help="Không xóa legacy IDs bắt đầu bằng place_")
-    parser.add_argument("--purge-only", action="store_true", help="Chỉ dọn legacy IDs, không sync dữ liệu")
+    parser = argparse.ArgumentParser(description="Đồng bộ delta DIADIEM active từ SQLite sang ChromaDB.")
+    parser.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE, help="Số bản ghi mỗi lần upsert.")
+    parser.add_argument("--limit", type=int, default=None, help="Giới hạn số bản ghi thiếu cần xử lý.")
     return parser
 
 
@@ -240,35 +243,21 @@ def main() -> None:
     args = parser.parse_args()
 
     print("=" * 72)
-    print("SYNC SQLITE -> CHROMADB")
+    print("DELTA SYNC SQLITE ACTIVE -> CHROMADB")
     print(f"SQLite: {SQLITE_PATH}")
-    print(f"Chroma candidates: {', '.join(str(path) for path in CHROMA_DIRS)}")
+    print(f"Chroma: http://{CHROMA_HOST}:{CHROMA_PORT}")
     print(f"Collection: {COLLECTION_NAME}")
     print("=" * 72)
 
-    if args.purge_only:
-        collection, chroma_dir = get_chroma_collection()
-        purge_stats = purge_legacy_ids(collection)
-        print(f"Chroma path used: {chroma_dir}")
-        print(f"Legacy scanned: {purge_stats['scanned']}")
-        print(f"Legacy deleted: {purge_stats['deleted']}")
-        print(f"Collection count: {collection.count()}")
-        return
-
-    stats = sync_places(
-        limit=args.limit,
-        batch_size=args.batch_size,
-        purge_legacy=not args.no_purge_legacy,
-    )
-
-    print(f"Chroma path used: {stats['chroma_dir']}")
-    print(f"Legacy scanned: {stats['legacy_scanned']}")
-    print(f"Legacy deleted: {stats['legacy_deleted']}")
-    print(f"Selected: {stats['selected']}")
-    print(f"Synced: {stats['synced']}")
-    print(f"Skipped (missing item_id): {stats['skipped']}")
+    stats = sync_missing_places(batch_size=args.batch_size, limit=args.limit)
+    print(f"SQLite active total: {stats['sqlite_active_total']}")
+    print(f"Collection count before: {stats['collection_count_before']}")
+    print(f"Existing place IDs in collection: {stats['existing_place_ids']}")
+    print(f"Missing detected: {stats['missing_detected']}")
+    print(f"Upserted: {stats['upserted']}")
     print(f"Batches: {stats['batches']}")
-    print(f"Collection count: {stats['collection_count']}")
+    print(f"Batch size: {stats['batch_size']}")
+    print(f"Collection count after: {stats['collection_count_after']}")
 
 
 if __name__ == "__main__":
