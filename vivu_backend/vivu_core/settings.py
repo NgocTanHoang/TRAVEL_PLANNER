@@ -160,11 +160,15 @@ USE_TZ = True
 # Static files
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'  # Collected static files location
+STATIC_ROOT.mkdir(parents=True, exist_ok=True)
 STATICFILES_DIRS = [
     FRONTEND_DIR / 'static',  # Frontend static files (CSS, JS, images)
     BASE_DIR / 'static',  # Backend static files (if any) - keep for admin
 ]
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = os.getenv(
+    'DJANGO_STATICFILES_STORAGE',
+    'whitenoise.storage.CompressedManifestStaticFilesStorage',
+)
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -250,7 +254,7 @@ GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY', os.getenv('GOOGLE_MAPS_API_KEY', ''
 GOOGLE_MAPS_API_KEY = GOOGLE_API_KEY
 CHROMA_PERSIST_DIRECTORY = os.getenv(
     'CHROMA_PERSIST_DIRECTORY',
-    str(BASE_DIR / 'vector_db'),
+    str(PROJECT_ROOT / 'vector_db_data'),
 )
 
 # OpenRouteService API - For geocoding and routing
@@ -281,8 +285,7 @@ TAVILY_API_KEY = os.getenv('TAVILY_API_KEY', '')
 SERPAPI_API_KEY = os.getenv('SERPAPI_API_KEY', '')
 
 # Vector DB (Optional - for RAG)
-# Keep vector_db in backend for now, can move to data/ later if needed
-VECTOR_DB_PATH = str(BASE_DIR / 'vector_db')
+VECTOR_DB_PATH = CHROMA_PERSIST_DIRECTORY
 
 # Redis Cache Configuration
 # Redis is used for caching API results and session storage

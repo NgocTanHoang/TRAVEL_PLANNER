@@ -1,5 +1,6 @@
 .git
 .gitignore
+.env
 .venv
 venv
 env
@@ -18,4 +19,7 @@ vivu_frontend/node_modules
 dist
 build
 agent_output_test.json
+vector_db
+vivu_backend/vector_db
 vector_db_data
+vivu_backend/staticfiles

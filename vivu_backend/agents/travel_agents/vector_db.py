@@ -43,7 +43,7 @@ def _resolve_persist_directory(persist_directory: Optional[str] = None) -> Path:
         persist_directory
         or os.getenv("CHROMA_PERSIST_DIRECTORY")
         or os.getenv("VECTOR_DB_PATH")
-        or "vivu_backend/vector_db"
+        or "vector_db_data"
     )
     candidate = Path(configured_path)
     if not candidate.is_absolute():
