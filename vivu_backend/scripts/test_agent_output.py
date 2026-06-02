@@ -20,7 +20,7 @@ from dotenv import load_dotenv
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 REPO_ROOT = BACKEND_DIR.parent
-OUTPUT_PATH = REPO_ROOT / "agent_output_test.json"
+OUTPUT_PATH = BACKEND_DIR / "scripts" / "artifacts" / "agent_output_test.json"
 ENV_PATH = REPO_ROOT / ".env"
 
 if str(REPO_ROOT) not in sys.path:
@@ -93,6 +93,7 @@ async def main() -> None:
             raise RuntimeError(f"Khong nhan duoc itinerary_json: {planning_error}")
         raise ValueError("Khong nhan duoc state['itinerary_json'] tu workflow.")
 
+    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     with OUTPUT_PATH.open("w", encoding="utf-8") as output_file:
         json.dump(itinerary_json, output_file, ensure_ascii=False, indent=2)
 

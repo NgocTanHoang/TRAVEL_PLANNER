@@ -1,80 +1,82 @@
 {% load static %}
+<footer class="relative overflow-hidden border-t border-white/10 bg-ocean text-slate-100 font-sans transition-colors duration-300">
+    <div class="pointer-events-none absolute inset-0">
+        <div class="absolute left-[-8rem] top-[-8rem] h-64 w-64 rounded-full bg-emerald-400/10 blur-3xl"></div>
+        <div class="absolute bottom-[-9rem] right-[-6rem] h-72 w-72 rounded-full bg-cyan-400/10 blur-3xl"></div>
+    </div>
 
-<footer class="border-t border-border bg-ocean text-slate-100 font-sans transition-colors duration-300">
-    <div class="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-6 py-12 md:grid-cols-2 lg:grid-cols-4">
+    <div class="relative mx-auto grid max-w-[1440px] grid-cols-1 gap-8 px-6 py-14 md:grid-cols-2 lg:grid-cols-4 lg:px-10">
         <div class="space-y-4">
             <div class="flex items-center gap-3">
-                <img
-                    src="{% static 'img/logo_crop-Photoroom.png' %}"
-                    alt="Vi Vu logo"
-                    class="h-10 w-auto"
-                >
+                <span class="inline-flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/10">
+                    <img
+                        src="{% static 'img/logo_crop-Photoroom.png' %}"
+                        alt="Vi Vu logo"
+                        class="h-9 w-auto"
+                    >
+                </span>
                 <div>
-                    <p class="text-lg font-semibold text-white">Vi Vu</p>
-                    <p class="text-xs text-slate-400">AI-Powered Travel Planner cho Việt Nam</p>
+                    <p class="font-hero text-xl tracking-tight text-white">Vi Vu</p>
+                    <p class="text-xs text-slate-400">Atlas AI Travel Planner cho Việt Nam</p>
                 </div>
             </div>
             <p class="text-sm leading-relaxed text-slate-400">
-                Nền tảng công nghệ tối ưu hóa lộ trình du lịch nội địa, quản lý ngân sách và đồng hành cùng bạn trên mọi nẻo đường Việt Nam.
+                Nền tảng du lịch AI kết nối dữ liệu địa điểm, tuyến đường, ngân sách và lưu trú để giúp người dùng lên hành trình rõ ràng hơn.
             </p>
             <div class="flex gap-4 text-slate-400">
-                <a href="https://facebook.com" class="transition-colors hover:text-primary" aria-label="Facebook">
+                <a href="https://facebook.com" class="transition-colors hover:text-emerald-300" aria-label="Facebook">
                     <i class="fa-brands fa-facebook-f text-base"></i>
                 </a>
-                <a href="https://github.com" class="transition-colors hover:text-primary" aria-label="GitHub">
+                <a href="https://github.com" class="transition-colors hover:text-emerald-300" aria-label="GitHub">
                     <i class="fa-brands fa-github text-base"></i>
                 </a>
-                <a href="https://youtube.com" class="transition-colors hover:text-primary" aria-label="YouTube">
+                <a href="https://youtube.com" class="transition-colors hover:text-emerald-300" aria-label="YouTube">
                     <i class="fa-brands fa-youtube text-base"></i>
                 </a>
             </div>
         </div>
 
         <div>
-            <h3 class="text-sm font-semibold uppercase tracking-[0.2em] text-white">Sản phẩm</h3>
+            <h3 class="text-sm font-semibold uppercase tracking-[0.22em] text-white">Điều hướng</h3>
             <ul class="mt-4 space-y-3 text-sm text-slate-400">
-                <li><a href="{% url 'travel-plan' %}" class="transition-colors hover:text-primary">Tạo lịch trình</a></li>
-                <li><a href="{% url 'place_search' %}" class="transition-colors hover:text-primary">Khám phá địa điểm</a></li>
-                <li><a href="{% url 'swagger-ui' %}" class="transition-colors hover:text-primary">Tài liệu API</a></li>
-                <li><a href="{% url 'place_search' %}" class="transition-colors hover:text-primary">Tiện ích bản đồ</a></li>
+                <li><a href="{% url 'home' %}" class="transition-colors hover:text-emerald-300">Trang chủ</a></li>
+                <li><a href="{% url 'place_search' %}" class="transition-colors hover:text-emerald-300">Tìm kiếm điểm đến</a></li>
+                <li><a href="{% url 'travel-plan' %}" class="transition-colors hover:text-emerald-300">Tạo lịch trình</a></li>
+                <li><a href="{% url 'ai-chat' %}" class="transition-colors hover:text-emerald-300">AI chatbot</a></li>
             </ul>
         </div>
 
         <div>
-            <h3 class="text-sm font-semibold uppercase tracking-[0.2em] text-white">Công nghệ lõi</h3>
+            <h3 class="text-sm font-semibold uppercase tracking-[0.22em] text-white">Hạ tầng</h3>
             <ul class="mt-4 space-y-3 text-sm leading-relaxed text-slate-400">
-                <li>Django REST Framework</li>
-                <li>LangChain &amp; LangGraph</li>
-                <li>OpenAI &amp; Groq LLMs</li>
-                <li>ChromaDB RAG</li>
-                <li>OpenStreetMap / OSRM</li>
+                <li>Django REST Framework + PostgreSQL</li>
+                <li>LangGraph, agent orchestration và checkpoint</li>
+                <li>ChromaDB, semantic search và RAG grounding</li>
+                <li>OpenStreetMap, OSRM và lớp bản đồ chủ quyền</li>
             </ul>
         </div>
 
         <div>
-            <h3 class="text-sm font-semibold uppercase tracking-[0.2em] text-white">Ban phát triển</h3>
+            <h3 class="text-sm font-semibold uppercase tracking-[0.22em] text-white">Atlas Note</h3>
             <div class="mt-4 space-y-4 text-sm leading-relaxed text-slate-400">
                 <div>
-                    <p class="font-semibold text-slate-100">Hoàng Ngọc Tân</p>
-                    <p>MSSV: 21074741</p>
-                    <a href="mailto:hoangngoctanptth@gmail.com" class="transition-colors hover:text-primary">
-                        hoangngoctanptth@gmail.com
-                    </a>
+                    <p class="font-semibold text-slate-100">Vi Vu Atlas AI</p>
+                    <p>Thiết kế để phục vụ discovery, planning, chat và telemetry trong cùng một hệ điều hướng.</p>
                 </div>
                 <p>
-                    Sẵn sàng đồng hành trong việc xây dựng nền tảng lập kế hoạch du lịch thông minh, bám dữ liệu thật và trải nghiệm thực tế của người dùng Việt Nam.
+                    Footer mới giữ phong cách Deep Ocean Emerald để khớp với landing cinematic, wizard 4 bước và Discovery Hub từ Stitch.
                 </p>
             </div>
         </div>
     </div>
 
-    <div class="border-t border-border">
-        <div class="mx-auto flex max-w-7xl flex-col gap-3 px-6 py-5 text-sm text-slate-500 md:flex-row md:items-center md:justify-between">
+    <div class="relative border-t border-white/10">
+        <div class="mx-auto flex max-w-[1440px] flex-col gap-3 px-6 py-5 text-sm text-slate-500 md:flex-row md:items-center md:justify-between lg:px-10">
             <p>© 2026 Vi Vu - AI Travel Planner. All rights reserved.</p>
             <div class="flex items-center gap-3">
-                <a href="{% url 'home' %}" class="transition-colors hover:text-primary">Điều khoản dịch vụ</a>
+                <a href="{% url 'home' %}" class="transition-colors hover:text-emerald-300">Điều khoản dịch vụ</a>
                 <span class="text-slate-700">|</span>
-                <a href="{% url 'home' %}" class="transition-colors hover:text-primary">Chính sách bảo mật</a>
+                <a href="{% url 'home' %}" class="transition-colors hover:text-emerald-300">Chính sách bảo mật</a>
             </div>
         </div>
     </div>

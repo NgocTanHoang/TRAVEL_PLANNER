@@ -1,22 +1,23 @@
 {% load static %}
-
 <header
     id="navbar"
-    class="sticky top-0 z-50 border-b border-border bg-card text-foreground font-sans backdrop-blur-xl transition-colors duration-300"
+    class="nav-shell {% if request.path == '/' %}nav-floating{% else %}nav-solid nav-scrolled{% endif %} fixed inset-x-0 top-0 z-50 font-sans transition-all duration-300"
 >
-    <div class="mx-auto flex h-20 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto flex h-20 w-full max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-10">
         <a href="{% url 'home' %}" class="flex min-w-0 items-center gap-3">
-            <img
-                src="{% static 'img/logo_crop-Photoroom.png' %}"
-                alt="Vi Vu logo"
-                class="h-9 w-auto shrink-0"
-            >
+            <span class="inline-flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/10 shadow-lg shadow-black/10 backdrop-blur-md">
+                <img
+                    src="{% static 'img/logo_crop-Photoroom.png' %}"
+                    alt="Vi Vu logo"
+                    class="h-8 w-auto shrink-0"
+                >
+            </span>
             <div class="min-w-0">
-                <p class="truncate text-2xl font-semibold tracking-tight text-foreground">
+                <p class="truncate font-hero text-2xl tracking-tight text-current">
                     Vi Vu
                 </p>
-                <p class="hidden text-xs text-muted-foreground md:block">
-                    Lập kế hoạch thông minh, trọn vẹn hành trình
+                <p class="hidden text-xs text-current/70 md:block">
+                    Atlas AI Travel Planner cho hành trình Việt Nam
                 </p>
             </div>
         </a>
@@ -24,27 +25,27 @@
         <nav class="hidden items-center gap-2 lg:flex">
             <a
                 href="{% url 'home' %}"
-                class="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground {% if request.path == '/' %}bg-emerald-soft text-primary{% endif %}"
+                class="nav-link rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 {% if request.path == '/' %}is-active{% endif %}"
             >
                 Trang chủ
             </a>
             <a
                 href="{% url 'place_search' %}"
-                class="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground {% if '/places/' in request.path %}bg-emerald-soft text-primary{% endif %}"
+                class="nav-link rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 {% if '/places/' in request.path %}is-active{% endif %}"
             >
-                Khám phá
+                Tìm kiếm
             </a>
             <a
                 href="{% url 'travel-plan' %}"
-                class="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground {% if '/travel-plan/' in request.path %}bg-emerald-soft text-primary{% endif %}"
+                class="nav-link rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 {% if '/travel-plan/' in request.path %}is-active{% endif %}"
             >
                 Tạo lịch trình
             </a>
             <a
                 href="{% url 'ai-chat' %}"
-                class="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground {% if '/ai-chat/' in request.path %}bg-emerald-soft text-primary{% endif %}"
+                class="nav-link rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 {% if '/ai-chat/' in request.path %}is-active{% endif %}"
             >
-                AI Chat
+                AI chatbot
             </a>
         </nav>
 
@@ -53,7 +54,7 @@
                 id="theme-toggle-desktop"
                 type="button"
                 aria-label="Chuyển giao diện"
-                class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background text-foreground shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary hover:text-primary"
+                class="nav-icon-button inline-flex h-11 w-11 items-center justify-center rounded-full border text-current transition-all duration-200"
             >
                 <i class="theme-toggle-icon fa-solid fa-moon text-sm"></i>
             </button>
@@ -63,18 +64,18 @@
                     <button
                         id="user-avatar-btn"
                         type="button"
-                        class="inline-flex items-center gap-3 rounded-full border border-border bg-background py-2 pl-3 pr-4 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                        class="nav-user-button inline-flex items-center gap-3 rounded-full border px-3 py-2 pr-4 text-left transition-all duration-200"
                     >
-                        <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-soft text-sm font-semibold text-primary">
+                        <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-400/15 text-sm font-semibold text-emerald-300">
                             {{ user.username|slice:":1"|upper }}
                         </span>
-                        <span class="max-w-[9rem] truncate text-sm font-medium text-foreground">
+                        <span class="max-w-[9rem] truncate text-sm font-medium text-current">
                             {{ user.username }}
                         </span>
                     </button>
                     <div
                         id="user-dropdown-menu"
-                        class="invisible absolute right-0 top-[calc(100%+0.75rem)] z-50 w-56 translate-y-2 rounded-2xl border border-border bg-card p-2 opacity-0 shadow-xl transition-all duration-200"
+                        class="invisible absolute right-0 top-[calc(100%+0.75rem)] z-50 w-60 translate-y-2 rounded-[1.5rem] border bg-card/95 p-2 opacity-0 shadow-2xl backdrop-blur-xl transition-all duration-200"
                     >
                         <a
                             href="{% url 'admin:index' %}"
@@ -96,7 +97,7 @@
             {% else %}
                 <a
                     href="{% url 'login' %}"
-                    class="px-3 py-2 text-sm font-medium text-foreground transition-colors hover:text-primary"
+                    class="px-3 py-2 text-sm font-semibold text-current transition-colors hover:text-primary"
                 >
                     Đăng nhập
                 </a>
@@ -114,7 +115,7 @@
                 id="theme-toggle-mobile-top"
                 type="button"
                 aria-label="Chuyển giao diện"
-                class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background text-foreground shadow-sm transition-all duration-200 hover:border-primary hover:text-primary"
+                class="nav-icon-button inline-flex h-11 w-11 items-center justify-center rounded-full border text-current transition-all duration-200"
             >
                 <i class="theme-toggle-icon fa-solid fa-moon text-sm"></i>
             </button>
@@ -122,7 +123,7 @@
                 id="mobile-menu-toggle"
                 type="button"
                 aria-label="Mở menu điều hướng"
-                class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background text-foreground shadow-sm transition-all duration-200 hover:border-primary hover:text-primary"
+                class="nav-icon-button inline-flex h-11 w-11 items-center justify-center rounded-full border text-current transition-all duration-200"
             >
                 <i class="fa-solid fa-bars text-base"></i>
             </button>
@@ -136,26 +137,28 @@
 
     <aside
         id="mobile-drawer"
-        class="pointer-events-none fixed right-0 top-0 z-[60] flex h-full w-full max-w-sm translate-x-full flex-col border-l border-border bg-card text-foreground font-sans opacity-0 shadow-2xl transition-all duration-300 lg:hidden"
+        class="pointer-events-none fixed right-0 top-0 z-[60] flex h-full w-full max-w-sm translate-x-full flex-col border-l border-white/10 bg-slate-950/95 text-slate-100 opacity-0 shadow-2xl backdrop-blur-2xl transition-all duration-300 lg:hidden"
         aria-hidden="true"
     >
-        <div class="flex items-center justify-between border-b border-border px-5 py-5">
+        <div class="flex items-center justify-between border-b border-white/10 px-5 py-5">
             <div class="flex items-center gap-3">
-                <img
-                    src="{% static 'img/logo_crop-Photoroom.png' %}"
-                    alt="Vi Vu logo"
-                    class="h-9 w-auto"
-                >
+                <span class="inline-flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/10">
+                    <img
+                        src="{% static 'img/logo_crop-Photoroom.png' %}"
+                        alt="Vi Vu logo"
+                        class="h-8 w-auto"
+                    >
+                </span>
                 <div>
-                    <p class="text-lg font-semibold tracking-tight text-foreground">Vi Vu</p>
-                    <p class="text-xs text-muted-foreground">Lập kế hoạch thông minh, trọn vẹn hành trình</p>
+                    <p class="font-hero text-lg tracking-tight text-white">Vi Vu</p>
+                    <p class="text-xs text-slate-400">Atlas AI Travel Planner</p>
                 </div>
             </div>
             <button
                 id="mobile-menu-close"
                 type="button"
                 aria-label="Đóng menu điều hướng"
-                class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-slate-300 transition-colors hover:border-emerald-400 hover:text-emerald-300"
             >
                 <i class="fa-solid fa-xmark text-base"></i>
             </button>
@@ -163,23 +166,23 @@
 
         <div class="flex-1 overflow-y-auto px-5 py-6">
             <nav class="flex flex-col gap-2">
-                <a href="{% url 'home' %}" class="mobile-drawer-link rounded-2xl px-4 py-4 text-base font-medium text-foreground transition-colors hover:bg-muted hover:text-primary">Trang chủ</a>
-                <a href="{% url 'place_search' %}" class="mobile-drawer-link rounded-2xl px-4 py-4 text-base font-medium text-foreground transition-colors hover:bg-muted hover:text-primary">Khám phá</a>
-                <a href="{% url 'travel-plan' %}" class="mobile-drawer-link rounded-2xl px-4 py-4 text-base font-medium text-foreground transition-colors hover:bg-muted hover:text-primary">Tạo lịch trình</a>
-                <a href="{% url 'ai-chat' %}" class="mobile-drawer-link rounded-2xl px-4 py-4 text-base font-medium text-foreground transition-colors hover:bg-muted hover:text-primary">AI Chat</a>
+                <a href="{% url 'home' %}" class="mobile-drawer-link rounded-2xl px-4 py-4 text-base font-medium text-white transition-colors hover:bg-white/5 hover:text-emerald-300">Trang chủ</a>
+                <a href="{% url 'place_search' %}" class="mobile-drawer-link rounded-2xl px-4 py-4 text-base font-medium text-white transition-colors hover:bg-white/5 hover:text-emerald-300">Tìm kiếm</a>
+                <a href="{% url 'travel-plan' %}" class="mobile-drawer-link rounded-2xl px-4 py-4 text-base font-medium text-white transition-colors hover:bg-white/5 hover:text-emerald-300">Tạo lịch trình</a>
+                <a href="{% url 'ai-chat' %}" class="mobile-drawer-link rounded-2xl px-4 py-4 text-base font-medium text-white transition-colors hover:bg-white/5 hover:text-emerald-300">AI chatbot</a>
             </nav>
 
-            <div class="mt-8 rounded-3xl border border-border bg-muted p-5">
-                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-primary">
-                    Trợ lý hành trình
+            <div class="mt-8 rounded-[1.75rem] border border-white/10 bg-white/5 p-5">
+                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-300">
+                    Aether Deep Ocean
                 </p>
-                <p class="mt-3 text-sm leading-relaxed text-muted-foreground">
-                    Khám phá điểm đến, xây lịch trình 4 bước và theo dõi ngân sách du lịch nội địa ngay trên cùng một nền tảng.
+                <p class="mt-3 text-sm leading-relaxed text-slate-300">
+                    Khám phá điểm đến, lên lịch trình 4 bước và trò chuyện với Atlas ngay trong cùng một hệ giao diện thống nhất.
                 </p>
                 <button
                     id="theme-toggle-drawer"
                     type="button"
-                    class="mt-4 inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-background"
+                    class="mt-4 inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm font-medium text-emerald-300 transition-colors hover:bg-white/5"
                 >
                     <i class="theme-toggle-icon fa-solid fa-moon text-sm"></i>
                     Đổi giao diện
@@ -187,21 +190,21 @@
             </div>
         </div>
 
-        <div class="border-t border-border px-5 py-5">
+        <div class="border-t border-white/10 px-5 py-5">
             {% if user.is_authenticated %}
-                <div class="mb-4 flex items-center gap-3 rounded-2xl bg-muted px-4 py-4">
-                    <span class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-emerald-soft text-sm font-semibold text-primary">
+                <div class="mb-4 flex items-center gap-3 rounded-2xl bg-white/5 px-4 py-4">
+                    <span class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-emerald-400/15 text-sm font-semibold text-emerald-300">
                         {{ user.username|slice:":1"|upper }}
                     </span>
                     <div class="min-w-0">
-                        <p class="truncate text-sm font-semibold text-foreground">{{ user.username }}</p>
-                        <p class="text-xs text-muted-foreground">Tài khoản đang hoạt động</p>
+                        <p class="truncate text-sm font-semibold text-white">{{ user.username }}</p>
+                        <p class="text-xs text-slate-400">Tài khoản đang hoạt động</p>
                     </div>
                 </div>
                 <div class="flex flex-col gap-3">
                     <a
                         href="{% url 'admin:index' %}"
-                        class="inline-flex items-center justify-center rounded-full border border-border px-4 py-3 text-sm font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
+                        class="inline-flex items-center justify-center rounded-full border border-white/10 px-4 py-3 text-sm font-medium text-white transition-colors hover:border-emerald-400 hover:text-emerald-300"
                     >
                         Quản trị hệ thống
                     </a>
@@ -217,7 +220,7 @@
                 <div class="flex flex-col gap-3">
                     <a
                         href="{% url 'login' %}"
-                        class="inline-flex items-center justify-center rounded-full border border-border px-4 py-3 text-sm font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
+                        class="inline-flex items-center justify-center rounded-full border border-white/10 px-4 py-3 text-sm font-medium text-white transition-colors hover:border-emerald-400 hover:text-emerald-300"
                     >
                         Đăng nhập
                     </a>
@@ -231,42 +234,4 @@
             {% endif %}
         </div>
     </aside>
-
-    <div
-        id="logout-modal-overlay"
-        class="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center bg-black/50 px-4 opacity-0 transition-opacity duration-300"
-    >
-        <div class="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-2xl">
-            <div class="flex items-start gap-4">
-                <span class="mt-1 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300">
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                </span>
-                <div>
-                    <h3 class="text-lg font-semibold text-foreground">Đăng xuất khỏi Vi Vu?</h3>
-                    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
-                        Phiên làm việc hiện tại sẽ kết thúc. Bạn có thể đăng nhập lại bất cứ lúc nào để tiếp tục lên kế hoạch du lịch.
-                    </p>
-                </div>
-            </div>
-
-            <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                <button
-                    id="logout-modal-cancel"
-                    type="button"
-                    class="inline-flex items-center justify-center rounded-full border border-border px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-                >
-                    Ở lại
-                </button>
-                <form id="logout-form" method="post" action="{% url 'logout' %}">
-                    {% csrf_token %}
-                    <button
-                        type="submit"
-                        class="inline-flex items-center justify-center rounded-full bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-rose-700"
-                    >
-                        Đăng xuất
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
 </header>

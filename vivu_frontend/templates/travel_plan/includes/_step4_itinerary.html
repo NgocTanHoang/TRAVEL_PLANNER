@@ -5,12 +5,12 @@
             Xác nhận kế hoạch
         </span>
         <h2>Rà soát blueprint chuyến đi trước khi hoàn tất</h2>
-        <p>Xem lại tổng chi phí, hoạt động gợi ý và timeline từng ngày. Hành động cuối chỉ tạo lịch trình trên màn hình hiện tại, chưa tự động lưu vào database nếu chưa có save logic.</p>
+        <p>Xem lại tổng chi phí, hoạt động gợi ý và timeline từng ngày. Khi bạn bấm tạo lịch trình, Atlas sẽ phát tiến độ theo thời gian thực và tự khôi phục nếu trang bị tải lại giữa chừng.</p>
     </div>
 
     <div class="tp-soft rounded-[1.35rem] px-4 py-3 text-sm leading-7 theme-text-muted">
         <strong class="text-slate-900 dark:text-slate-100">Lưu ý chính xác:</strong>
-        Nút <em>Tạo lịch trình</em> hiện dùng luồng thành công hiện có ở frontend và không khẳng định rằng dữ liệu đã được lưu vĩnh viễn.
+        Nút <em>Tạo lịch trình</em> sẽ mở luồng AI theo thời gian thực, phát từng ngày khi sẵn sàng và đồng bộ với trạng thái lưu lịch trình ở backend.
     </div>
 
     <div id="step4-result" class="mt-5">

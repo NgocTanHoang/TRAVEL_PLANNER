@@ -1,849 +1,461 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}AI Chat Assistant - Vi Vu{% endblock %}
+{% block title %}Atlas AI Concierge Workspace | Vi Vu{% endblock %}
 
-{% block nav_items %}
-    <li role="none">
-        <a href="/" class="nav-link" role="menuitem">Trang chủ</a>
-    </li>
-    <li role="none" class="search-dropdown">
-        <a href="#" class="nav-link search-toggle" role="menuitem" onclick="event.preventDefault(); return false;">🔍 Tìm kiếm</a>
-        <div class="search-dropdown-menu" role="menu">
-            <div class="search-dropdown-header">Tìm kiếm du lịch</div>
-            
-            <div class="search-dropdown-category">
-                <div class="search-dropdown-category-title">📍 Địa điểm & Tham quan</div>
-                <div class="search-dropdown-items">
-                    <a href="/places/search/" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🗺️</span>
-                        <span>Tìm kiếm địa điểm</span>
-                    </a>
-                    <a href="/places/search/?loai_dia_diem=di_tich_lich_su" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🏛️</span>
-                        <span>Di tích lịch sử</span>
-                    </a>
-                    <a href="/places/search/?loai_dia_diem=thang_canh" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🏞️</span>
-                        <span>Thắng cảnh</span>
-                    </a>
-                    <a href="/places/search/?loai_dia_diem=giai_tri" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🎢</span>
-                        <span>Khu vui chơi</span>
-                    </a>
-                </div>
-            </div>
-            
-            <div class="search-dropdown-category">
-                <div class="search-dropdown-category-title">🏨 Lưu trú</div>
-                <div class="search-dropdown-items">
-                    <a href="/places/search/?loai_dia_diem=khach_san" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🏨</span>
-                        <span>Tìm khách sạn</span>
-                    </a>
-                    <a href="/places/search/?loai_dia_diem=homestay" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🏡</span>
-                        <span>Homestay</span>
-                    </a>
-                    <a href="/places/search/?loai_dia_diem=resort" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🏖️</span>
-                        <span>Resort</span>
-                    </a>
-                </div>
-            </div>
-            
-            <div class="search-dropdown-category">
-                <div class="search-dropdown-category-title">🍽️ Ăn uống</div>
-                <div class="search-dropdown-items">
-                    <a href="/places/search/?loai_dia_diem=nha_hang" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🍜</span>
-                        <span>Nhà hàng</span>
-                    </a>
-                    <a href="/places/search/?loai_dia_diem=cafe" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">☕</span>
-                        <span>Quán cafe</span>
-                    </a>
-                    <a href="/places/search/?loai_dia_diem=bar" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🍻</span>
-                        <span>Bar & Pub</span>
-                    </a>
-                    <a href="/places/search/?loai_dia_diem=dac_san" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🥘</span>
-                        <span>Đặc sản địa phương</span>
-                    </a>
-                </div>
-            </div>
-            
-            <div class="search-dropdown-category">
-                <div class="search-dropdown-category-title">🛍️ Mua sắm</div>
-                <div class="search-dropdown-items">
-                    <a href="/places/search/?loai_dia_diem=trung_tam_thuong_mai" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🏬</span>
-                        <span>Trung tâm thương mại</span>
-                    </a>
-                    <a href="/places/search/?loai_dia_diem=cho" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🛒</span>
-                        <span>Chợ địa phương</span>
-                    </a>
-                    <a href="/places/search/?loai_dia_diem=qua_luu_niem" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🎁</span>
-                        <span>Quà lưu niệm</span>
-                    </a>
-                </div>
-            </div>
-            
-            <div class="search-dropdown-category">
-                <div class="search-dropdown-category-title">✈️ Di chuyển</div>
-                <div class="search-dropdown-items">
-                    <a href="/travel-plan/" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">✈️</span>
-                        <span>Tìm chuyến bay</span>
-                    </a>
-                    <a href="/travel-plan/" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🚂</span>
-                        <span>Vé tàu hỏa</span>
-                    </a>
-                    <a href="/travel-plan/" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🚌</span>
-                        <span>Vé xe khách</span>
-                    </a>
-                    <a href="/travel-plan/" class="search-dropdown-item" role="menuitem">
-                        <span class="search-dropdown-item-icon">🚗</span>
-                        <span>Thuê xe</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </li>
-    <li role="none">
-        <a href="/travel-plan/" class="nav-link" role="menuitem">✈️ Tạo lịch trình</a>
-    </li>
-    <li role="none">
-        <a href="/ai-chat/" class="nav-link active" role="menuitem">🤖 AI Chat Assistant</a>
-    </li>
+{% block body_class %}bg-slate-950{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .chat-workspace {
+        position: relative;
+        min-height: calc(100vh - 5rem);
+        overflow: hidden;
+        background:
+            radial-gradient(circle at 20% 18%, rgba(15, 118, 110, 0.16), transparent 32%),
+            radial-gradient(circle at 80% 70%, rgba(16, 185, 129, 0.10), transparent 28%),
+            linear-gradient(180deg, #0b1326 0%, #09101f 100%);
+    }
+
+    .aether-glass {
+        background: rgba(23, 31, 51, 0.52);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .atlas-bubble {
+        background: rgba(45, 52, 73, 0.56);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .user-bubble {
+        background: linear-gradient(135deg, #0f766e 0%, #10b981 100%);
+    }
+
+    .pulse-status {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(52, 211, 153, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+    }
+
+    .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .typing-dot {
+        animation: blink 1.4s infinite both;
+    }
+
+    .typing-dot:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .typing-dot:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+
+    @keyframes blink {
+        0%, 80%, 100% { opacity: 0.2; }
+        40% { opacity: 1; }
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<style>
-    /* ===================================
-     * AI CHAT PAGE STYLES
-     * =================================== */
-    .ai-chat-page {
-        min-height: 100vh;
-        background: var(--color-primary);
-        padding: 0.5rem;
-        padding-top: calc(10px + 15px);
-        margin-top: 0;
-        padding-bottom: 0.5rem;
-    }
-
-    .ai-chat-container {
-        max-width: 100%;
-        width: 100%;
-        margin: 0 auto;
-        background: var(--color-white);
-        border-radius: 20px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        height: calc(100vh - 110px);
-        min-height: calc(100vh - 110px);
-    }
-
-    .chat-page-header {
-        display: none;
-    }
-
-    .chat-messages-container {
-        flex: 1;
-        overflow-y: auto;
-        padding: 2rem;
-        background: var(--color-gray-50);
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        min-height: 0;
-    }
-
-    .chat-messages-container::-webkit-scrollbar {
-        width: 8px;
-    }
-
-    .chat-messages-container::-webkit-scrollbar-track {
-        background: var(--color-gray-200);
-        border-radius: 4px;
-    }
-
-    .chat-messages-container::-webkit-scrollbar-thumb {
-        background: var(--color-secondary);
-        border-radius: 4px;
-    }
-
-    .chat-messages-container::-webkit-scrollbar-thumb:hover {
-        background: var(--color-secondary-dark);
-    }
-
-    .message {
-        padding: 1rem 1.5rem;
-        border-radius: 20px;
-        max-width: 75%;
-        word-wrap: break-word;
-        animation: fadeIn 0.3s ease-in;
-    }
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .message.user {
-        background: var(--color-secondary);
-        color: var(--color-text-light);
-        margin-left: auto;
-        text-align: right;
-        border-bottom-right-radius: 5px;
-    }
-
-    .message.ai {
-        background: var(--color-gray-200);
-        color: var(--color-text-dark);
-        margin-right: auto;
-        border-bottom-left-radius: 5px;
-    }
-
-    .message.ai .message-header {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 0.5rem;
-        font-weight: 600;
-        color: var(--color-primary);
-    }
-
-    .message-time {
-        font-size: 0.75rem;
-        opacity: 0.7;
-        margin-top: 0.5rem;
-    }
-
-    .chat-input-container {
-        padding: 1.5rem 2rem;
-        background: var(--color-white);
-        border-top: 2px solid var(--color-gray-200);
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-    }
-
-    .chat-input-wrapper {
-        flex: 1;
-        position: relative;
-    }
-
-    .chat-input {
-        width: 100%;
-        padding: 1rem 3.5rem 1rem 1.5rem;
-        border: 2px solid var(--color-gray-300);
-        border-radius: 50px;
-        font-size: 1rem;
-        font-family: var(--font-family-base);
-        transition: var(--transition-base);
-    }
-
-    .chat-input:focus {
-        outline: none;
-        border-color: var(--color-secondary);
-        box-shadow: 0 0 0 4px rgba(var(--color-secondary-rgb), 0.1);
-    }
-
-    .chat-send-btn {
-        position: absolute;
-        right: 0.5rem;
-        top: 50%;
-        transform: translateY(-50%);
-        background: var(--color-secondary);
-        color: var(--color-text-light);
-        border: none;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: var(--transition-base);
-        font-size: 1.2rem;
-    }
-
-    .chat-send-btn:hover:not(:disabled) {
-        background: var(--color-secondary-dark);
-        transform: translateY(-50%) scale(1.1);
-    }
-
-    .chat-send-btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-
-    .chat-loading {
-        display: none;
-        padding: 1rem;
-        text-align: center;
-        color: var(--color-gray-600);
-    }
-
-    .chat-loading.active {
-        display: block;
-    }
-
-    .chat-loading-dots {
-        display: inline-flex;
-        gap: 0.5rem;
-    }
-
-    .chat-loading-dots span {
-        width: 8px;
-        height: 8px;
-        background: var(--color-secondary);
-        border-radius: 50%;
-        animation: bounce 1.4s infinite ease-in-out both;
-    }
-
-    .chat-loading-dots span:nth-child(1) {
-        animation-delay: -0.32s;
-    }
-
-    .chat-loading-dots span:nth-child(2) {
-        animation-delay: -0.16s;
-    }
-
-    @keyframes bounce {
-        0%, 80%, 100% {
-            transform: scale(0);
-        }
-        40% {
-            transform: scale(1);
-        }
-    }
-
-    .suggested-questions {
-        padding: 0.75rem 1.5rem;
-        background: var(--color-gray-50);
-        border-top: 1px solid var(--color-gray-200);
-        transition: opacity 0.3s ease, max-height 0.3s ease, padding 0.3s ease;
-        overflow: hidden;
-    }
-
-    .suggested-questions.hidden {
-        opacity: 0;
-        max-height: 0;
-        padding: 0;
-        border: none;
-        margin: 0;
-    }
-
-    .suggested-questions h3 {
-        font-size: 0.9rem;
-        color: var(--color-gray-600);
-        margin: 0 0 0.75rem 0;
-        font-weight: 600;
-        white-space: nowrap;
-    }
-
-    .suggested-questions-list {
-        display: flex;
-        gap: 0.75rem;
-        overflow-x: auto;
-        overflow-y: hidden;
-        padding-bottom: 0.5rem;
-        scrollbar-width: thin;
-        scrollbar-color: var(--color-gray-400) var(--color-gray-100);
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .suggested-questions-list::-webkit-scrollbar {
-        height: 6px;
-    }
-
-    .suggested-questions-list::-webkit-scrollbar-track {
-        background: var(--color-gray-100);
-        border-radius: 3px;
-    }
-
-    .suggested-questions-list::-webkit-scrollbar-thumb {
-        background: var(--color-gray-400);
-        border-radius: 3px;
-    }
-
-    .suggested-questions-list::-webkit-scrollbar-thumb:hover {
-        background: var(--color-gray-500);
-    }
-
-    .suggested-question {
-        padding: 0.6rem 1.2rem;
-        background: var(--color-white);
-        border: 1px solid var(--color-gray-300);
-        border-radius: 25px;
-        font-size: 0.85rem;
-        color: var(--color-text-dark);
-        cursor: pointer;
-        transition: var(--transition-base);
-        white-space: nowrap;
-        flex-shrink: 0;
-    }
-
-    .suggested-question:hover {
-        background: var(--color-secondary);
-        color: var(--color-text-light);
-        border-color: var(--color-secondary);
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-md);
-    }
-
-    @media (max-width: 768px) {
-        .ai-chat-page {
-            padding: 0.25rem;
-            padding-top: calc(80px + 10px);
-            padding-bottom: 0.25rem;
-        }
-
-        .ai-chat-container {
-            height: calc(100vh - 95px);
-            min-height: calc(100vh - 95px);
-            border-radius: 15px;
-        }
-
-        .chat-page-header {
-            display: none;
-        }
-
-        .chat-messages-container {
-            padding: 1rem;
-        }
-
-        .message {
-            max-width: 85%;
-            padding: 0.75rem 1rem;
-        }
-
-        .chat-input-container {
-            padding: 1rem;
-        }
-
-        .suggested-questions {
-            padding: 0.5rem 1rem;
-        }
-
-        .suggested-questions h3 {
-            font-size: 0.85rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .suggested-question {
-            padding: 0.5rem 1rem;
-            font-size: 0.8rem;
-        }
-    }
-
-    /* ===================================
-     * FOOTER STYLES
-     * =================================== */
-    footer {
-        background: var(--color-primary-dark);
-        color: var(--color-text-light);
-        padding: 3rem 2rem 1.5rem;
-        margin-top: auto;
-    }
-
-    footer .footer-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 2rem;
-        margin-bottom: 2rem;
-    }
-
-    footer .footer-section h4 {
-        font-size: 1.2rem;
-        margin-bottom: 1rem;
-        color: var(--color-accent);
-    }
-
-    footer .footer-section p {
-        opacity: 0.9;
-        line-height: 1.6;
-        margin-bottom: 0.5rem;
-    }
-
-    footer .footer-section ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    footer .footer-section ul li {
-        margin-bottom: 0.5rem;
-    }
-
-    footer .footer-section a {
-        color: var(--color-text-light);
-        text-decoration: none;
-        opacity: 0.9;
-        transition: all 0.3s;
-    }
-
-    footer .footer-section a:hover {
-        color: var(--color-accent);
-        opacity: 1;
-    }
-
-    footer .footer-bottom {
-        text-align: center;
-        padding-top: 2rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-        opacity: 0.8;
-    }
-
-    footer .social-links {
-        display: flex;
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-
-    footer .social-link {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 45px;
-        height: 45px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.1);
-        transition: all 0.3s;
-        color: var(--color-text-light);
-        text-decoration: none;
-    }
-
-    footer .social-link:hover {
-        background: var(--color-accent);
-        transform: translateY(-3px);
-    }
-
-    /* Responsive footer */
-    @media (max-width: 768px) {
-        footer .footer-container {
-            grid-template-columns: 1fr;
-            gap: 2rem;
-        }
-        
-        footer {
-            padding: 2rem 1rem 1rem;
-        }
-    }
-</style>
-
-<div class="ai-chat-page">
-    <div class="ai-chat-container">
-        <div class="chat-messages-container" id="chat-messages">
-            <div class="message ai">
-                <div class="message-header">
-                    <span>🤖</span>
-                    <span>AI Assistant</span>
+<section class="chat-workspace px-4 pb-10 pt-28 sm:px-6 lg:px-10">
+    <div class="mx-auto grid max-w-[1440px] gap-8 lg:grid-cols-12">
+        <aside class="space-y-6 lg:col-span-4 xl:col-span-3">
+            <div class="aether-glass rounded-[2rem] p-8 text-center shadow-2xl shadow-black/20">
+                <div class="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-[1.75rem] bg-emerald-500/15 text-5xl text-emerald-300">
+                    <i class="fa-solid fa-robot"></i>
                 </div>
-                <div>Xin chào! Tôi là AI Assistant của Vi Vu. Tôi có thể giúp bạn:</div>
-                <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
-                    <li>Tìm địa điểm phù hợp cho chuyến đi</li>
-                    <li>Tư vấn về ngân sách và chi phí</li>
-                    <li>Gợi ý lịch trình du lịch</li>
-                    <li>Trả lời câu hỏi về các địa điểm tại Việt Nam</li>
-                </ul>
-                <div class="message-time">Bây giờ</div>
+                <div class="mx-auto mb-4 flex w-fit items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1">
+                    <span class="pulse-status h-2 w-2 rounded-full bg-emerald-300"></span>
+                    <span class="text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-300">Đang hoạt động</span>
+                </div>
+                <h1 class="font-heading text-2xl font-bold text-white">Atlas AI Concierge</h1>
+                <p class="mt-2 text-sm leading-6 text-slate-300">
+                    Trợ lý du lịch thông minh của Vi Vu, có thể giữ ngữ cảnh hội thoại theo `conversation_id` và phản hồi dựa trên RAG, chatbot và dữ liệu thật.
+                </p>
             </div>
-        </div>
 
-        <div class="chat-loading" id="chat-loading">
-            <div class="chat-loading-dots">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-        </div>
-
-        <div class="suggested-questions">
-            <h3>💡 Câu hỏi gợi ý:</h3>
-            <div class="suggested-questions-list">
-                <div class="suggested-question" onclick="sendSuggestedQuestion('Địa điểm nào nên tham quan ở Hà Nội?')">
-                    Địa điểm nào nên tham quan ở Hà Nội?
-                </div>
-                <div class="suggested-question" onclick="sendSuggestedQuestion('Khách sạn tốt ở Đà Lạt với giá hợp lý?')">
-                    Khách sạn tốt ở Đà Lạt với giá hợp lý?
-                </div>
-                <div class="suggested-question" onclick="sendSuggestedQuestion('Lịch trình 3 ngày ở Phú Quốc?')">
-                    Lịch trình 3 ngày ở Phú Quốc?
-                </div>
-                <div class="suggested-question" onclick="sendSuggestedQuestion('Nhà hàng ngon ở Sài Gòn?')">
-                    Nhà hàng ngon ở Sài Gòn?
+            <div class="space-y-3">
+                <p class="px-2 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Gợi ý nhanh</p>
+                <div class="space-y-2">
+                    <button type="button" class="chat-prompt-btn aether-glass flex w-full items-center justify-between rounded-2xl px-5 py-4 text-left text-sm text-slate-200 transition-all duration-200 hover:border-white/20 hover:bg-white/5">
+                        <span>Gợi ý lịch trình 3 ngày ở Đồng Nai</span>
+                        <i class="fa-solid fa-arrow-right text-xs text-emerald-300"></i>
+                    </button>
+                    <button type="button" class="chat-prompt-btn aether-glass flex w-full items-center justify-between rounded-2xl px-5 py-4 text-left text-sm text-slate-200 transition-all duration-200 hover:border-white/20 hover:bg-white/5">
+                        <span>Ở Biên Hòa có món đặc sản nào ngon?</span>
+                        <i class="fa-solid fa-arrow-right text-xs text-emerald-300"></i>
+                    </button>
+                    <button type="button" class="chat-prompt-btn aether-glass flex w-full items-center justify-between rounded-2xl px-5 py-4 text-left text-sm text-slate-200 transition-all duration-200 hover:border-white/20 hover:bg-white/5">
+                        <span>Tìm khách sạn gần biển cho 2 người</span>
+                        <i class="fa-solid fa-arrow-right text-xs text-emerald-300"></i>
+                    </button>
                 </div>
             </div>
-        </div>
 
-        <div class="chat-input-container">
-            <div class="chat-input-wrapper">
-                <input 
-                    type="text" 
-                    class="chat-input" 
-                    id="chat-input" 
-                    placeholder="Nhập câu hỏi của bạn..." 
-                    autocomplete="off"
-                />
-                <button class="chat-send-btn" id="chat-send-btn" onclick="sendMessage()">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
+            <div class="aether-glass rounded-[2rem] p-6">
+                <div class="flex items-center justify-between gap-4">
+                    <div>
+                        <p class="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Trip Context</p>
+                        <h2 class="mt-2 text-lg font-semibold text-white">Bối cảnh hành trình</h2>
+                    </div>
+                    <i class="fa-solid fa-compass text-emerald-300"></i>
+                </div>
+                <div class="mt-5 space-y-3">
+                    <button type="button" class="destination-chip inline-flex w-full items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-slate-100 transition-all duration-200 hover:border-emerald-400/30 hover:bg-emerald-400/10" data-destination="Tỉnh Đồng Nai">
+                        <span>Tỉnh Đồng Nai</span>
+                        <i class="fa-solid fa-location-dot text-emerald-300"></i>
+                    </button>
+                    <button type="button" class="destination-chip inline-flex w-full items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-slate-100 transition-all duration-200 hover:border-emerald-400/30 hover:bg-emerald-400/10" data-destination="Thành phố Biên Hòa">
+                        <span>Thành phố Biên Hòa</span>
+                        <i class="fa-solid fa-location-dot text-emerald-300"></i>
+                    </button>
+                    <button type="button" class="destination-chip inline-flex w-full items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-slate-100 transition-all duration-200 hover:border-emerald-400/30 hover:bg-emerald-400/10" data-destination="Thành phố Long Khánh">
+                        <span>Thành phố Long Khánh</span>
+                        <i class="fa-solid fa-location-dot text-emerald-300"></i>
+                    </button>
+                </div>
+                <p id="chat-context-note" class="mt-4 text-xs leading-6 text-slate-400">
+                    Chưa có điểm đến ưu tiên. Bạn có thể chọn nhanh một khu vực hoặc để Atlas tự suy luận từ tin nhắn.
+                </p>
+            </div>
+        </aside>
+
+        <div class="aether-glass flex min-h-[760px] flex-col overflow-hidden rounded-[2rem] border border-white/10 shadow-2xl shadow-black/25 lg:col-span-8 xl:col-span-9">
+            <div class="flex items-center justify-between gap-4 border-b border-white/10 bg-white/[0.03] px-6 py-5 sm:px-8">
+                <div class="flex items-center gap-4">
+                    <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-400/10 text-emerald-300">
+                        <i class="fa-solid fa-sparkles"></i>
+                    </span>
+                    <div>
+                        <div class="flex items-center gap-3">
+                            <h2 class="font-heading text-lg font-bold text-white">Atlas AI Concierge</h2>
+                            <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-300">
+                                Travel Assistant
+                            </span>
+                        </div>
+                        <p class="mt-1 text-xs text-slate-400">Kết nối chat API, conversation cache và fallback 4 tầng của hệ thống.</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="reset-chat-session" type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-slate-300 transition-colors hover:border-emerald-400/40 hover:text-emerald-300" title="Làm mới cuộc trò chuyện">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="chat-messages" class="hide-scrollbar flex-1 space-y-6 overflow-y-auto px-6 py-6 sm:px-8">
+                <div class="flex gap-4">
+                    <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-white/5 text-emerald-300">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div class="atlas-bubble max-w-3xl rounded-3xl rounded-tl-none px-5 py-4 text-sm leading-7 text-slate-100">
+                        Xin chào! Tôi là Atlas. Tôi có thể giúp bạn tìm địa điểm, khách sạn, món ăn, hoặc gợi ý lịch trình dựa trên dữ liệu thật trong hệ thống Vi Vu.
+                    </div>
+                </div>
+            </div>
+
+            <div id="chat-loading" class="hidden border-t border-white/10 bg-white/[0.03] px-6 py-4 text-sm text-slate-300 sm:px-8">
+                <div class="flex items-center gap-3">
+                    <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white/5 text-emerald-300">
+                        <i class="fa-solid fa-robot"></i>
+                    </span>
+                    <div class="flex items-center gap-1">
+                        <span class="typing-dot inline-block h-2 w-2 rounded-full bg-emerald-300"></span>
+                        <span class="typing-dot inline-block h-2 w-2 rounded-full bg-emerald-300"></span>
+                        <span class="typing-dot inline-block h-2 w-2 rounded-full bg-emerald-300"></span>
+                    </div>
+                    <span>Atlas đang tổng hợp câu trả lời...</span>
+                </div>
+            </div>
+
+            <div class="border-t border-white/10 bg-white/[0.03] px-6 py-5 sm:px-8">
+                <form id="chat-form" class="space-y-4">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-300">
+                            Conversation Cache
+                        </span>
+                        <span id="chat-conversation-pill" class="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-300">
+                            Sẽ tạo mới khi gửi tin nhắn đầu tiên
+                        </span>
+                    </div>
+                    <div class="flex flex-col gap-3 lg:flex-row">
+                        <div class="min-w-0 flex-1 rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-3">
+                            <label for="chat-input" class="sr-only">Tin nhắn cho Atlas</label>
+                            <textarea id="chat-input" rows="2" class="w-full resize-none border-0 bg-transparent text-sm leading-7 text-white outline-none placeholder:text-slate-400" placeholder="Ví dụ: Tôi muốn đi Biên Hòa 3 ngày, ưu tiên quán cà phê đẹp và khách sạn gần trung tâm."></textarea>
+                        </div>
+                        <button id="chat-send-btn" type="submit" class="inline-flex min-h-[3.75rem] items-center justify-center gap-2 rounded-[1.5rem] bg-primary px-6 text-sm font-semibold text-primary-foreground transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary-hover">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            Gửi Atlas
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
-</div>
+</section>
+{% endblock %}
 
+{% block extra_scripts %}
 <script>
-    const chatMessages = document.getElementById('chat-messages');
-    const chatInput = document.getElementById('chat-input');
-    const chatSendBtn = document.getElementById('chat-send-btn');
-    const chatLoading = document.getElementById('chat-loading');
-    const suggestedQuestions = document.querySelector('.suggested-questions');
-    let hasUserMessage = false;
+    (function () {
+        "use strict";
 
-    // Get CSRF token
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
+        const CHAT_STORAGE_KEY = "vivu-atlas-chat-session";
+        const DEFAULT_ERROR_MESSAGE = "Có lỗi xảy ra khi xử lý tin nhắn.";
+        const AUTH_REQUIRED_MESSAGE = "Vui lòng đăng nhập để sử dụng tính năng này.";
+        const ACCESS_DENIED_MESSAGE = "Bạn không có quyền sử dụng tính năng này.";
+        const LOGIN_URL = "/accounts/login/";
+        const form = document.getElementById("chat-form");
+        const input = document.getElementById("chat-input");
+        const messages = document.getElementById("chat-messages");
+        const loading = document.getElementById("chat-loading");
+        const sendButton = document.getElementById("chat-send-btn");
+        const conversationPill = document.getElementById("chat-conversation-pill");
+        const contextNote = document.getElementById("chat-context-note");
+        const resetButton = document.getElementById("reset-chat-session");
+        const promptButtons = document.querySelectorAll(".chat-prompt-btn");
+        const destinationButtons = document.querySelectorAll(".destination-chip");
 
-    function addMessage(text, isUser = false) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${isUser ? 'user' : 'ai'}`;
-        
-        // Convert markdown-like formatting to HTML
-        let formattedText = text
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\n/g, '<br>');
-        
-        if (!isUser) {
-            messageDiv.innerHTML = `
-                <div class="message-header">
-                    <span>🤖</span>
-                    <span>AI Assistant</span>
-                </div>
-                <div>${formattedText}</div>
-                <div class="message-time">${new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</div>
-            `;
-        } else {
-            messageDiv.innerHTML = `
-                <div>${formattedText}</div>
-                <div class="message-time">${new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</div>
-            `;
-        }
-        
-        chatMessages.appendChild(messageDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
+        let conversationId = "";
+        let selectedDestination = "";
 
-    function showLoading() {
-        chatLoading.classList.add('active');
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-
-    function hideLoading() {
-        chatLoading.classList.remove('active');
-    }
-
-    // Extract destination from message
-    function extractDestination(message) {
-        const vietnameseCities = [
-            'hà nội', 'hanoi', 'hồ chí minh', 'ho chi minh', 'sài gòn', 'saigon',
-            'đà nẵng', 'da nang', 'hội an', 'hoi an', 'huế', 'hue',
-            'nha trang', 'nha trang', 'đà lạt', 'da lat', 'vũng tàu', 'vung tau',
-            'phú quốc', 'phu quoc', 'cần thơ', 'can tho', 'hạ long', 'ha long',
-            'sapa', 'sapa', 'mộc châu', 'moc chau', 'mai châu', 'mai chau',
-            'tam đảo', 'tam dao', 'cát bà', 'cat ba', 'mũi né', 'mui ne'
-        ];
-        
-        const messageLower = message.toLowerCase();
-        for (const city of vietnameseCities) {
-            if (messageLower.includes(city)) {
-                // Return formatted city name
-                const cityMap = {
-                    'hà nội': 'Hà Nội', 'hanoi': 'Hà Nội',
-                    'hồ chí minh': 'Hồ Chí Minh', 'ho chi minh': 'Hồ Chí Minh', 'sài gòn': 'Hồ Chí Minh', 'saigon': 'Hồ Chí Minh',
-                    'đà nẵng': 'Đà Nẵng', 'da nang': 'Đà Nẵng',
-                    'hội an': 'Hội An', 'hoi an': 'Hội An',
-                    'huế': 'Huế', 'hue': 'Huế',
-                    'nha trang': 'Nha Trang',
-                    'đà lạt': 'Đà Lạt', 'da lat': 'Đà Lạt',
-                    'vũng tàu': 'Vũng Tàu', 'vung tau': 'Vũng Tàu',
-                    'phú quốc': 'Phú Quốc', 'phu quoc': 'Phú Quốc',
-                    'cần thơ': 'Cần Thơ', 'can tho': 'Cần Thơ',
-                    'hạ long': 'Hạ Long', 'ha long': 'Hạ Long',
-                    'sapa': 'Sapa',
-                    'mộc châu': 'Mộc Châu', 'moc chau': 'Mộc Châu',
-                    'mai châu': 'Mai Châu', 'mai chau': 'Mai Châu',
-                    'tam đảo': 'Tam Đảo', 'tam dao': 'Tam Đảo',
-                    'cát bà': 'Cát Bà', 'cat ba': 'Cát Bà',
-                    'mũi né': 'Mũi Né', 'mui ne': 'Mũi Né'
-                };
-                return cityMap[city] || city;
-            }
-        }
-        return null;
-    }
-
-    // Enhanced search for places if message contains location keywords
-    async function searchPlacesIfNeeded(message, destination) {
-        const searchKeywords = ['địa điểm', 'thăm quan', 'du lịch', 'khách sạn', 'hotel', 'nhà hàng', 'restaurant', 'ăn', 'ẩm thực', 'cafe', 'quán'];
-        const messageLower = message.toLowerCase();
-        
-        const shouldSearch = searchKeywords.some(keyword => messageLower.includes(keyword));
-        
-        if (shouldSearch && destination) {
+        function loadSession() {
             try {
-                // Search places API
-                const searchResponse = await fetch(`/api/v1/places/search/?q=${encodeURIComponent(message)}&city=${encodeURIComponent(destination)}&limit=5`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (searchResponse.ok) {
-                    const searchData = await searchResponse.json();
-                    if (searchData.results && searchData.results.length > 0) {
-                        return searchData.results;
-                    }
+                const raw = window.localStorage.getItem(CHAT_STORAGE_KEY);
+                if (!raw) {
+                    return;
                 }
+                const parsed = JSON.parse(raw);
+                conversationId = parsed.conversationId || "";
+                selectedDestination = parsed.destination || "";
             } catch (error) {
-                console.error('Place search error:', error);
+                console.warn("Không thể đọc session chat đã lưu.", error);
             }
         }
-        return null;
-    }
 
-    async function sendMessage(messageText = null) {
-        const message = messageText || chatInput.value.trim();
-        if (!message) return;
-
-        // Hide suggested questions after first user message
-        if (!hasUserMessage && suggestedQuestions) {
-            hasUserMessage = true;
-            suggestedQuestions.classList.add('hidden');
+        function persistSession() {
+            try {
+                window.localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify({
+                    conversationId,
+                    destination: selectedDestination,
+                }));
+            } catch (error) {
+                console.warn("Không thể lưu session chat.", error);
+            }
         }
 
-        // Add user message
-        addMessage(message, true);
-        
-        // Clear input
-        if (!messageText) {
-            chatInput.value = '';
+        function updateContextUI() {
+            conversationPill.textContent = conversationId
+                ? `Đang dùng ${conversationId}`
+                : "Sẽ tạo mới khi gửi tin nhắn đầu tiên";
+            contextNote.textContent = selectedDestination
+                ? `Atlas sẽ ưu tiên ngữ cảnh cho ${selectedDestination} khi truy xuất dữ liệu và fallback.`
+                : "Chưa có điểm đến ưu tiên. Bạn có thể chọn nhanh một khu vực hoặc để Atlas tự suy luận từ tin nhắn.";
         }
 
-        // Disable input and button
-        chatInput.disabled = true;
-        chatSendBtn.disabled = true;
-        showLoading();
-
-        try {
-            // Extract destination from message
-            const destination = extractDestination(message);
-            
-            // Search places if needed (in parallel)
-            const placesPromise = searchPlacesIfNeeded(message, destination);
-            
-            // Call RAG API with destination
-            const response = await fetch('/api/v1/chat/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({
-                    message: message,
-                    destination: destination,
-                    use_chatbot: true
-                })
-            });
-
-            const data = await response.json();
-            const places = await placesPromise;
-
-            if (response.ok && data.status === 'success') {
-                // Add AI response
-                addMessage(data.message, false);
-                
-                // Add places if found
-                if (places && places.length > 0) {
-                    const placesText = '📍 **Địa điểm gợi ý:**\n\n' + 
-                        places.slice(0, 3).map((place, idx) => 
-                            `${idx + 1}. **${place.tenDiaDiem}**${place.diaChi ? ' - ' + place.diaChi : ''}${place.danhGiaTrungBinh ? ' ⭐ ' + place.danhGiaTrungBinh.toFixed(1) : ''}`
-                        ).join('\n');
-                    addMessage(placesText, false);
+        function getCookie(name) {
+            const cookies = document.cookie ? document.cookie.split(";") : [];
+            for (const cookie of cookies) {
+                const trimmed = cookie.trim();
+                if (trimmed.startsWith(`${name}=`)) {
+                    return decodeURIComponent(trimmed.slice(name.length + 1));
                 }
-                
-                // Show sources if available
-                if (data.sources && data.sources.length > 0) {
-                    const sourcesText = '📚 **Nguồn tham khảo:** ' + data.sources.map(s => s.name).join(', ');
-                    addMessage(sourcesText, false);
-                }
+            }
+            return "";
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+
+        function setLoadingState(isLoading) {
+            loading.classList.toggle("hidden", !isLoading);
+            sendButton.disabled = isLoading;
+            if (isLoading) {
+                messages.scrollTop = messages.scrollHeight;
+            }
+        }
+
+        function redirectToLogin() {
+            const next = encodeURIComponent(window.location.pathname + window.location.search + window.location.hash);
+            window.setTimeout(() => {
+                window.location.assign(`${LOGIN_URL}?next=${next}`);
+            }, 900);
+        }
+
+        function appendMessage(role, content, sources = []) {
+            const wrapper = document.createElement("div");
+            wrapper.className = role === "user"
+                ? "flex justify-end"
+                : "flex gap-4";
+
+            if (role === "user") {
+                wrapper.innerHTML = `
+                    <div class="user-bubble max-w-3xl rounded-3xl rounded-tr-none px-5 py-4 text-sm leading-7 text-white shadow-lg shadow-emerald-500/20">
+                        ${escapeHtml(content)}
+                    </div>
+                `;
             } else {
-                addMessage(data.error || 'Có lỗi xảy ra. Vui lòng thử lại.', false);
+                const sourcesHtml = Array.isArray(sources) && sources.length
+                    ? `
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            ${sources.map((source) => `
+                                <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300">
+                                    ${escapeHtml(source.name || source.city || source.category || "Nguồn dữ liệu")}
+                                </span>
+                            `).join("")}
+                        </div>
+                    `
+                    : "";
+
+                wrapper.innerHTML = `
+                    <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-white/5 text-emerald-300">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div class="atlas-bubble max-w-3xl rounded-3xl rounded-tl-none px-5 py-4 text-sm leading-7 text-slate-100">
+                        <div class="whitespace-pre-wrap">${escapeHtml(content)}</div>
+                        ${sourcesHtml}
+                    </div>
+                `;
             }
-        } catch (error) {
-            console.error('Chat error:', error);
-            addMessage('Lỗi kết nối. Vui lòng kiểm tra kết nối mạng và thử lại.', false);
-        } finally {
-            hideLoading();
-            chatInput.disabled = false;
-            chatSendBtn.disabled = false;
-            chatInput.focus();
+
+            messages.appendChild(wrapper);
+            messages.scrollTop = messages.scrollHeight;
         }
-    }
 
-    function sendSuggestedQuestion(question) {
-        chatInput.value = question;
-        sendMessage();
-    }
+        async function sendMessage(message) {
+            setLoadingState(true);
 
-    // Enter key to send
-    chatInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
+            try {
+                const response = await fetch("/api/v1/chat/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCookie("csrftoken"),
+                    },
+                    body: JSON.stringify({
+                        message,
+                        destination: selectedDestination || null,
+                        conversation_id: conversationId,
+                        use_chatbot: true,
+                    }),
+                });
+
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        throw new Error(AUTH_REQUIRED_MESSAGE);
+                    }
+                    if (response.status === 403) {
+                        throw new Error(ACCESS_DENIED_MESSAGE);
+                    }
+                    throw new Error(payload.error || DEFAULT_ERROR_MESSAGE);
+                }
+
+                if (payload.conversation_id) {
+                    conversationId = payload.conversation_id;
+                    persistSession();
+                    updateContextUI();
+                }
+
+                appendMessage("assistant", payload.message || "Atlas chưa trả về nội dung.", payload.sources || []);
+            } catch (error) {
+                appendMessage("assistant", error.message || DEFAULT_ERROR_MESSAGE);
+                if ((error.message || "") === AUTH_REQUIRED_MESSAGE) {
+                    redirectToLogin();
+                }
+            } finally {
+                setLoadingState(false);
+            }
         }
-    });
 
-    // Focus input on load
-    window.addEventListener('load', function() {
-        chatInput.focus();
-    });
+        form.addEventListener("submit", async function (event) {
+            event.preventDefault();
+            const message = input.value.trim();
+            if (!message) {
+                return;
+            }
+
+            appendMessage("user", message);
+            input.value = "";
+            await sendMessage(message);
+        });
+
+        promptButtons.forEach((button) => {
+            button.addEventListener("click", function () {
+                const text = button.querySelector("span")?.textContent?.trim() || "";
+                if (!text) {
+                    return;
+                }
+                input.value = text;
+                input.focus();
+            });
+        });
+
+        destinationButtons.forEach((button) => {
+            button.addEventListener("click", function () {
+                selectedDestination = button.dataset.destination || "";
+                persistSession();
+                updateContextUI();
+                destinationButtons.forEach((chip) => {
+                    chip.classList.remove("border-emerald-400/40", "bg-emerald-400/15");
+                });
+                button.classList.add("border-emerald-400/40", "bg-emerald-400/15");
+            });
+        });
+
+        resetButton.addEventListener("click", function () {
+            conversationId = "";
+            selectedDestination = "";
+            try {
+                window.localStorage.removeItem(CHAT_STORAGE_KEY);
+            } catch (error) {
+                console.warn("Không thể xóa session chat.", error);
+            }
+            updateContextUI();
+            destinationButtons.forEach((chip) => chip.classList.remove("border-emerald-400/40", "bg-emerald-400/15"));
+            messages.innerHTML = `
+                <div class="flex gap-4">
+                    <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-white/5 text-emerald-300">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div class="atlas-bubble max-w-3xl rounded-3xl rounded-tl-none px-5 py-4 text-sm leading-7 text-slate-100">
+                        Xin chào! Tôi là Atlas. Tôi có thể giúp bạn tìm địa điểm, khách sạn, món ăn, hoặc gợi ý lịch trình dựa trên dữ liệu thật trong hệ thống Vi Vu.
+                    </div>
+                </div>
+            `;
+        });
+
+        loadSession();
+        updateContextUI();
+
+        if (selectedDestination) {
+            destinationButtons.forEach((button) => {
+                if (button.dataset.destination === selectedDestination) {
+                    button.classList.add("border-emerald-400/40", "bg-emerald-400/15");
+                }
+            });
+        }
+    })();
 </script>
 {% endblock %}
-
-{% block footer %}
-    <!-- FOOTER -->
-    {% include 'includes/footer.html' %}
-{% endblock %}
-

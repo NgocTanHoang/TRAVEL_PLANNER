@@ -26,6 +26,32 @@ from apps.places.models import DiaDiem, TinhThanh
 
 logger = logging.getLogger(__name__)
 
+CHAT_HISTORY_TTL_SECONDS = 60 * 60 * 6
+CHAT_HISTORY_MAX_MESSAGES = 20
+
+
+def _conversation_cache_key(conversation_id: str) -> str:
+    return f"travel_chat:conversation:{conversation_id}"
+
+
+def _load_conversation_history(conversation_id: str) -> list:
+    if not conversation_id:
+        return []
+    return cache.get(_conversation_cache_key(conversation_id), [])
+
+
+def _save_conversation_history(conversation_id: str, history: list) -> None:
+    if not conversation_id:
+        return
+    cache.set(_conversation_cache_key(conversation_id), history[-CHAT_HISTORY_MAX_MESSAGES:], CHAT_HISTORY_TTL_SECONDS)
+
+
+def _record_conversation_turn(conversation_id: str, role: str, content: str) -> list:
+    history = _load_conversation_history(conversation_id)
+    history.append({'role': role, 'content': content})
+    _save_conversation_history(conversation_id, history)
+    return history
+
 
 class ChatView(APIView):
     """
@@ -163,7 +189,7 @@ class ChatView(APIView):
         try:
             message = request.data.get('message', '').strip()
             destination = request.data.get('destination')
-            conversation_id = request.data.get('conversation_id')
+            conversation_id = (request.data.get('conversation_id') or '').strip()
             use_chatbot = request.data.get('use_chatbot', True)
             
             if not message:
@@ -180,6 +206,8 @@ class ChatView(APIView):
                     'error': 'Quá nhiều yêu cầu. Vui lòng thử lại sau.'
                 }, status=status.HTTP_429_TOO_MANY_REQUESTS)
             cache.set(cache_key, count + 1, 60)
+            conversation_history = _load_conversation_history(conversation_id)
+            recent_history = conversation_history[-10:]
             
             # Bước 1: Tìm kiếm thông tin từ nhiều nguồn
             logger.info(f"Searching information for query: {message}, destination: {destination}")
@@ -193,6 +221,16 @@ class ChatView(APIView):
                     if context:
                         enhanced_message = f"{message}\n\nThông tin tìm được:\n{context}"
                     
+                    if recent_history:
+                        history_prompt = "\n".join(
+                            f"{item.get('role', 'user')}: {item.get('content', '')}"
+                            for item in recent_history
+                        )
+                        enhanced_message = (
+                            f"Lá»‹ch sá»­ há»™i thoáº¡i gáº§n Ä‘Ã¢y:\n{history_prompt}\n\n"
+                            f"CÃ¢u há»i má»›i: {enhanced_message}"
+                        )
+
                     chatbot_response = self.travel_chatbot.chat(
                         user_message=enhanced_message,
                         use_rag=False,  # Đã có context rồi, không cần RAG nữa
@@ -210,6 +248,12 @@ class ChatView(APIView):
                             }
                             for place in db_places
                         ]
+                        _record_conversation_turn(conversation_id, 'user', message)
+                        updated_history = _record_conversation_turn(
+                            conversation_id,
+                            'assistant',
+                            chatbot_response.get('response', ''),
+                        )
                         
                         return Response({
                             'status': 'success',
@@ -218,7 +262,8 @@ class ChatView(APIView):
                             'destination': destination or chatbot_response.get('destination'),
                             'sources': sources,
                             'source': 'travel_chatbot_with_search',
-                            'conversation_id': conversation_id
+                            'conversation_id': conversation_id,
+                            'conversation_turns': len(updated_history)
                         }, status=status.HTTP_200_OK)
                 except Exception as e:
                     logger.error(f"Error in Travel Chatbot with search: {e}", exc_info=True)
@@ -253,6 +298,9 @@ class ChatView(APIView):
                         'source': 'rag_agent',
                         'conversation_id': conversation_id
                     }
+                    _record_conversation_turn(conversation_id, 'user', message)
+                    updated_history = _record_conversation_turn(conversation_id, 'assistant', response_text)
+                    response_data['conversation_turns'] = len(updated_history)
                     
                     return Response(response_data, status=status.HTTP_200_OK)
                     
@@ -271,21 +319,33 @@ class ChatView(APIView):
                     }
                     for place in db_places[:3]
                 ]
+                _record_conversation_turn(conversation_id, 'user', message)
                 return Response({
                     'status': 'success',
                     'message': response_text,
                     'sources': sources,
                     'source': 'database_search',
-                    'conversation_id': conversation_id
+                    'conversation_id': conversation_id,
+                    'conversation_turns': len(
+                        _record_conversation_turn(
+                            conversation_id,
+                            'assistant',
+                            response_text,
+                        )
+                    )
                 }, status=status.HTTP_200_OK)
             
             # Ultimate fallback
+            fallback_message = self._fallback_response(message)
+            _record_conversation_turn(conversation_id, 'user', message)
+            updated_history = _record_conversation_turn(conversation_id, 'assistant', fallback_message)
             return Response({
                 'status': 'success',
-                'message': self._fallback_response(message),
+                'message': fallback_message,
                 'sources': [],
                 'source': 'fallback',
                 'conversation_id': conversation_id,
+                'conversation_turns': len(updated_history),
                 'note': 'Không tìm thấy thông tin. Vui lòng kiểm tra API keys hoặc thử lại với câu hỏi khác.'
             }, status=status.HTTP_200_OK)
             

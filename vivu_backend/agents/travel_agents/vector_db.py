@@ -33,6 +33,24 @@ except Exception as e:
     CHROMADB_AVAILABLE = False
 
 
+def _repo_root() -> Path:
+    return Path(__file__).resolve().parents[3]
+
+
+def _resolve_persist_directory(persist_directory: Optional[str] = None) -> Path:
+    """Resolve a single Chroma persist path from env or the explicit constructor input."""
+    configured_path = (
+        persist_directory
+        or os.getenv("CHROMA_PERSIST_DIRECTORY")
+        or os.getenv("VECTOR_DB_PATH")
+        or "vivu_backend/vector_db"
+    )
+    candidate = Path(configured_path)
+    if not candidate.is_absolute():
+        candidate = (_repo_root() / candidate).resolve()
+    return candidate
+
+
 def _build_chroma_client(persist_directory: str):
     """Use HttpClient inside Docker when CHROMA_HOST is configured, else local PersistentClient."""
     chroma_host = os.getenv("CHROMA_HOST")
@@ -41,7 +59,7 @@ def _build_chroma_client(persist_directory: str):
         logger.info(f"Initializing ChromaDB HttpClient at {chroma_host}:{chroma_port}")
         return chromadb.HttpClient(host=chroma_host, port=chroma_port)
 
-    persist_dir = Path(persist_directory)
+    persist_dir = _resolve_persist_directory(persist_directory)
     persist_dir.mkdir(exist_ok=True)
     logger.info(f"Initializing ChromaDB PersistentClient at {persist_dir}")
     return chromadb.PersistentClient(
@@ -169,7 +187,7 @@ class VectorDatabaseAgent(BaseAgent):
         'phú quốc': 'Phu Quoc',
     }
     
-    def __init__(self, persist_directory: str = "vector_db"):
+    def __init__(self, persist_directory: Optional[str] = None):
         """
         Initialize Vector Database Agent
         
@@ -180,7 +198,7 @@ class VectorDatabaseAgent(BaseAgent):
             agent_name="vector_db_agent",
             description="Vector database agent for semantic search"
         )
-        self.persist_dir = Path(persist_directory)
+        self.persist_dir = _resolve_persist_directory(persist_directory)
         self.sqlite_path = _default_sqlite_path()
         
         # Initialize ChromaDB client (lazy)

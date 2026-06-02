@@ -1,0 +1,1107 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Khám phá địa điểm - Vi Vu{% endblock %}
+
+{% block extra_styles %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""/>
+
+<style>
+    .search-screen,
+    .search-screen * {
+        font-family: Inter, "Segoe UI", sans-serif;
+    }
+
+    .search-screen {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-screen::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+            radial-gradient(circle at 0% 0%, rgba(var(--primary), 0.08) 0%, transparent 28%),
+            radial-gradient(circle at 100% 100%, rgba(var(--ocean-soft), 0.08) 0%, transparent 34%),
+            linear-gradient(180deg, rgba(var(--background), 0.96) 0%, rgba(var(--muted), 0.98) 100%);
+        z-index: 0;
+    }
+
+    .glass-panel {
+        background: rgba(var(--card), 0.72);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(var(--border), 0.75);
+        box-shadow: var(--surface-shadow);
+    }
+
+    .premium-easing {
+        transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .reveal-up {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: revealUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    @keyframes revealUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .ai-glow:hover {
+        box-shadow: 0 0 25px rgba(5, 150, 105, 0.25);
+    }
+
+    .filter-scrollbar::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .filter-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(var(--muted-foreground), 0.45);
+        border-radius: 9999px;
+    }
+
+    .quick-filter-chip,
+    .result-card,
+    #search-shell,
+    #search-sidebar {
+        transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .quick-filter-chip {
+        background: rgba(var(--surface-container-lowest), 0.74);
+        border: 1px solid rgba(var(--border), 0.7);
+        color: rgb(var(--foreground));
+    }
+
+    .quick-filter-chip:hover,
+    .quick-filter-chip.is-active {
+        background: rgb(var(--primary));
+        color: rgb(var(--primary-foreground));
+        border-color: rgba(var(--primary), 0.2);
+        transform: translateY(-1px);
+        box-shadow: 0 12px 30px rgba(var(--primary), 0.18);
+    }
+
+    .search-chip-soft {
+        background: rgba(var(--emerald-soft), 0.92);
+        color: rgb(var(--primary));
+        border: 1px solid rgba(var(--primary), 0.12);
+    }
+
+    .search-pill {
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid rgb(226 232 240 / 0.95);
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+        transition: box-shadow 0.25s ease, transform 0.25s ease;
+    }
+
+    .search-pill:hover {
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.09);
+    }
+
+    .search-input-shell {
+        background: transparent;
+        border: 0;
+    }
+
+    .search-input-shell:focus-within,
+    .search-pill:focus-within {
+        border-color: rgba(var(--primary), 0.45);
+        box-shadow: 0 0 0 4px rgba(var(--primary), 0.1);
+    }
+
+    #search-shell {
+        display: grid;
+        gap: 1.5rem;
+    }
+
+    @media (min-width: 768px) {
+        #search-shell {
+            grid-template-columns: minmax(320px, 45%) minmax(0, 55%);
+        }
+    }
+
+    #search-shell.sidebar-collapsed {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    #search-shell.sidebar-collapsed #search-sidebar {
+        opacity: 0;
+        transform: translateX(-24px);
+        max-width: 0;
+        overflow: hidden;
+        padding: 0;
+        margin: 0;
+        border: 0;
+    }
+
+    #search-map {
+        height: 300px;
+    }
+
+    @media (min-width: 768px) {
+        #search-map {
+            height: calc(100vh - 120px);
+        }
+    }
+
+    .result-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--surface-shadow-strong);
+    }
+
+    .result-thumb {
+        background:
+            radial-gradient(circle at top right, rgba(255, 255, 255, 0.2), transparent 38%),
+            linear-gradient(135deg, rgba(var(--ocean), 1) 0%, rgba(var(--ocean-soft), 1) 45%, rgba(var(--accent), 0.94) 100%);
+    }
+
+    .result-price-pill {
+        background: rgba(var(--warning-soft), 0.94);
+        color: rgb(var(--warning-foreground));
+    }
+
+    .search-hero-visual {
+        position: relative;
+        overflow: hidden;
+        background:
+            linear-gradient(180deg, rgba(2, 6, 23, 0.08), rgba(2, 6, 23, 0.55)),
+            linear-gradient(135deg, rgba(var(--ocean), 1) 0%, rgba(var(--ocean-soft), 1) 45%, rgba(var(--accent), 0.9) 100%);
+    }
+
+    .search-hero-visual img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.24;
+    }
+
+    .search-hero-visual::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(2, 6, 23, 0.85), rgba(2, 6, 23, 0.1));
+    }
+
+    .sovereignty-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        max-width: 220px;
+        border-radius: 1rem;
+        padding: 0.5rem 0.75rem;
+        background: rgba(2, 6, 23, 0.88);
+        color: #f8fafc;
+        border: 1px solid rgba(52, 211, 153, 0.38);
+        box-shadow: 0 14px 28px rgba(2, 6, 23, 0.34);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        font-size: 0.72rem;
+        line-height: 1.35;
+        white-space: normal;
+        text-align: left;
+    }
+
+    .sovereignty-label__flag {
+        font-size: 1rem;
+        line-height: 1;
+        flex: 0 0 auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="search-screen px-4 pb-8 pt-24 sm:px-6 lg:px-8">
+    <div class="relative z-10 mx-auto flex max-w-7xl flex-col gap-6">
+        <div class="glass-panel reveal-up rounded-[2rem] p-4 sm:p-6">
+            <div class="grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)]">
+                <div class="flex flex-col gap-5">
+                    <div>
+                        <span class="search-chip-soft inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em]">
+                            <i class="fa-solid fa-sparkles text-[11px]"></i>
+                            Premium Booking Discovery
+                        </span>
+                        <h1 class="mt-4 font-heading text-3xl font-bold tracking-tight text-slate-950 md:text-5xl dark:text-slate-50">
+                            Tìm đúng điểm đến, nhìn thấy bản đồ và chốt lựa chọn trong một luồng khám phá mượt mà.
+                        </h1>
+                        <p class="theme-text-muted mt-4 max-w-3xl text-sm leading-7 md:text-base">
+                            Vi Vu kết hợp dữ liệu địa điểm thật, bộ lọc sâu, thời tiết và bản đồ ghim trực tiếp để bạn vừa tìm kiếm vừa so sánh điểm đến một cách trực quan.
+                        </p>
+                    </div>
+
+                    <div class="mt-5 flex flex-wrap gap-3">
+                        <a href="{% url 'travel-plan' %}"
+                           class="ai-glow inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white premium-easing hover:-translate-y-0.5"
+                           style="background: rgb(var(--primary));">
+                            <i class="fa-solid fa-route"></i>
+                            Tạo lịch trình từ điểm đến này
+                        </a>
+                        <a href="{% url 'places:submit_place' %}"
+                           class="theme-btn-secondary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-medium premium-easing hover:-translate-y-0.5">
+                            <i class="fa-solid fa-location-dot"></i>
+                            Đề xuất địa điểm mới
+                        </a>
+                    </div>
+
+                    <div class="search-pill flex flex-col gap-3 rounded-full border border-slate-200 px-3 py-3 shadow-sm premium-easing hover:shadow-md sm:px-4 md:flex-row md:items-center md:gap-0">
+                        <div class="search-input-shell relative min-w-0 flex-1 rounded-full">
+                            <i class="fa-solid fa-map-marker-alt pointer-events-none absolute left-6 top-1/2 -translate-y-1/2 text-sm" style="color: rgb(var(--primary));"></i>
+                            <input id="search-input"
+                                   type="text"
+                                   class="h-14 w-full rounded-full border-0 bg-transparent px-6 pl-14 text-sm shadow-none focus:outline-none focus:ring-0"
+                                   placeholder="Tìm theo tên địa điểm, khu vực, trải nghiệm..."
+                                   value="{{ initial_query|default:'' }}"
+                                   autocomplete="off">
+                        </div>
+                        <div class="hidden h-9 w-px bg-slate-200 md:block"></div>
+                        <div class="search-input-shell relative min-w-0 rounded-full md:w-[220px]">
+                            <i class="fa-solid fa-filter pointer-events-none absolute left-6 top-1/2 -translate-y-1/2 text-sm" style="color: rgb(var(--primary));"></i>
+                            <input id="province-filter"
+                                   type="text"
+                                   class="h-14 w-full rounded-full border-0 bg-transparent px-6 pl-14 text-sm shadow-none focus:outline-none focus:ring-0"
+                                   placeholder="Tỉnh thành">
+                        </div>
+                        <label class="hidden search-input-shell h-14 items-center gap-3 rounded-2xl px-4 text-sm theme-text-muted">
+                            <span class="font-medium">Mở cửa</span>
+                            <input id="openNow-filter-clone"
+                                   type="checkbox"
+                                   class="ml-auto h-4 w-4 rounded border-slate-300"
+                                   style="accent-color: rgb(var(--primary));">
+                        </label>
+                        <button id="search-btn"
+                                type="button"
+                                class="ai-glow inline-flex h-14 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white premium-easing hover:-translate-y-0.5 md:ml-3"
+                                style="background: rgb(var(--primary));">
+                            <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                            Tìm kiếm
+                        </button>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3">
+                        <span class="text-xs font-bold uppercase tracking-[0.24em]" style="color: rgb(var(--primary));">
+                            Quick Filters
+                        </span>
+                        <div class="filter-scrollbar flex gap-3 overflow-x-auto pb-1">
+                            <button type="button" class="quick-filter-chip inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-medium" data-filter="weather">
+                                <span>⛅</span> Thời tiết
+                            </button>
+                            <button type="button" class="quick-filter-chip inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-medium" data-filter="dia_danh">
+                                <span>📍</span> Địa danh
+                            </button>
+                            <button type="button" class="quick-filter-chip inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-medium" data-filter="khach_san">
+                                <span>🏨</span> Khách sạn
+                            </button>
+                            <button type="button" class="quick-filter-chip inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-medium" data-filter="nha_hang">
+                                <span>🍽️</span> Ăn uống
+                            </button>
+                            <button type="button" class="quick-filter-chip inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-medium" data-filter="emergency">
+                                <span>🛡️</span> Lưu ý khẩn cấp
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="search-hero-visual rounded-[1.75rem] p-5 text-white">
+                    <img src="{% static 'img/stitch-deep-ocean-search.png' %}" alt="Premium booking discovery visual">
+                    <div class="relative z-10 flex h-full min-h-[240px] flex-col justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-white/70">Khám phá trực quan</p>
+                            <h2 class="mt-3 text-2xl font-semibold">Bản đồ, shortlist và thông tin địa phương luôn cùng một nhịp.</h2>
+                        </div>
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            <div class="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
+                                <p class="text-xs uppercase tracking-[0.18em] text-white/70">Map Ready</p>
+                                <p class="mt-2 text-sm leading-6 text-white/90">Khi có kết quả tìm kiếm, hệ thống sẽ ghim trực tiếp marker lên bản đồ Leaflet với nền Carto đồng bộ.</p>
+                            </div>
+                            <div class="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
+                                <p class="text-xs uppercase tracking-[0.18em] text-white/70">AI Context</p>
+                                <p class="mt-2 text-sm leading-6 text-white/90">Chọn một điểm để xem thời tiết, gợi ý địa phương và thông tin nhanh theo ngữ cảnh.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div class="glass-panel reveal-up rounded-[1.75rem] p-4" style="animation-delay: 0.05s;">
+                <p class="theme-text-muted text-xs font-semibold uppercase tracking-[0.2em]">Điểm dữ liệu</p>
+                <p class="mt-3 text-3xl font-bold" style="color: rgb(var(--primary));">1289+</p>
+                <p class="theme-text-muted mt-2 text-sm leading-6">POI đã được làm sạch để tìm kiếm, lọc và hiển thị trên bản đồ.</p>
+            </div>
+            <div class="glass-panel reveal-up rounded-[1.75rem] p-4" style="animation-delay: 0.1s;">
+                <p class="theme-text-muted text-xs font-semibold uppercase tracking-[0.2em]">Map Sync</p>
+                <p class="mt-3 text-3xl font-bold" style="color: rgb(var(--primary));">Live</p>
+                <p class="theme-text-muted mt-2 text-sm leading-6">Danh sách kết quả và marker bản đồ được cập nhật cùng lúc sau mỗi lần tìm kiếm.</p>
+            </div>
+            <div class="glass-panel reveal-up rounded-[1.75rem] p-4" style="animation-delay: 0.15s;">
+                <p class="theme-text-muted text-xs font-semibold uppercase tracking-[0.2em]">Local Insight</p>
+                <p class="mt-3 text-3xl font-bold" style="color: rgb(var(--primary));">3 khối</p>
+                <p class="theme-text-muted mt-2 text-sm leading-6">Thời tiết, lưu ý bản địa và detail panel đều bám theo địa điểm bạn đang chọn.</p>
+            </div>
+            <div class="glass-panel reveal-up rounded-[1.75rem] p-4" style="animation-delay: 0.2s;">
+                <p class="theme-text-muted text-xs font-semibold uppercase tracking-[0.2em]">Booking Flow</p>
+                <p class="mt-3 text-3xl font-bold" style="color: rgb(var(--primary));">Responsive</p>
+                <p class="theme-text-muted mt-2 text-sm leading-6">Shell mới tối ưu cho mobile và desktop mà vẫn giữ nguyên flow tìm kiếm thật của hệ thống.</p>
+            </div>
+        </div>
+
+        <div id="search-shell">
+            <aside id="search-sidebar" class="order-2 space-y-5 md:order-1 md:h-[calc(100vh-120px)] md:overflow-y-auto md:pr-2">
+                <div class="glass-panel rounded-[1.75rem] p-5">
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <p class="theme-text-muted text-xs font-semibold uppercase tracking-[0.2em]">Thời tiết tại điểm đến</p>
+                            <h2 id="weather-location" class="mt-2 text-xl font-semibold">Chưa chọn địa điểm</h2>
+                            <p id="weather-status" class="theme-text-muted mt-1 text-sm">Tìm và chọn một địa điểm để xem dự báo 3 ngày tới.</p>
+                        </div>
+                        <div class="search-chip-soft rounded-2xl px-4 py-3 text-right">
+                            <div id="weather-icon" class="text-2xl">🌤️</div>
+                            <div id="weather-temp" class="mt-1 text-2xl font-semibold">--°C</div>
+                        </div>
+                    </div>
+                    <div id="weather-forecast" class="mt-4 grid grid-cols-3 gap-3">
+                        <div class="theme-muted-surface rounded-2xl px-3 py-4 text-center text-sm theme-text-muted">Chưa có dữ liệu</div>
+                        <div class="theme-muted-surface rounded-2xl px-3 py-4 text-center text-sm theme-text-muted">Chưa có dữ liệu</div>
+                        <div class="theme-muted-surface rounded-2xl px-3 py-4 text-center text-sm theme-text-muted">Chưa có dữ liệu</div>
+                    </div>
+                </div>
+
+                <div class="rounded-[1.75rem] p-5" style="background: #FEF3C7; color: #78350F;">
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/70">
+                            <i class="fa-solid fa-shield-heart"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-[0.2em]">Lưu ý & phong tục</p>
+                            <h2 class="mt-1 text-lg font-semibold">Bỏ túi trước khi đi</h2>
+                        </div>
+                    </div>
+                    <ul id="local-insights-list" class="mt-4 space-y-3 text-sm leading-6">
+                        <li class="rounded-2xl bg-white/70 px-4 py-3">Ưu tiên chọn một địa điểm trên bản đồ để xem gợi ý bản địa hóa theo vùng miền.</li>
+                    </ul>
+                </div>
+
+                <div class="glass-panel rounded-[1.75rem] p-5">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <p class="theme-text-muted text-xs font-semibold uppercase tracking-[0.2em]">Bộ lọc sâu</p>
+                            <h2 class="mt-1 text-lg font-semibold">Tối ưu kết quả hiển thị</h2>
+                        </div>
+                        <button id="reset-filters-btn" type="button" class="text-sm font-medium" style="color: rgb(var(--primary));">
+                            Đặt lại
+                        </button>
+                    </div>
+
+                    <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                        <label class="space-y-2 text-sm theme-text-muted">
+                            <span class="font-medium" style="color: rgb(var(--foreground));">Loại địa điểm</span>
+                            <select id="type-filter" class="theme-input w-full rounded-2xl px-4 py-3">
+                                <option value="">Tất cả loại hình</option>
+                                <option value="dia_danh">Địa danh</option>
+                                <option value="khach_san">Khách sạn</option>
+                                <option value="nha_hang">Ăn uống</option>
+                                <option value="giai_tri">Giải trí</option>
+                                <option value="mua_sam">Mua sắm</option>
+                            </select>
+                        </label>
+
+                        <label class="space-y-2 text-sm theme-text-muted">
+                            <span class="font-medium" style="color: rgb(var(--foreground));">Đánh giá tối thiểu</span>
+                            <select id="rating-filter" class="theme-input w-full rounded-2xl px-4 py-3">
+                                <option value="0">Tất cả mức điểm</option>
+                                <option value="3">Từ 3.0 sao</option>
+                                <option value="4">Từ 4.0 sao</option>
+                                <option value="4.5">Từ 4.5 sao</option>
+                            </select>
+                        </label>
+
+                        <label class="space-y-2 text-sm theme-text-muted">
+                            <span class="font-medium" style="color: rgb(var(--foreground));">Giá vé tối đa</span>
+                            <input id="price-filter" type="number" min="0" step="50000" placeholder="Ví dụ 300000" class="theme-input w-full rounded-2xl px-4 py-3">
+                        </label>
+
+                        <div class="space-y-2 text-sm theme-text-muted">
+                            <span class="font-medium" style="color: rgb(var(--foreground));">Điều hướng panel</span>
+                            <button id="toggle-sidebar-btn"
+                                    type="button"
+                                    class="theme-btn-secondary inline-flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium">
+                                <i class="fa-solid fa-sliders"></i>
+                                Ẩn/hiện bảng thông tin
+                            </button>
+                        </div>
+                    </div>
+
+                    <label class="theme-muted-surface mt-4 flex items-center gap-3 rounded-2xl px-4 py-3 text-sm">
+                        <input id="open-now-filter" type="checkbox" class="h-4 w-4 rounded border-slate-300" style="accent-color: rgb(var(--primary));">
+                        Chỉ hiện nơi có dữ liệu giờ mở cửa
+                    </label>
+                </div>
+
+                <div class="glass-panel rounded-[1.75rem] p-5">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <p class="theme-text-muted text-xs font-semibold uppercase tracking-[0.2em]">Kết quả từ cơ sở dữ liệu</p>
+                            <h2 class="mt-1 text-lg font-semibold">Địa điểm nổi bật</h2>
+                        </div>
+                        <span id="results-count" class="search-chip-soft rounded-full px-3 py-1 text-sm font-semibold">0</span>
+                    </div>
+
+                    <div id="results-list" class="mt-4 space-y-4">
+                        <div class="theme-muted-surface rounded-[24px] border border-dashed px-5 py-8 text-center text-sm leading-6 theme-text-muted">
+                            Nhập từ khóa hoặc chọn bộ lọc để bắt đầu khám phá dữ liệu địa điểm.
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <div class="order-1 space-y-5 md:order-2">
+                <div class="glass-panel rounded-[2rem] p-4 sm:p-5 md:sticky md:top-24">
+                    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <p class="theme-text-muted text-xs font-semibold uppercase tracking-[0.2em]">Bản đồ tương tác</p>
+                            <h2 id="map-heading" class="mt-1 text-xl font-semibold">Toàn cảnh điểm đến trên bản đồ tương tác</h2>
+                        </div>
+                        <div class="theme-text-muted flex items-center gap-2 text-sm">
+                            <span class="theme-muted-surface inline-flex items-center gap-2 rounded-full px-4 py-2">
+                                <span class="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+                                Ghim địa điểm khi có kết quả
+                            </span>
+                        </div>
+                    </div>
+                    <div class="mt-4 overflow-hidden rounded-[1.75rem] border theme-divider">
+                        <div id="search-map" class="w-full"></div>
+                    </div>
+                </div>
+
+                <div id="place-highlight" class="glass-panel hidden rounded-[2rem] p-5 md:block">
+                    <div class="flex flex-col gap-4 lg:flex-row">
+                        <div class="search-hero-visual relative flex h-52 items-end overflow-hidden rounded-[1.75rem] p-5 text-white lg:w-[38%]">
+                            <img src="{% static 'img/stitch-deep-ocean-search.png' %}" alt="Search concept from Stitch">
+                            <div class="relative z-10">
+                                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-white/75">Điểm được chọn</p>
+                                <h3 id="detail-name" class="mt-2 text-2xl font-semibold">Chưa chọn địa điểm</h3>
+                                <p id="detail-type" class="mt-2 text-sm text-white/80">Hãy nhấn vào một thẻ địa điểm hoặc marker trên bản đồ.</p>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="grid gap-4 sm:grid-cols-2">
+                                <div class="theme-muted-surface rounded-3xl p-4">
+                                    <p class="theme-text-muted text-xs font-semibold uppercase tracking-[0.18em]">Vị trí</p>
+                                    <p id="detail-location" class="mt-2 text-sm leading-6">Chưa có dữ liệu.</p>
+                                </div>
+                                <div class="theme-muted-surface rounded-3xl p-4">
+                                    <p class="theme-text-muted text-xs font-semibold uppercase tracking-[0.18em]">Thông tin nhanh</p>
+                                    <div class="mt-2 flex flex-wrap gap-2 text-sm">
+                                        <span id="detail-rating" class="theme-btn-secondary rounded-full px-3 py-1 shadow-sm">Đánh giá: --</span>
+                                        <span id="detail-price" class="theme-btn-secondary rounded-full px-3 py-1 shadow-sm">Giá vé: --</span>
+                                        <span id="detail-hours" class="theme-btn-secondary rounded-full px-3 py-1 shadow-sm">Giờ mở cửa: --</span>
+                                    </div>
+                                </div>
+                                <div class="theme-muted-surface rounded-3xl p-4 sm:col-span-2">
+                                    <p class="theme-text-muted text-xs font-semibold uppercase tracking-[0.18em]">Mô tả</p>
+                                    <p id="detail-description" class="mt-2 text-sm leading-7">
+                                        Hệ thống sẽ hiển thị mô tả, website và thông tin liên hệ của địa điểm tại đây sau khi bạn chọn kết quả.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="mt-4 flex flex-wrap gap-3">
+                                <a id="detail-website" href="#" target="_blank" rel="noopener noreferrer" class="theme-btn-secondary hidden items-center gap-2 rounded-full px-4 py-2 text-sm font-medium">
+                                    <i class="fa-solid fa-up-right-from-square"></i>
+                                    Website
+                                </a>
+                                <a id="detail-phone" href="#" class="theme-btn-secondary hidden items-center gap-2 rounded-full px-4 py-2 text-sm font-medium">
+                                    <i class="fa-solid fa-phone"></i>
+                                    Liên hệ
+                                </a>
+                                <button id="detail-map-focus" type="button" class="theme-btn-primary inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold">
+                                    <i class="fa-solid fa-location-crosshairs"></i>
+                                    Đưa bản đồ tới điểm này
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+
+<script>
+    let searchMap = null;
+    let markers = [];
+    let currentSearchResults = [];
+    let filteredResults = [];
+    let selectedPlace = null;
+    let activeQuickFilter = '';
+    let userLocation = null;
+
+    const searchInput = document.getElementById('search-input');
+    const searchBtn = document.getElementById('search-btn');
+    const resultsList = document.getElementById('results-list');
+    const resultsCount = document.getElementById('results-count');
+    const typeFilter = document.getElementById('type-filter');
+    const ratingFilter = document.getElementById('rating-filter');
+    const priceFilter = document.getElementById('price-filter');
+    const provinceFilter = document.getElementById('province-filter');
+    const openNowFilter = document.getElementById('open-now-filter');
+    const openNowFilterClone = document.getElementById('openNow-filter-clone');
+    const resetFiltersBtn = document.getElementById('reset-filters-btn');
+    const toggleSidebarBtn = document.getElementById('toggle-sidebar-btn');
+    const searchShell = document.getElementById('search-shell');
+    const detailMapFocus = document.getElementById('detail-map-focus');
+    const CARTO_DARK_TILE_URL = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+    const VIETNAM_BOUNDS = L.latLngBounds(L.latLng(6.0, 102.0), L.latLng(24.0, 118.0));
+    const SOVEREIGNTY_MARKERS = [
+        {
+            coords: [16.5, 112.0],
+            text: 'Quần đảo Hoàng Sa <br>(Thành phố Đà Nẵng, Việt Nam)'
+        },
+        {
+            coords: [10.0, 114.3],
+            text: 'Quần đảo Trường Sa <br>(Tỉnh Khánh Hòa, Việt Nam)'
+        }
+    ];
+
+    const WEATHER_CODES = {
+        0: ['☀️', 'Trời quang'],
+        1: ['🌤️', 'Nắng nhẹ'],
+        2: ['⛅', 'Ít mây'],
+        3: ['☁️', 'Nhiều mây'],
+        45: ['🌫️', 'Sương mù'],
+        48: ['🌫️', 'Sương mù dày'],
+        51: ['🌦️', 'Mưa phùn nhẹ'],
+        53: ['🌦️', 'Mưa phùn'],
+        55: ['🌧️', 'Mưa phùn dày'],
+        61: ['🌦️', 'Mưa nhẹ'],
+        63: ['🌧️', 'Mưa vừa'],
+        65: ['🌧️', 'Mưa to'],
+        71: ['🌨️', 'Tuyết nhẹ'],
+        80: ['🌦️', 'Mưa rào nhẹ'],
+        81: ['🌧️', 'Mưa rào'],
+        82: ['⛈️', 'Mưa giông'],
+        95: ['⛈️', 'Dông'],
+    };
+
+    function getWeatherMeta(code) { return WEATHER_CODES[code] || ['🌤️', 'Thời tiết ổn định']; }
+
+    function getPlaceTypeLabel(type) {
+        const labels = {
+            dia_danh: 'Địa danh',
+            nha_hang: 'Ăn uống',
+            khach_san: 'Khách sạn',
+            giai_tri: 'Giải trí',
+            mua_sam: 'Mua sắm',
+            khac: 'Địa điểm khác',
+        };
+        return labels[type] || 'Địa điểm';
+    }
+
+    function formatCurrency(value) {
+        if (value === null || value === undefined || value === '' || Number(value) === 0) return 'Miễn phí / chưa rõ';
+        return `${Number(value).toLocaleString('vi-VN')}đ`;
+    }
+
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        if ([lat1, lon1, lat2, lon2].some((item) => item === null || item === undefined || Number.isNaN(Number(item)))) return Infinity;
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+            + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180)
+            * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+    }
+
+    function initSearchMap() {
+        searchMap = L.map('search-map', {
+            center: [10.7769, 106.7009],
+            zoom: 6,
+            zoomControl: true,
+            attributionControl: true,
+            maxBounds: VIETNAM_BOUNDS,
+            maxBoundsViscosity: 1.0,
+        });
+        searchMap.setMinZoom(5);
+
+        L.tileLayer(CARTO_DARK_TILE_URL, {
+            attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; OpenStreetMap contributors',
+            minZoom: 5,
+            maxZoom: 16,
+            noWrap: true,
+        }).addTo(searchMap);
+
+        SOVEREIGNTY_MARKERS.forEach((item) => {
+            L.marker(item.coords, {
+                interactive: false,
+                keyboard: false,
+                zIndexOffset: 1000,
+                icon: L.divIcon({
+                    className: 'sovereignty-marker',
+                    html: `
+                        <div class="sovereignty-label">
+                            <span class="sovereignty-label__flag">🇻🇳</span>
+                            <span>${item.text}</span>
+                        </div>
+                    `,
+                    iconSize: [216, 48],
+                    iconAnchor: [108, 24]
+                })
+            }).addTo(searchMap);
+        });
+        setTimeout(() => searchMap.invalidateSize(), 150);
+    }
+
+    function clearMarkers() {
+        markers.forEach(({ marker }) => searchMap.removeLayer(marker));
+        markers = [];
+    }
+
+    function renderWeatherLoading(label) {
+        document.getElementById('weather-location').textContent = label || 'Đang cập nhật thời tiết';
+        document.getElementById('weather-status').textContent = 'Đang tải dự báo thời tiết từ Open-Meteo...';
+        document.getElementById('weather-icon').textContent = '⏳';
+        document.getElementById('weather-temp').textContent = '--°C';
+    }
+
+    async function updateWeather(place) {
+        if (!place || !place.viDo || !place.kinhDo) {
+            document.getElementById('weather-location').textContent = 'Chưa chọn địa điểm';
+            document.getElementById('weather-status').textContent = 'Tìm và chọn một địa điểm để xem dự báo 3 ngày tới.';
+            document.getElementById('weather-icon').textContent = '🌤️';
+            document.getElementById('weather-temp').textContent = '--°C';
+            document.getElementById('weather-forecast').innerHTML = `
+                <div class="theme-muted-surface rounded-2xl px-3 py-4 text-center text-sm theme-text-muted">Chưa có dữ liệu</div>
+                <div class="theme-muted-surface rounded-2xl px-3 py-4 text-center text-sm theme-text-muted">Chưa có dữ liệu</div>
+                <div class="theme-muted-surface rounded-2xl px-3 py-4 text-center text-sm theme-text-muted">Chưa có dữ liệu</div>
+            `;
+            return;
+        }
+
+        renderWeatherLoading(place.tenTinhThanh || place.tenDiaDiem);
+        try {
+            const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${place.viDo}&longitude=${place.kinhDo}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&forecast_days=3&timezone=Asia%2FBangkok`);
+            const data = await response.json();
+            const currentTemp = Math.round(data.current?.temperature_2m ?? 0);
+            const [icon, text] = getWeatherMeta(data.current?.weather_code);
+
+            document.getElementById('weather-location').textContent = place.tenTinhThanh || place.tenDiaDiem;
+            document.getElementById('weather-status').textContent = `${text}. Phù hợp để theo dõi thời tiết trước khi chốt lịch trình.`;
+            document.getElementById('weather-icon').textContent = icon;
+            document.getElementById('weather-temp').textContent = `${currentTemp}°C`;
+
+            const dailyTime = data.daily?.time || [];
+            const maxTemps = data.daily?.temperature_2m_max || [];
+            const minTemps = data.daily?.temperature_2m_min || [];
+            const weatherCodes = data.daily?.weather_code || [];
+
+            document.getElementById('weather-forecast').innerHTML = dailyTime.map((date, index) => {
+                const [dailyIcon, dailyText] = getWeatherMeta(weatherCodes[index]);
+                const shortDate = new Date(date).toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit' });
+                return `
+                    <div class="theme-muted-surface rounded-2xl px-3 py-4 text-center">
+                        <div class="theme-text-muted text-xs font-semibold uppercase tracking-[0.18em]">${shortDate}</div>
+                        <div class="mt-2 text-2xl">${dailyIcon}</div>
+                        <div class="mt-2 text-sm font-medium">${Math.round(minTemps[index])}° - ${Math.round(maxTemps[index])}°</div>
+                        <div class="theme-text-muted mt-1 text-xs">${dailyText}</div>
+                    </div>
+                `;
+            }).join('');
+        } catch (error) {
+            document.getElementById('weather-status').textContent = 'Không thể tải thời tiết lúc này. Bạn vẫn có thể tiếp tục xem bản đồ và danh sách địa điểm.';
+            document.getElementById('weather-icon').textContent = '🌦️';
+            document.getElementById('weather-temp').textContent = '--°C';
+        }
+    }
+
+    function buildInsights(place) {
+        const province = (place?.tenTinhThanh || '').toLowerCase();
+        const type = place?.loaiDiaDiem || '';
+        const insights = [];
+        if (!place) return ['Ưu tiên chọn một địa điểm trên bản đồ để xem gợi ý bản địa hóa theo vùng miền.'];
+
+        if (type === 'dia_danh') insights.push('Mang theo giày bám tốt và nước cá nhân nếu bạn dự kiến đi bộ hoặc leo dốc quanh khu tham quan.');
+        if (type === 'nha_hang') insights.push('Nên hỏi rõ giá niêm yết, món đặc sản theo mùa và thời gian phục vụ cao điểm trước khi gọi món.');
+        if (type === 'khach_san') insights.push('Kiểm tra khung giờ nhận và trả phòng, cũng như khoảng cách thực tế từ nơi lưu trú tới trung tâm tham quan.');
+        if (province.includes('huế') || province.includes('ninh bình') || province.includes('quảng nam')) insights.push('Khi vào khu tâm linh hoặc di tích, ưu tiên trang phục lịch sự, kín vai và giữ âm lượng nhỏ.');
+        if (province.includes('đà lạt') || province.includes('lâm đồng') || province.includes('sa pa') || province.includes('lào cai')) insights.push('Buổi tối nhiệt độ có thể giảm nhanh, nên chuẩn bị áo khoác mỏng ngay cả khi ban ngày nắng đẹp.');
+        if (province.includes('hồ chí minh') || province.includes('hà nội') || province.includes('đà nẵng')) insights.push('Ở khu đông khách, nên ưu tiên đặt xe công nghệ tại điểm đón chính thức và xác nhận giá trước khi di chuyển.');
+
+        insights.push('Giữ tiền mặt mệnh giá nhỏ cho vé gửi xe, quầy địa phương và luôn hỏi giá trước với dịch vụ ngoài khu niêm yết.');
+        return insights.slice(0, 4);
+    }
+
+    function renderInsights(place) {
+        const insights = buildInsights(place);
+        document.getElementById('local-insights-list').innerHTML = insights.map((item) => `<li class="rounded-2xl bg-white/70 px-4 py-3">${item}</li>`).join('');
+    }
+
+    function updatePlaceHighlight(place) {
+        selectedPlace = place || null;
+        const websiteLink = document.getElementById('detail-website');
+        const phoneLink = document.getElementById('detail-phone');
+
+        if (!place) {
+            document.getElementById('detail-name').textContent = 'Chưa chọn địa điểm';
+            document.getElementById('detail-type').textContent = 'Hãy nhấn vào một thẻ địa điểm hoặc marker trên bản đồ.';
+            document.getElementById('detail-location').textContent = 'Chưa có dữ liệu.';
+            document.getElementById('detail-rating').textContent = 'Đánh giá: --';
+            document.getElementById('detail-price').textContent = 'Giá vé: --';
+            document.getElementById('detail-hours').textContent = 'Giờ mở cửa: --';
+            document.getElementById('detail-description').textContent = 'Hệ thống sẽ hiển thị mô tả, website và thông tin liên hệ của địa điểm tại đây sau khi bạn chọn kết quả.';
+            websiteLink.classList.add('hidden');
+            phoneLink.classList.add('hidden');
+            renderInsights(null);
+            updateWeather(null);
+            return;
+        }
+
+        document.getElementById('detail-name').textContent = place.tenDiaDiem;
+        document.getElementById('detail-type').textContent = `${getPlaceTypeLabel(place.loaiDiaDiem)} tại ${place.tenTinhThanh || 'điểm đến đang chọn'}`;
+        document.getElementById('detail-location').textContent = [place.diaChi, place.tenTinhThanh].filter(Boolean).join(', ') || 'Đang cập nhật vị trí.';
+        document.getElementById('detail-rating').textContent = `Đánh giá: ${(place.danhGiaTrungBinh || 0).toFixed(1)} (${place.soLuotDanhGia || 0} lượt)`;
+        document.getElementById('detail-price').textContent = `Giá vé: ${formatCurrency(place.giaVe)}`;
+        document.getElementById('detail-hours').textContent = `Giờ mở cửa: ${place.gioMoCua || 'Chưa rõ'}`;
+        document.getElementById('detail-description').textContent = place.moTa || 'Địa điểm này chưa có mô tả chi tiết trong cơ sở dữ liệu, bạn có thể dùng AI Chat để hỏi sâu hơn.';
+
+        if (place.website) {
+            websiteLink.href = place.website;
+            websiteLink.classList.remove('hidden');
+            websiteLink.classList.add('inline-flex');
+        } else {
+            websiteLink.classList.add('hidden');
+            websiteLink.classList.remove('inline-flex');
+        }
+
+        if (place.dienThoai) {
+            phoneLink.href = `tel:${place.dienThoai}`;
+            phoneLink.innerHTML = `<i class="fa-solid fa-phone"></i> ${place.dienThoai}`;
+            phoneLink.classList.remove('hidden');
+            phoneLink.classList.add('inline-flex');
+        } else {
+            phoneLink.classList.add('hidden');
+            phoneLink.classList.remove('inline-flex');
+        }
+
+        renderInsights(place);
+        updateWeather(place);
+    }
+
+    function sortResults(results) {
+        return [...results].sort((a, b) => {
+            const ratingDiff = (b.danhGiaTrungBinh || 0) - (a.danhGiaTrungBinh || 0);
+            if (ratingDiff !== 0) return ratingDiff;
+            if (userLocation && a.viDo && a.kinhDo && b.viDo && b.kinhDo) {
+                return calculateDistance(userLocation.lat, userLocation.lon, Number(a.viDo), Number(a.kinhDo))
+                    - calculateDistance(userLocation.lat, userLocation.lon, Number(b.viDo), Number(b.kinhDo));
+            }
+            return (a.tenDiaDiem || '').localeCompare(b.tenDiaDiem || '', 'vi');
+        });
+    }
+
+    function passesFilters(place) {
+        const typeValue = typeFilter.value;
+        const minRating = Number(ratingFilter.value || 0);
+        const maxPrice = Number(priceFilter.value || 0);
+        const provinceKeyword = (provinceFilter.value || '').trim().toLowerCase();
+
+        if (typeValue && place.loaiDiaDiem !== typeValue) return false;
+        if ((place.danhGiaTrungBinh || 0) < minRating) return false;
+        if (maxPrice > 0 && Number(place.giaVe || 0) > maxPrice) return false;
+        if (provinceKeyword && !`${place.tenTinhThanh || ''} ${place.diaChi || ''}`.toLowerCase().includes(provinceKeyword)) return false;
+        if (openNowFilter.checked && !place.gioMoCua) return false;
+        if (activeQuickFilter === 'dia_danh' && place.loaiDiaDiem !== 'dia_danh') return false;
+        if (activeQuickFilter === 'khach_san' && place.loaiDiaDiem !== 'khach_san') return false;
+        if (activeQuickFilter === 'nha_hang' && place.loaiDiaDiem !== 'nha_hang') return false;
+        if (activeQuickFilter === 'emergency' && !/(bệnh viện|cấp cứu|trạm y tế|an toàn|cảnh báo)/.test(`${place.moTa || ''} ${place.diaChi || ''}`.toLowerCase())) return false;
+        return true;
+    }
+
+    function highlightResult(placeId) {
+        document.querySelectorAll('.result-card').forEach((card) => {
+            const isActive = String(card.dataset.placeId) === String(placeId);
+            card.classList.toggle('ring-2', isActive);
+            card.classList.toggle('ring-emerald-300', isActive);
+            card.classList.toggle('border-emerald-200', isActive);
+            if (isActive) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+    }
+
+    function focusPlace(placeId) {
+        const place = filteredResults.find((item) => String(item.maDiaDiem || item.id || item.tenDiaDiem) === String(placeId))
+            || currentSearchResults.find((item) => String(item.maDiaDiem || item.id || item.tenDiaDiem) === String(placeId));
+        if (!place) return;
+
+        updatePlaceHighlight(place);
+        highlightResult(place.maDiaDiem || place.id || place.tenDiaDiem);
+
+        if (place.viDo && place.kinhDo && searchMap) {
+            searchMap.setView([Number(place.viDo), Number(place.kinhDo)], 14, { animate: true });
+            const markerObj = markers.find(({ placeId: markerPlaceId }) => String(markerPlaceId) === String(place.maDiaDiem || place.id || place.tenDiaDiem));
+            if (markerObj) markerObj.marker.openPopup();
+        }
+    }
+
+    function displayMarkers(results) {
+        clearMarkers();
+        results.forEach((place) => {
+            if (!place.viDo || !place.kinhDo) return;
+            const lat = Number(place.viDo);
+            const lon = Number(place.kinhDo);
+            if (Number.isNaN(lat) || Number.isNaN(lon)) return;
+
+            const placeId = place.maDiaDiem || place.id || place.tenDiaDiem;
+            const marker = L.marker([lat, lon], {
+                icon: L.divIcon({
+                    className: 'border-0 bg-transparent',
+                    html: `<div class="flex h-12 w-12 items-center justify-center rounded-full border-4 border-white text-lg text-white shadow-lg" style="background: rgb(var(--primary));"><i class="fa-solid fa-map-marker-alt"></i></div>`,
+                    iconSize: [48, 48],
+                    iconAnchor: [24, 48]
+                })
+            }).addTo(searchMap);
+
+            marker.bindPopup(`
+                <div style="min-width: 220px;">
+                    <div style="font-weight: 700; color: rgb(var(--foreground)); margin-bottom: 4px;">${place.tenDiaDiem}</div>
+                    <div style="font-size: 12px; color: rgb(var(--muted-foreground)); margin-bottom: 6px;">${place.tenTinhThanh || 'Đang cập nhật tỉnh thành'}</div>
+                    <div style="font-size: 12px; color: rgb(var(--foreground));">${getPlaceTypeLabel(place.loaiDiaDiem)} • ${formatCurrency(place.giaVe)}</div>
+                </div>
+            `);
+            marker.on('click', () => focusPlace(placeId));
+            markers.push({ marker, placeId });
+        });
+
+        if (markers.length > 0) {
+            const bounds = results
+                .filter((place) => place.viDo && place.kinhDo)
+                .map((place) => [Number(place.viDo), Number(place.kinhDo)]);
+            if (bounds.length > 0) searchMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 11 });
+            searchMap.panInsideBounds(VIETNAM_BOUNDS, { animate: false });
+        }
+    }
+
+    function renderResults(results) {
+        resultsCount.textContent = results.length;
+        if (!results.length) {
+            resultsList.innerHTML = `
+                <div class="theme-muted-surface rounded-[24px] border border-dashed px-5 py-8 text-center text-sm leading-6 theme-text-muted">
+                    Không tìm thấy kết quả phù hợp với bộ lọc hiện tại. Hãy đổi từ khóa hoặc nới bộ lọc để xem thêm địa điểm.
+                </div>
+            `;
+            displayMarkers([]);
+            updatePlaceHighlight(null);
+            return;
+        }
+
+        resultsList.innerHTML = results.map((place) => {
+            const placeId = place.maDiaDiem || place.id || place.tenDiaDiem;
+            const rating = Number(place.danhGiaTrungBinh || 0).toFixed(1);
+            const shortDescription = place.moTa
+                ? `${place.moTa.slice(0, 120)}${place.moTa.length > 120 ? '...' : ''}`
+                : 'Địa điểm đang chờ bổ sung mô tả chi tiết trong cơ sở dữ liệu.';
+            let distanceText = 'Khoảng cách sẽ hiển thị khi cho phép định vị.';
+            if (userLocation && place.viDo && place.kinhDo) {
+                const distance = calculateDistance(userLocation.lat, userLocation.lon, Number(place.viDo), Number(place.kinhDo));
+                if (Number.isFinite(distance)) distanceText = `Cách bạn khoảng ${distance.toFixed(1)} km`;
+            }
+
+            return `
+                <article class="result-card glass-panel overflow-hidden rounded-[1.6rem] p-4" data-place-id="${placeId}">
+                    <div class="flex flex-col gap-4 md:flex-row">
+                        <div class="result-thumb relative flex h-40 w-full shrink-0 items-end overflow-hidden rounded-[1.35rem] p-3 text-white md:h-auto md:w-44">
+                            <span class="relative text-xs font-semibold uppercase tracking-[0.16em]">${getPlaceTypeLabel(place.loaiDiaDiem)}</span>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex flex-wrap items-start justify-between gap-3">
+                                <div>
+                                    <div class="search-chip-soft inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold">⭐ ${rating}</div>
+                                    <h3 class="mt-3 text-lg font-semibold leading-7">${place.tenDiaDiem}</h3>
+                                    <p class="theme-text-muted mt-1 text-sm">${place.tenTinhThanh || 'Đang cập nhật vị trí'}</p>
+                                </div>
+                                <span class="result-price-pill rounded-full px-3 py-1 text-xs font-semibold">${formatCurrency(place.giaVe)}</span>
+                            </div>
+                            <p class="theme-text-muted mt-3 text-sm leading-6">${shortDescription}</p>
+                            <div class="mt-4 flex flex-wrap gap-2 text-xs">
+                                <span class="theme-btn-secondary rounded-full px-3 py-1 shadow-sm">${distanceText}</span>
+                                <span class="theme-btn-secondary rounded-full px-3 py-1 shadow-sm">${place.gioMoCua || 'Giờ mở cửa đang cập nhật'}</span>
+                            </div>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <button type="button" class="focus-place-btn inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white premium-easing hover:-translate-y-0.5" style="background: rgb(var(--primary));" data-place-id="${placeId}">
+                                    <i class="fa-solid fa-location-crosshairs"></i>
+                                    Xem trên bản đồ
+                                </button>
+                                <button type="button" class="detail-place-btn theme-btn-secondary inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium" data-place-id="${placeId}">
+                                    <i class="fa-solid fa-circle-info"></i>
+                                    Xem thông tin
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            `;
+        }).join('');
+
+        displayMarkers(results);
+        const defaultSelection = selectedPlace
+            && results.find((place) => String(place.maDiaDiem || place.id || place.tenDiaDiem) === String(selectedPlace.maDiaDiem || selectedPlace.id || selectedPlace.tenDiaDiem))
+            ? selectedPlace
+            : results[0];
+        focusPlace(defaultSelection.maDiaDiem || defaultSelection.id || defaultSelection.tenDiaDiem);
+    }
+
+    function applyFilters() {
+        filteredResults = sortResults(currentSearchResults.filter(passesFilters));
+        renderResults(filteredResults);
+    }
+
+    async function performSearch(query) {
+        const keyword = (query || '').trim();
+        if (!keyword) {
+            resultsList.innerHTML = `
+                <div class="theme-warning-surface rounded-[24px] px-5 py-8 text-center text-sm leading-6">
+                    Vui lòng nhập từ khóa để bắt đầu tìm kiếm địa điểm du lịch.
+                </div>
+            `;
+            return;
+        }
+
+        searchBtn.disabled = true;
+        searchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tìm';
+        try {
+            const response = await fetch(`/api/v1/places/search/?q=${encodeURIComponent(keyword)}`);
+            const data = await response.json();
+            currentSearchResults = data.results || [];
+            applyFilters();
+        } catch (error) {
+            resultsList.innerHTML = `
+                <div class="theme-warning-surface rounded-[24px] px-5 py-8 text-center text-sm leading-6">
+                    Không thể tải dữ liệu địa điểm lúc này. Vui lòng thử lại sau ít phút.
+                </div>
+            `;
+        } finally {
+            searchBtn.disabled = false;
+            searchBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm';
+        }
+    }
+
+    function resetFilters() {
+        typeFilter.value = '';
+        ratingFilter.value = '0';
+        priceFilter.value = '';
+        provinceFilter.value = '';
+        openNowFilter.checked = false;
+        if (openNowFilterClone) openNowFilterClone.checked = false;
+        activeQuickFilter = '';
+        document.querySelectorAll('.quick-filter-chip').forEach((chip) => chip.classList.remove('is-active'));
+        applyFilters();
+    }
+
+    function bindResultActions() {
+        resultsList.addEventListener('click', (event) => {
+            const button = event.target.closest('button');
+            const card = event.target.closest('.result-card');
+            if (button) {
+                focusPlace(button.dataset.placeId);
+                return;
+            }
+            if (card) focusPlace(card.dataset.placeId);
+        });
+    }
+
+    function bindFilters() {
+        [typeFilter, ratingFilter, priceFilter, provinceFilter, openNowFilter].forEach((element) => {
+            element.addEventListener('input', applyFilters);
+            element.addEventListener('change', applyFilters);
+        });
+
+        if (openNowFilterClone) {
+            openNowFilterClone.addEventListener('change', () => {
+                openNowFilter.checked = openNowFilterClone.checked;
+                applyFilters();
+            });
+            openNowFilter.addEventListener('change', () => {
+                openNowFilterClone.checked = openNowFilter.checked;
+            });
+        }
+
+        document.querySelectorAll('.quick-filter-chip').forEach((chip) => {
+            chip.addEventListener('click', () => {
+                activeQuickFilter = chip.dataset.filter === activeQuickFilter ? '' : chip.dataset.filter;
+                document.querySelectorAll('.quick-filter-chip').forEach((item) => item.classList.toggle('is-active', item.dataset.filter === activeQuickFilter));
+                if (activeQuickFilter === 'weather' && selectedPlace) updateWeather(selectedPlace);
+                if (activeQuickFilter === 'emergency' && !provinceFilter.value) provinceFilter.focus();
+                applyFilters();
+            });
+        });
+
+        resetFiltersBtn.addEventListener('click', resetFilters);
+    }
+
+    function bindSidebarToggle() {
+        toggleSidebarBtn.addEventListener('click', () => {
+            searchShell.classList.toggle('sidebar-collapsed');
+            setTimeout(() => {
+                if (searchMap) searchMap.invalidateSize();
+            }, 320);
+        });
+    }
+
+    function bindSearchActions() {
+        searchBtn.addEventListener('click', () => performSearch(searchInput.value));
+        searchInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') performSearch(searchInput.value);
+        });
+        detailMapFocus.addEventListener('click', () => {
+            if (selectedPlace) focusPlace(selectedPlace.maDiaDiem || selectedPlace.id || selectedPlace.tenDiaDiem);
+        });
+    }
+
+    function getUserLocation() {
+        if (!navigator.geolocation) return;
+        navigator.geolocation.getCurrentPosition((position) => {
+            userLocation = {
+                lat: position.coords.latitude,
+                lon: position.coords.longitude
+            };
+            if (currentSearchResults.length) applyFilters();
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initSearchMap();
+        bindResultActions();
+        bindFilters();
+        bindSidebarToggle();
+        bindSearchActions();
+        getUserLocation();
+        updatePlaceHighlight(null);
+
+        const queryParam = new URLSearchParams(window.location.search).get('q');
+        if (queryParam) {
+            searchInput.value = queryParam;
+            performSearch(queryParam);
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        if (searchMap) setTimeout(() => searchMap.invalidateSize(), 150);
+    });
+</script>
+{% endblock %}

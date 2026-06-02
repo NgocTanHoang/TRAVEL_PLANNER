@@ -20,7 +20,7 @@ if hasattr(sys.stderr, "reconfigure"):
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 REPO_ROOT = BACKEND_DIR.parent
-PAYLOAD_PATH = REPO_ROOT / "agent_output_test.json"
+PAYLOAD_PATH = BACKEND_DIR / "scripts" / "artifacts" / "agent_output_test.json"
 
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))

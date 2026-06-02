@@ -9,13 +9,38 @@ const workflowState = {
     step1Data: null,
     step2Data: null,
     step3Data: null,
-    step4Data: null
+    step4Data: null,
+    activeStream: null,
+    authRedirectPending: false,
+    postStreamReconnectTimer: null,
+    streamedDayKeys: new Set(),
+    streamedProgressKeys: new Set()
+};
+
+const ACTIVE_TRAVEL_STREAM_STORAGE_KEY = 'vivu-active-travel-stream';
+const AUTH_REQUIRED_MESSAGE = 'Vui lòng đăng nhập để sử dụng tính năng này.';
+const STREAM_FAILURE_MESSAGE = 'Hệ thống AI gặp sự cố. Vui lòng thử lại.';
+const LOGIN_PATH = '/accounts/login/';
+const nativeFetch = window.fetch.bind(window);
+let pendingModalAction = null;
+
+window.fetch = async function(input, init = {}) {
+    const response = await nativeFetch(input, init);
+    const requestUrl = typeof input === 'string' ? input : input?.url || '';
+    const skipAuthHandling = Boolean(init?.__skipAuthHandling);
+
+    if (!skipAuthHandling && (response.status === 401 || response.status === 403) && requestUrl.includes('/api/')) {
+        handleProtectedRouteFailure();
+    }
+
+    return response;
 };
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     initializeWorkflow();
     loadTravelStyles(); // Load travel styles from API
+    resumeTravelPlanStreamFromStorage();
 });
 
 function initializeWorkflow() {
@@ -677,6 +702,1375 @@ document.addEventListener('keydown', function(e) {
         closeErrorModal();
     }
 });
+
+function showErrorModal(message, type = 'error', options = {}) {
+    const overlay = document.getElementById('error-modal-overlay');
+    const messageDiv = document.getElementById('error-modal-message');
+    if (!overlay || !messageDiv) return;
+
+    const header = overlay.querySelector('.error-modal-header');
+    const icon = header?.querySelector('.error-icon');
+    pendingModalAction = typeof options.onClose === 'function' ? options.onClose : null;
+
+    messageDiv.textContent = message;
+
+    if (type === 'success') {
+        header?.classList.remove('error');
+        header?.classList.add('success');
+        if (icon) icon.textContent = '✓';
+    } else {
+        header?.classList.remove('success');
+        header?.classList.add('error');
+        if (icon) icon.textContent = '⚠️';
+    }
+
+    overlay.classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeErrorModal(event) {
+    if (event && !event.target.classList.contains('error-modal-overlay')) {
+        return;
+    }
+
+    const overlay = document.getElementById('error-modal-overlay');
+    if (overlay) {
+        overlay.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+
+    if (pendingModalAction) {
+        const action = pendingModalAction;
+        pendingModalAction = null;
+        workflowState.authRedirectPending = false;
+        action();
+    }
+}
+
+// Final frontend overrides for streaming UX and reconnect behavior.
+async function preflightTravelPlanStream(threadId) {
+    const response = await fetch(`/api/v1/travel-plans/stream/${encodeURIComponent(threadId)}/`, {
+        method: 'GET',
+        headers: { Accept: 'text/event-stream' }
+    });
+
+    if (!response.ok) {
+        let errorPayload = {};
+        try {
+            errorPayload = await parseJsonResponse(response, 'Không thể khôi phục luồng AI.');
+        } catch (error) {
+            throw new Error(error.message || 'Không thể khôi phục luồng AI.');
+        }
+        throw new Error(errorPayload.error || 'Không thể khôi phục luồng AI.');
+    }
+
+    if (response.body?.cancel) {
+        try {
+            await response.body.cancel();
+        } catch (error) {
+            console.warn('Không thể đóng preflight stream phụ.', error);
+        }
+    }
+}
+
+function connectTravelPlanEventSource(threadId) {
+    const streamUrl = `/api/v1/travel-plans/stream/${encodeURIComponent(threadId)}/`;
+    const eventSource = new EventSource(streamUrl);
+
+    workflowState.activeStream = {
+        ...(workflowState.activeStream || {}),
+        threadId,
+        eventSource,
+        status: 'running'
+    };
+
+    ['connected', 'progress', 'day_ready', 'completed', 'error'].forEach((eventName) => {
+        eventSource.addEventListener(eventName, (event) => {
+            let payload = {};
+            try {
+                payload = event.data ? JSON.parse(event.data) : {};
+            } catch (error) {
+                console.error('Không thể parse SSE payload:', error, event.data);
+            }
+            handleStreamEvent(eventName, payload);
+        });
+    });
+
+    eventSource.onerror = () => {
+        if (!workflowState.activeStream || workflowState.activeStream.threadId !== threadId) {
+            eventSource.close();
+            return;
+        }
+
+        eventSource.close();
+        workflowState.activeStream.eventSource = null;
+
+        if (workflowState.activeStream.status === 'completed') {
+            return;
+        }
+
+        appendStreamingProgress('reconnect', 'Luồng SSE bị gián đoạn, đang thử kết nối lại…');
+        workflowState.postStreamReconnectTimer = window.setTimeout(() => {
+            connectTravelPlanEventSource(threadId);
+        }, 1200);
+    };
+}
+
+function goToStep(step) {
+    document.querySelectorAll('.step-content').forEach(content => {
+        content.classList.remove('active');
+    });
+
+    const targetStep = document.getElementById(`step-${step}`);
+    if (targetStep) {
+        targetStep.classList.add('active');
+    }
+
+    document.querySelectorAll('.step-item').forEach((item, index) => {
+        const stepNum = index + 1;
+        item.classList.remove('active', 'completed');
+
+        if (stepNum < step) {
+            item.classList.add('completed');
+        } else if (stepNum === step) {
+            item.classList.add('active');
+        }
+    });
+
+    workflowState.currentStep = step;
+
+    if (step === 3 && !workflowState.step3Data) {
+        loadStep3();
+    } else if (step === 4 && !workflowState.step4Data && !workflowState.activeStream) {
+        loadStep4();
+    }
+}
+
+async function createFinalPlan() {
+    const createBtn = document.getElementById('step4-create');
+    const resultDiv = document.getElementById('step4-result');
+    const payload = buildStep4GenerationPayload();
+
+    if (!payload.origin || !payload.destination || !payload.start_date) {
+        showErrorModal('Thiếu dữ liệu hành trình. Vui lòng kiểm tra lại 4 bước trước khi tạo lịch trình.');
+        return;
+    }
+
+    if (workflowState.activeStream?.threadId) {
+        showErrorModal('Luồng AI hiện tại vẫn đang chạy. Vui lòng chờ hoàn tất hoặc tải lại trang để khôi phục.');
+        return;
+    }
+
+    const threadId = generateTravelPlanThreadId();
+    const originalLabel = createBtn ? createBtn.innerHTML : '';
+
+    if (createBtn) {
+        createBtn.disabled = true;
+        createBtn.innerHTML = '<span class="loading-spinner"></span> Đang khởi tạo luồng AI...';
+    }
+
+    if (resultDiv) {
+        resultDiv.innerHTML = renderStep4StreamingShell(payload, threadId);
+    }
+
+    try {
+        registerActiveStream(threadId, payload, 'live');
+        appendStreamingProgress('bootstrap', 'Đã tạo thread_id, đang yêu cầu backend bắt đầu lập lịch trình…');
+        await bootstrapTravelPlanStream(payload, threadId);
+    } catch (error) {
+        console.error('Create final plan stream error:', error);
+        cleanupActiveStream({ clearStorage: true, clearData: false });
+        if (!workflowState.step4Data?.plan) {
+            workflowState.step4Data = buildSafeFallbackStep4Data(payload, error.message || 'Không thể hoàn thiện lịch trình AI.');
+        }
+        displayStep4Result(workflowState.step4Data);
+        showErrorModal(error.message || 'Không thể hoàn tất lịch trình lúc này. Vui lòng thử lại.');
+        if (createBtn) {
+            createBtn.disabled = false;
+            createBtn.innerHTML = originalLabel;
+        }
+    }
+}
+
+async function resumeTravelPlanStreamFromStorage() {
+    const persisted = loadPersistedTravelStream();
+    if (!persisted?.threadId || !persisted?.payload) return;
+
+    hydrateWorkflowStateFromPayload(persisted.payload);
+    workflowState.step4Data = workflowState.step4Data || { status: 'streaming' };
+    goToStep(4);
+
+    const resultDiv = document.getElementById('step4-result');
+    const createBtn = document.getElementById('step4-create');
+    if (resultDiv) {
+        resultDiv.innerHTML = renderStep4StreamingShell(persisted.payload, persisted.threadId);
+    }
+    if (createBtn) {
+        createBtn.disabled = true;
+        createBtn.innerHTML = '<span class="loading-spinner"></span> Đang khôi phục luồng AI...';
+    }
+
+    registerActiveStream(persisted.threadId, persisted.payload, 'resume');
+    appendStreamingProgress('resume', 'Đã tìm thấy thread_id trước đó, đang phát lại tiến độ…');
+
+    try {
+        await preflightTravelPlanStream(persisted.threadId);
+    } catch (error) {
+        cleanupActiveStream({ clearStorage: true, clearData: true });
+        showErrorModal(error.message || 'Không thể khôi phục luồng AI.');
+        if (createBtn) {
+            createBtn.disabled = false;
+            createBtn.innerHTML = '<i class="fa-solid fa-sparkles"></i> Tạo lịch trình';
+        }
+        return;
+    }
+
+    connectTravelPlanEventSource(persisted.threadId);
+}
+
+window.goToStep = goToStep;
+window.createFinalPlan = createFinalPlan;
+window.closeErrorModal = closeErrorModal;
+
+async function preflightTravelPlanStream(threadId) {
+    const response = await fetch(`/api/v1/travel-plans/stream/${encodeURIComponent(threadId)}/`, {
+        method: 'GET',
+        headers: {
+            Accept: 'text/event-stream'
+        }
+    });
+
+    if (!response.ok) {
+        let errorPayload = {};
+        try {
+            errorPayload = await parseJsonResponse(response, 'Không thể khôi phục luồng AI.');
+        } catch (error) {
+            throw new Error(error.message || 'Không thể khôi phục luồng AI.');
+        }
+        throw new Error(errorPayload.error || 'Không thể khôi phục luồng AI.');
+    }
+
+    if (response.body?.cancel) {
+        try {
+            await response.body.cancel();
+        } catch (error) {
+            console.warn('Không thể đóng preflight stream phụ.', error);
+        }
+    }
+}
+
+function connectTravelPlanEventSource(threadId) {
+    const streamUrl = `/api/v1/travel-plans/stream/${encodeURIComponent(threadId)}/`;
+    const eventSource = new EventSource(streamUrl);
+
+    if (!workflowState.activeStream) {
+        workflowState.activeStream = { threadId, eventSource, status: 'running' };
+    } else {
+        workflowState.activeStream.eventSource = eventSource;
+        workflowState.activeStream.status = 'running';
+    }
+
+    ['connected', 'progress', 'day_ready', 'completed', 'error'].forEach((eventName) => {
+        eventSource.addEventListener(eventName, (event) => {
+            let payload = {};
+            try {
+                payload = event.data ? JSON.parse(event.data) : {};
+            } catch (error) {
+                console.error('Không thể parse SSE payload:', error, event.data);
+            }
+            handleStreamEvent(eventName, payload);
+        });
+    });
+
+    eventSource.onerror = () => {
+        if (!workflowState.activeStream || workflowState.activeStream.threadId !== threadId) {
+            eventSource.close();
+            return;
+        }
+
+        eventSource.close();
+        workflowState.activeStream.eventSource = null;
+
+        if (workflowState.activeStream.status === 'completed') {
+            return;
+        }
+
+        appendStreamingProgress('reconnect', 'Luồng SSE bị gián đoạn, đang thử kết nối lại…');
+        workflowState.postStreamReconnectTimer = window.setTimeout(() => {
+            connectTravelPlanEventSource(threadId);
+        }, 1200);
+    };
+}
+
+function goToStep(step) {
+    document.querySelectorAll('.step-content').forEach(content => {
+        content.classList.remove('active');
+    });
+
+    const targetStep = document.getElementById(`step-${step}`);
+    if (targetStep) {
+        targetStep.classList.add('active');
+    }
+
+    document.querySelectorAll('.step-item').forEach((item, index) => {
+        const stepNum = index + 1;
+        item.classList.remove('active', 'completed');
+
+        if (stepNum < step) {
+            item.classList.add('completed');
+        } else if (stepNum === step) {
+            item.classList.add('active');
+        }
+    });
+
+    workflowState.currentStep = step;
+
+    if (step === 3 && !workflowState.step3Data) {
+        loadStep3();
+    } else if (step === 4 && !workflowState.step4Data && !workflowState.activeStream) {
+        loadStep4();
+    }
+}
+
+async function createFinalPlan() {
+    const createBtn = document.getElementById('step4-create');
+    const resultDiv = document.getElementById('step4-result');
+    const payload = buildStep4GenerationPayload();
+
+    if (!payload.origin || !payload.destination || !payload.start_date) {
+        showErrorModal('Thiếu dữ liệu hành trình. Vui lòng kiểm tra lại 4 bước trước khi tạo lịch trình.');
+        return;
+    }
+
+    if (workflowState.activeStream?.threadId) {
+        showErrorModal('Luồng AI hiện tại vẫn đang chạy. Vui lòng chờ hoàn tất hoặc tải lại trang để khôi phục.');
+        return;
+    }
+
+    const threadId = generateTravelPlanThreadId();
+    const originalLabel = createBtn ? createBtn.innerHTML : '';
+
+    if (createBtn) {
+        createBtn.disabled = true;
+        createBtn.innerHTML = '<span class="loading-spinner"></span> Đang khởi tạo luồng AI...';
+    }
+
+    if (resultDiv) {
+        resultDiv.innerHTML = renderStep4StreamingShell(payload, threadId);
+    }
+
+    try {
+        registerActiveStream(threadId, payload, 'live');
+        appendStreamingProgress('bootstrap', 'Đã tạo thread_id, đang yêu cầu backend bắt đầu lập lịch trình…');
+        await bootstrapTravelPlanStream(payload, threadId);
+    } catch (error) {
+        console.error('Create final plan stream error:', error);
+        cleanupActiveStream({ clearStorage: true, clearData: false });
+        if (!workflowState.step4Data?.plan) {
+            workflowState.step4Data = buildSafeFallbackStep4Data(
+                payload,
+                error.message || 'Không thể hoàn thiện lịch trình AI.'
+            );
+        }
+        displayStep4Result(workflowState.step4Data);
+        showErrorModal(error.message || 'Không thể hoàn tất lịch trình lúc này. Vui lòng thử lại.');
+        if (createBtn) {
+            createBtn.disabled = false;
+            createBtn.innerHTML = originalLabel;
+        }
+    }
+}
+
+async function resumeTravelPlanStreamFromStorage() {
+    const persisted = loadPersistedTravelStream();
+    if (!persisted?.threadId || !persisted?.payload) return;
+
+    hydrateWorkflowStateFromPayload(persisted.payload);
+    workflowState.step4Data = workflowState.step4Data || { status: 'streaming' };
+    goToStep(4);
+
+    const resultDiv = document.getElementById('step4-result');
+    const createBtn = document.getElementById('step4-create');
+    if (resultDiv) {
+        resultDiv.innerHTML = renderStep4StreamingShell(persisted.payload, persisted.threadId);
+    }
+    if (createBtn) {
+        createBtn.disabled = true;
+        createBtn.innerHTML = '<span class="loading-spinner"></span> Đang khôi phục luồng AI...';
+    }
+
+    registerActiveStream(persisted.threadId, persisted.payload, 'resume');
+    appendStreamingProgress('resume', 'Đã tìm thấy thread_id trước đó, đang phát lại tiến độ…');
+
+    try {
+        await preflightTravelPlanStream(persisted.threadId);
+    } catch (error) {
+        cleanupActiveStream({ clearStorage: true, clearData: true });
+        showErrorModal(error.message || 'Không thể khôi phục luồng AI.');
+        if (createBtn) {
+            createBtn.disabled = false;
+            createBtn.innerHTML = '<i class="fa-solid fa-sparkles"></i> Tạo lịch trình';
+        }
+        return;
+    }
+
+    connectTravelPlanEventSource(persisted.threadId);
+}
+
+window.goToStep = goToStep;
+window.createFinalPlan = createFinalPlan;
+window.closeErrorModal = closeErrorModal;
+
+function renderStreamingSkeletonDays(totalDays) {
+    return Array.from({ length: totalDays }, (_, index) => `
+        <article id="stream-day-skeleton-${index + 1}" class="timeline-day transition-all duration-300 ease-out opacity-80">
+            <div class="timeline-day-header">
+                <div>
+                    <h4 class="text-base font-bold text-foreground">Ngày ${index + 1}</h4>
+                    <div class="timeline-day-meta">
+                        <span class="timeline-chip">Đang chờ AI hoàn thiện</span>
+                    </div>
+                </div>
+                <span class="day-toggle-icon theme-text-muted">
+                    <i class="fa-solid fa-hourglass-half"></i>
+                </span>
+            </div>
+            <div class="timeline-day-body" style="display:block;">
+                <div class="timeline-sections">
+                    <div class="loading-line lg"></div>
+                    <div class="loading-line md" style="margin-top:0.85rem;"></div>
+                </div>
+            </div>
+        </article>
+    `).join('');
+}
+
+function renderStep4StreamingShell(payload, threadId) {
+    const totalDays = Math.max(1, Number(payload?.days || payload?.duration_days || 1));
+    return `
+        <div class="step4-shell">
+            ${renderStepPanel({
+                icon: 'fa-solid fa-tower-broadcast',
+                title: 'Atlas đang phát lịch trình theo thời gian thực',
+                subtitle: 'Luồng AI sẽ tự khôi phục nếu bạn tải lại trang trong lúc hệ thống còn giữ thread.',
+                content: `
+                    <div class="plan-overview-grid transition-all duration-300 ease-out">
+                        <article class="plan-overview-card">
+                            <span class="summary-label">Thread</span>
+                            <span class="summary-value">${escapeHtml(threadId)}</span>
+                        </article>
+                        <article class="plan-overview-card">
+                            <span class="summary-label">Tuyến hành trình</span>
+                            <span class="summary-value">${escapeHtml(`${payload.origin || 'Điểm đi'} → ${payload.destination || 'Điểm đến'}`)}</span>
+                        </article>
+                        <article class="plan-overview-card">
+                            <span class="summary-label">Trạng thái</span>
+                            <span id="step4-stream-status" class="summary-value">Đang khởi tạo luồng AI…</span>
+                        </article>
+                    </div>
+                    <div id="step4-stream-progress" class="timeline-list mt-5 transition-all duration-300 ease-out">
+                        <div class="itinerary-activity">Đang chuẩn bị kết nối tới máy chủ phát trực tuyến…</div>
+                    </div>
+                `
+            })}
+            ${renderStepPanel({
+                icon: 'fa-solid fa-calendar-days',
+                title: 'Ngày đã hoàn thiện',
+                subtitle: 'Mỗi thẻ sẽ thay thế skeleton ngay khi backend phát sự kiện day_ready.',
+                content: `<div id="step4-stream-days" class="timeline-shell transition-all duration-300 ease-out">${renderStreamingSkeletonDays(totalDays)}</div>`
+            })}
+        </div>
+    `;
+}
+
+function renderStreamingTimelineItem(item) {
+    if (!item || typeof item !== 'object') {
+        return '';
+    }
+
+    const time = escapeHtml(item.time || item.time_slot || '');
+    const activityName = escapeHtml(item.activity_name || item.activity || 'Hoạt động');
+    const note = escapeHtml(item.note || item.description || '');
+    const placeName = escapeHtml(item.place_name || '');
+
+    return `
+        <article class="itinerary-activity transition-all duration-300 ease-out">
+            ${time ? `<div class="timeline-chip">${time}</div>` : ''}
+            <div class="mt-2 text-sm font-semibold text-foreground">${activityName}</div>
+            ${placeName ? `<div class="budget-inline-meta">Địa điểm: ${placeName}</div>` : ''}
+            ${note ? `<div class="budget-inline-meta">${note}</div>` : ''}
+        </article>
+    `;
+}
+
+function upsertStreamingDayCard(dayPayload) {
+    const container = document.getElementById('step4-stream-days');
+    if (!container || !dayPayload) return;
+
+    const dayNumber = Number(dayPayload.day || 0) || 1;
+    const cardId = `stream-day-card-${dayNumber}`;
+    const skeleton = document.getElementById(`stream-day-skeleton-${dayNumber}`);
+    const existing = document.getElementById(cardId);
+    const timeline = Array.isArray(dayPayload.timeline) ? dayPayload.timeline : [];
+
+    const markup = `
+        <article id="${cardId}" class="timeline-day transition-all duration-300 ease-out">
+            <div class="timeline-day-header">
+                <div>
+                    <h4 class="text-base font-bold text-foreground">📅 Ngày ${dayNumber}${dayPayload.date ? ` (${escapeHtml(dayPayload.date)})` : ''}${dayPayload.theme ? `: ${escapeHtml(dayPayload.theme)}` : ''}</h4>
+                    <div class="timeline-day-meta">
+                        <span class="timeline-chip"><i class="fa-regular fa-clock"></i> ${timeline.length} mốc hoạt động</span>
+                        <span class="timeline-chip"><i class="fa-solid fa-check"></i> Đã sẵn sàng</span>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-day-body" style="display:block;">
+                <div class="timeline-sections">
+                    <section class="timeline-section">
+                        <div class="timeline-section-title">
+                            <i class="fa-solid fa-map-location-dot"></i>
+                            <span>Lộ trình trong ngày</span>
+                        </div>
+                        <div class="timeline-list">
+                            ${timeline.length ? timeline.map(renderStreamingTimelineItem).join('') : renderEmptyState('AI chưa gửi chi tiết timeline cho ngày này.')}
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </article>
+    `;
+
+    if (existing) {
+        existing.outerHTML = markup;
+    } else if (skeleton) {
+        skeleton.outerHTML = markup;
+    } else {
+        container.insertAdjacentHTML('beforeend', markup);
+    }
+}
+
+function appendStreamingProgress(step, message) {
+    const progressContainer = document.getElementById('step4-stream-progress');
+    const statusNode = document.getElementById('step4-stream-status');
+    if (statusNode && message) {
+        statusNode.textContent = message;
+    }
+    if (!progressContainer || !message) return;
+
+    const progressKey = `${step || 'general'}:${message}`;
+    if (workflowState.streamedProgressKeys.has(progressKey)) {
+        return;
+    }
+    workflowState.streamedProgressKeys.add(progressKey);
+
+    progressContainer.insertAdjacentHTML('beforeend', `
+        <div class="itinerary-activity transition-all duration-300 ease-out">
+            <strong class="block text-sm text-foreground">${escapeHtml(step || 'planning')}</strong>
+            <span class="budget-inline-meta">${escapeHtml(message)}</span>
+        </div>
+    `);
+}
+
+function cleanupActiveStream({ clearStorage = true, clearData = false } = {}) {
+    if (workflowState.activeStream?.eventSource) {
+        workflowState.activeStream.eventSource.close();
+    }
+
+    if (workflowState.postStreamReconnectTimer) {
+        window.clearTimeout(workflowState.postStreamReconnectTimer);
+        workflowState.postStreamReconnectTimer = null;
+    }
+
+    workflowState.activeStream = null;
+    resetStreamTrackingState();
+
+    if (clearStorage) {
+        clearPersistedTravelStream();
+    }
+
+    if (clearData) {
+        workflowState.step4Data = null;
+    }
+}
+
+function handleStreamEvent(eventType, payload) {
+    if (!payload || typeof payload !== 'object') return;
+
+    if (eventType === 'connected') {
+        appendStreamingProgress('connected', payload.message || 'Đã kết nối tới luồng SSE.');
+        return;
+    }
+
+    if (eventType === 'progress') {
+        appendStreamingProgress(payload.step, payload.message || 'Đang xử lý lịch trình.');
+        return;
+    }
+
+    if (eventType === 'day_ready') {
+        upsertStreamingDayCard(payload);
+        appendStreamingProgress('day_ready', `Đã hoàn thiện ngày ${payload.day}.`);
+        return;
+    }
+
+    if (eventType === 'completed') {
+        if (workflowState.activeStream) {
+            workflowState.activeStream.status = 'completed';
+        }
+        workflowState.step4Data = payload.response || payload;
+        displayStep4Result(workflowState.step4Data);
+        cleanupActiveStream({ clearStorage: true, clearData: false });
+        showErrorModal('Lịch trình đã được tạo thành công.', 'success');
+        const createBtn = document.getElementById('step4-create');
+        if (createBtn) {
+            createBtn.disabled = false;
+            createBtn.innerHTML = '<i class="fa-solid fa-sparkles"></i> Tạo lại lịch trình';
+        }
+        return;
+    }
+
+    if (eventType === 'error') {
+        appendStreamingProgress('error', payload.message || STREAM_FAILURE_MESSAGE);
+        cleanupActiveStream({ clearStorage: false, clearData: false });
+        showErrorModal(payload.message || STREAM_FAILURE_MESSAGE);
+        const createBtn = document.getElementById('step4-create');
+        if (createBtn) {
+            createBtn.disabled = false;
+            createBtn.innerHTML = '<i class="fa-solid fa-sparkles"></i> Tạo lịch trình';
+        }
+    }
+}
+
+function registerActiveStream(threadId, payload, mode = 'live') {
+    workflowState.activeStream = {
+        threadId,
+        payload,
+        mode,
+        eventSource: null,
+        status: 'running'
+    };
+    resetStreamTrackingState();
+    persistActiveTravelStream({
+        threadId,
+        payload,
+        mode,
+        savedAt: new Date().toISOString()
+    });
+}
+
+function connectTravelPlanEventSource(threadId) {
+    const streamUrl = `/api/v1/travel-plans/stream/${encodeURIComponent(threadId)}/`;
+    const eventSource = new EventSource(streamUrl);
+
+    if (!workflowState.activeStream) {
+        workflowState.activeStream = { threadId, eventSource, status: 'running' };
+    } else {
+        workflowState.activeStream.eventSource = eventSource;
+        workflowState.activeStream.status = 'running';
+    }
+
+    ['connected', 'progress', 'day_ready', 'completed', 'error'].forEach((eventName) => {
+        eventSource.addEventListener(eventName, (event) => {
+            let payload = {};
+            try {
+                payload = event.data ? JSON.parse(event.data) : {};
+            } catch (error) {
+                console.error('Không thể parse SSE payload:', error, event.data);
+            }
+            handleStreamEvent(eventName, payload);
+        });
+    });
+
+    eventSource.onerror = () => {
+        if (!workflowState.activeStream || workflowState.activeStream.threadId !== threadId) {
+            eventSource.close();
+            return;
+        }
+
+        eventSource.close();
+        workflowState.activeStream.eventSource = null;
+
+        if (workflowState.activeStream.status === 'completed') {
+            return;
+        }
+
+        appendStreamingProgress('reconnect', 'Luồng SSE bị gián đoạn, đang thử kết nối lại…');
+        workflowState.postStreamReconnectTimer = window.setTimeout(() => {
+            connectTravelPlanEventSource(threadId);
+        }, 1200);
+    };
+}
+
+async function bootstrapTravelPlanStream(payload, threadId) {
+    const response = await fetch('/api/v1/travel-plans/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            ...payload,
+            thread_id: threadId
+        })
+    });
+
+    if (!response.ok) {
+        let errorPayload = {};
+        try {
+            errorPayload = await parseJsonResponse(response, 'Không thể khởi tạo luồng AI.');
+        } catch (error) {
+            throw new Error(error.message || 'Không thể khởi tạo luồng AI.');
+        }
+        throw new Error(errorPayload.error || 'Không thể khởi tạo luồng AI.');
+    }
+
+    if (response.body?.cancel) {
+        try {
+            await response.body.cancel();
+        } catch (error) {
+            console.warn('Không thể đóng bootstrap stream phụ.', error);
+        }
+    }
+
+    connectTravelPlanEventSource(threadId);
+}
+
+async function preflightTravelPlanStream(threadId) {
+    const response = await fetch(`/api/v1/travel-plans/stream/${encodeURIComponent(threadId)}/`, {
+        method: 'GET',
+        headers: {
+            Accept: 'text/event-stream'
+        }
+    });
+
+    if (!response.ok) {
+        let errorPayload = {};
+        try {
+            errorPayload = await parseJsonResponse(response, 'Không thể khôi phục luồng AI.');
+        } catch (error) {
+            throw new Error(error.message || 'Không thể khôi phục luồng AI.');
+        }
+        throw new Error(errorPayload.error || 'Không thể khôi phục luồng AI.');
+    }
+
+    if (response.body?.cancel) {
+        try {
+            await response.body.cancel();
+        } catch (error) {
+            console.warn('Không thể đóng preflight stream phụ.', error);
+        }
+    }
+}
+
+function goToStep(step) {
+    document.querySelectorAll('.step-content').forEach(content => {
+        content.classList.remove('active');
+    });
+
+    const targetStep = document.getElementById(`step-${step}`);
+    if (targetStep) {
+        targetStep.classList.add('active');
+    }
+
+    document.querySelectorAll('.step-item').forEach((item, index) => {
+        const stepNum = index + 1;
+        item.classList.remove('active', 'completed');
+
+        if (stepNum < step) {
+            item.classList.add('completed');
+        } else if (stepNum === step) {
+            item.classList.add('active');
+        }
+    });
+
+    workflowState.currentStep = step;
+
+    if (step === 3 && !workflowState.step3Data) {
+        loadStep3();
+    } else if (step === 4 && !workflowState.step4Data && !workflowState.activeStream) {
+        loadStep4();
+    }
+}
+
+async function createFinalPlan() {
+    const createBtn = document.getElementById('step4-create');
+    const resultDiv = document.getElementById('step4-result');
+    const payload = buildStep4GenerationPayload();
+
+    if (!payload.origin || !payload.destination || !payload.start_date) {
+        showErrorModal('Thiếu dữ liệu hành trình. Vui lòng kiểm tra lại 4 bước trước khi tạo lịch trình.');
+        return;
+    }
+
+    if (workflowState.activeStream?.threadId) {
+        showErrorModal('Luồng AI hiện tại vẫn đang chạy. Vui lòng chờ hoàn tất hoặc tải lại trang để khôi phục.');
+        return;
+    }
+
+    const threadId = generateTravelPlanThreadId();
+    const originalLabel = createBtn ? createBtn.innerHTML : '';
+
+    if (createBtn) {
+        createBtn.disabled = true;
+        createBtn.innerHTML = '<span class="loading-spinner"></span> Đang khởi tạo luồng AI...';
+    }
+
+    if (resultDiv) {
+        resultDiv.innerHTML = renderStep4StreamingShell(payload, threadId);
+    }
+
+    try {
+        registerActiveStream(threadId, payload, 'live');
+        appendStreamingProgress('bootstrap', 'Đã tạo thread_id, đang yêu cầu backend bắt đầu lập lịch trình…');
+        await bootstrapTravelPlanStream(payload, threadId);
+    } catch (error) {
+        console.error('Create final plan stream error:', error);
+        cleanupActiveStream({ clearStorage: true, clearData: false });
+        if (!workflowState.step4Data?.plan) {
+            workflowState.step4Data = buildSafeFallbackStep4Data(
+                payload,
+                error.message || 'Không thể hoàn thiện lịch trình AI.'
+            );
+        }
+        displayStep4Result(workflowState.step4Data);
+        showErrorModal(error.message || 'Không thể hoàn tất lịch trình lúc này. Vui lòng thử lại.');
+        if (createBtn) {
+            createBtn.disabled = false;
+            createBtn.innerHTML = originalLabel;
+        }
+    }
+}
+
+async function resumeTravelPlanStreamFromStorage() {
+    const persisted = loadPersistedTravelStream();
+    if (!persisted?.threadId || !persisted?.payload) return;
+
+    hydrateWorkflowStateFromPayload(persisted.payload);
+    workflowState.step4Data = workflowState.step4Data || { status: 'streaming' };
+    goToStep(4);
+
+    const resultDiv = document.getElementById('step4-result');
+    const createBtn = document.getElementById('step4-create');
+    if (resultDiv) {
+        resultDiv.innerHTML = renderStep4StreamingShell(persisted.payload, persisted.threadId);
+    }
+    if (createBtn) {
+        createBtn.disabled = true;
+        createBtn.innerHTML = '<span class="loading-spinner"></span> Đang khôi phục luồng AI...';
+    }
+
+    registerActiveStream(persisted.threadId, persisted.payload, 'resume');
+    appendStreamingProgress('resume', 'Đã tìm thấy thread_id trước đó, đang phát lại tiến độ…');
+
+    try {
+        await preflightTravelPlanStream(persisted.threadId);
+    } catch (error) {
+        cleanupActiveStream({ clearStorage: true, clearData: true });
+        showErrorModal(error.message || 'Không thể khôi phục luồng AI.');
+        if (createBtn) {
+            createBtn.disabled = false;
+            createBtn.innerHTML = '<i class="fa-solid fa-sparkles"></i> Tạo lịch trình';
+        }
+        return;
+    }
+
+    connectTravelPlanEventSource(persisted.threadId);
+}
+
+window.goToStep = goToStep;
+window.createFinalPlan = createFinalPlan;
+window.closeErrorModal = closeErrorModal;
+
+document.addEventListener('DOMContentLoaded', () => {
+    const step4Header = document.querySelector('#step-4 .step-header h2');
+    const step4Intro = document.querySelector('#step-4 .step-header p');
+    const step4Notice = document.querySelector('#step-4 .tp-soft');
+    const modalTitle = document.querySelector('#error-modal-overlay .error-modal-header h3');
+    const modalButton = document.querySelector('#error-modal-overlay .error-modal-btn');
+
+    if (step4Header) {
+        step4Header.textContent = 'Rà soát blueprint chuyến đi trước khi hoàn tất';
+    }
+    if (step4Intro) {
+        step4Intro.textContent = 'Xem lại tổng chi phí, hoạt động gợi ý và timeline từng ngày. Khi bạn bấm tạo lịch trình, Atlas sẽ phát tiến độ theo thời gian thực và tự khôi phục nếu trang bị tải lại giữa chừng.';
+    }
+    if (step4Notice) {
+        step4Notice.innerHTML = '<strong class="text-slate-900 dark:text-slate-100">Lưu ý chính xác:</strong> Nút <em>Tạo lịch trình</em> sẽ mở luồng AI theo thời gian thực, phát từng ngày khi sẵn sàng và đồng bộ với trạng thái lưu lịch trình ở backend.';
+    }
+    if (modalTitle) {
+        modalTitle.textContent = 'Thông báo';
+    }
+    if (modalButton) {
+        modalButton.textContent = 'Đã hiểu';
+    }
+});
+
+function renderStreamingSkeletonDays(totalDays) {
+    return Array.from({ length: totalDays }, (_, index) => `
+        <article id="stream-day-skeleton-${index + 1}" class="timeline-day transition-all duration-300 ease-out opacity-80">
+            <div class="timeline-day-header">
+                <div>
+                    <h4 class="text-base font-bold text-foreground">Ngày ${index + 1}</h4>
+                    <div class="timeline-day-meta">
+                        <span class="timeline-chip">Đang chờ AI hoàn thiện</span>
+                    </div>
+                </div>
+                <span class="day-toggle-icon theme-text-muted">
+                    <i class="fa-solid fa-hourglass-half"></i>
+                </span>
+            </div>
+            <div class="timeline-day-body" style="display:block;">
+                <div class="timeline-sections">
+                    <div class="loading-line lg"></div>
+                    <div class="loading-line md" style="margin-top:0.85rem;"></div>
+                </div>
+            </div>
+        </article>
+    `).join('');
+}
+
+function renderStep4StreamingShell(payload, threadId) {
+    const totalDays = Math.max(1, Number(payload?.days || payload?.duration_days || 1));
+    return `
+        <div class="step4-shell">
+            ${renderStepPanel({
+                icon: 'fa-solid fa-tower-broadcast',
+                title: 'Atlas đang phát lịch trình theo thời gian thực',
+                subtitle: 'Luồng AI sẽ tự khôi phục nếu bạn tải lại trang trong lúc hệ thống còn giữ thread.',
+                content: `
+                    <div class="plan-overview-grid transition-all duration-300 ease-out">
+                        <article class="plan-overview-card">
+                            <span class="summary-label">Thread</span>
+                            <span class="summary-value">${escapeHtml(threadId)}</span>
+                        </article>
+                        <article class="plan-overview-card">
+                            <span class="summary-label">Tuyến hành trình</span>
+                            <span class="summary-value">${escapeHtml(`${payload.origin || 'Điểm đi'} → ${payload.destination || 'Điểm đến'}`)}</span>
+                        </article>
+                        <article class="plan-overview-card">
+                            <span class="summary-label">Trạng thái</span>
+                            <span id="step4-stream-status" class="summary-value">Đang khởi tạo luồng AI…</span>
+                        </article>
+                    </div>
+                    <div id="step4-stream-progress" class="timeline-list mt-5 transition-all duration-300 ease-out">
+                        <div class="itinerary-activity">Đang chuẩn bị kết nối tới máy chủ phát trực tuyến…</div>
+                    </div>
+                `
+            })}
+            ${renderStepPanel({
+                icon: 'fa-solid fa-calendar-days',
+                title: 'Ngày đã hoàn thiện',
+                subtitle: 'Mỗi thẻ sẽ thay thế skeleton ngay khi backend phát sự kiện day_ready.',
+                content: `<div id="step4-stream-days" class="timeline-shell transition-all duration-300 ease-out">${renderStreamingSkeletonDays(totalDays)}</div>`
+            })}
+        </div>
+    `;
+}
+
+function renderStreamingTimelineItem(item) {
+    if (!item || typeof item !== 'object') {
+        return '';
+    }
+
+    const time = escapeHtml(item.time || item.time_slot || '');
+    const activityName = escapeHtml(item.activity_name || item.activity || 'Hoạt động');
+    const note = escapeHtml(item.note || item.description || '');
+    const placeName = escapeHtml(item.place_name || '');
+
+    return `
+        <article class="itinerary-activity transition-all duration-300 ease-out">
+            ${time ? `<div class="timeline-chip">${time}</div>` : ''}
+            <div class="mt-2 text-sm font-semibold text-foreground">${activityName}</div>
+            ${placeName ? `<div class="budget-inline-meta">Địa điểm: ${placeName}</div>` : ''}
+            ${note ? `<div class="budget-inline-meta">${note}</div>` : ''}
+        </article>
+    `;
+}
+
+function upsertStreamingDayCard(dayPayload) {
+    const container = document.getElementById('step4-stream-days');
+    if (!container || !dayPayload) return;
+
+    const dayNumber = Number(dayPayload.day || 0) || 1;
+    const cardId = `stream-day-card-${dayNumber}`;
+    const skeleton = document.getElementById(`stream-day-skeleton-${dayNumber}`);
+    const existing = document.getElementById(cardId);
+    const timeline = Array.isArray(dayPayload.timeline) ? dayPayload.timeline : [];
+
+    const markup = `
+        <article id="${cardId}" class="timeline-day transition-all duration-300 ease-out">
+            <div class="timeline-day-header">
+                <div>
+                    <h4 class="text-base font-bold text-foreground">📅 Ngày ${dayNumber}${dayPayload.date ? ` (${escapeHtml(dayPayload.date)})` : ''}${dayPayload.theme ? `: ${escapeHtml(dayPayload.theme)}` : ''}</h4>
+                    <div class="timeline-day-meta">
+                        <span class="timeline-chip"><i class="fa-regular fa-clock"></i> ${timeline.length} mốc hoạt động</span>
+                        <span class="timeline-chip"><i class="fa-solid fa-check"></i> Đã sẵn sàng</span>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-day-body" style="display:block;">
+                <div class="timeline-sections">
+                    <section class="timeline-section">
+                        <div class="timeline-section-title">
+                            <i class="fa-solid fa-map-location-dot"></i>
+                            <span>Lộ trình trong ngày</span>
+                        </div>
+                        <div class="timeline-list">
+                            ${timeline.length ? timeline.map(renderStreamingTimelineItem).join('') : renderEmptyState('AI chưa gửi chi tiết timeline cho ngày này.')}
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </article>
+    `;
+
+    if (existing) {
+        existing.outerHTML = markup;
+    } else if (skeleton) {
+        skeleton.outerHTML = markup;
+    } else {
+        container.insertAdjacentHTML('beforeend', markup);
+    }
+}
+
+function appendStreamingProgress(step, message) {
+    const progressContainer = document.getElementById('step4-stream-progress');
+    const statusNode = document.getElementById('step4-stream-status');
+    if (statusNode && message) {
+        statusNode.textContent = message;
+    }
+    if (!progressContainer || !message) return;
+
+    const progressKey = `${step || 'general'}:${message}`;
+    if (workflowState.streamedProgressKeys.has(progressKey)) {
+        return;
+    }
+    workflowState.streamedProgressKeys.add(progressKey);
+
+    progressContainer.insertAdjacentHTML('beforeend', `
+        <div class="itinerary-activity transition-all duration-300 ease-out">
+            <strong class="block text-sm text-foreground">${escapeHtml(step || 'planning')}</strong>
+            <span class="budget-inline-meta">${escapeHtml(message)}</span>
+        </div>
+    `);
+}
+
+function cleanupActiveStream({ clearStorage = true, clearData = false } = {}) {
+    if (workflowState.activeStream?.eventSource) {
+        workflowState.activeStream.eventSource.close();
+    }
+
+    if (workflowState.postStreamReconnectTimer) {
+        window.clearTimeout(workflowState.postStreamReconnectTimer);
+        workflowState.postStreamReconnectTimer = null;
+    }
+
+    workflowState.activeStream = null;
+    resetStreamTrackingState();
+
+    if (clearStorage) {
+        clearPersistedTravelStream();
+    }
+
+    if (clearData) {
+        workflowState.step4Data = null;
+    }
+}
+
+function handleStreamEvent(eventType, payload) {
+    if (!payload || typeof payload !== 'object') return;
+
+    if (eventType === 'connected') {
+        appendStreamingProgress('connected', payload.message || 'Đã kết nối tới luồng SSE.');
+        return;
+    }
+
+    if (eventType === 'progress') {
+        appendStreamingProgress(payload.step, payload.message || 'Đang xử lý lịch trình.');
+        return;
+    }
+
+    if (eventType === 'day_ready') {
+        upsertStreamingDayCard(payload);
+        appendStreamingProgress('day_ready', `Đã hoàn thiện ngày ${payload.day}.`);
+        return;
+    }
+
+    if (eventType === 'completed') {
+        if (workflowState.activeStream) {
+            workflowState.activeStream.status = 'completed';
+        }
+        workflowState.step4Data = payload.response || payload;
+        displayStep4Result(workflowState.step4Data);
+        cleanupActiveStream({ clearStorage: true, clearData: false });
+        showErrorModal('Lịch trình đã được tạo thành công.', 'success');
+        const createBtn = document.getElementById('step4-create');
+        if (createBtn) {
+            createBtn.disabled = false;
+            createBtn.innerHTML = '<i class="fa-solid fa-sparkles"></i>Tạo lại lịch trình';
+        }
+        return;
+    }
+
+    if (eventType === 'error') {
+        appendStreamingProgress('error', payload.message || STREAM_FAILURE_MESSAGE);
+        cleanupActiveStream({ clearStorage: false, clearData: false });
+        showErrorModal(payload.message || STREAM_FAILURE_MESSAGE);
+        const createBtn = document.getElementById('step4-create');
+        if (createBtn) {
+            createBtn.disabled = false;
+            createBtn.innerHTML = '<i class="fa-solid fa-sparkles"></i> Tạo lịch trình';
+        }
+    }
+}
+
+function registerActiveStream(threadId, payload, mode = 'live') {
+    workflowState.activeStream = {
+        threadId,
+        payload,
+        mode,
+        eventSource: null,
+        status: 'running'
+    };
+    resetStreamTrackingState();
+    persistActiveTravelStream({
+        threadId,
+        payload,
+        mode,
+        savedAt: new Date().toISOString()
+    });
+}
+
+function connectTravelPlanEventSource(threadId) {
+    const streamUrl = `/api/v1/travel-plans/stream/${encodeURIComponent(threadId)}/`;
+    const eventSource = new EventSource(streamUrl);
+
+    if (!workflowState.activeStream) {
+        workflowState.activeStream = { threadId, eventSource, status: 'running' };
+    } else {
+        workflowState.activeStream.eventSource = eventSource;
+        workflowState.activeStream.status = 'running';
+    }
+
+    ['connected', 'progress', 'day_ready', 'completed', 'error'].forEach((eventName) => {
+        eventSource.addEventListener(eventName, (event) => {
+            let payload = {};
+            try {
+                payload = event.data ? JSON.parse(event.data) : {};
+            } catch (error) {
+                console.error('Không thể parse SSE payload:', error, event.data);
+            }
+            handleStreamEvent(eventName, payload);
+        });
+    });
+
+    eventSource.onerror = () => {
+        if (!workflowState.activeStream || workflowState.activeStream.threadId !== threadId) {
+            eventSource.close();
+            return;
+        }
+
+        eventSource.close();
+        workflowState.activeStream.eventSource = null;
+
+        if (workflowState.activeStream.status === 'completed') {
+            return;
+        }
+
+        appendStreamingProgress('reconnect', 'Luồng SSE bị gián đoạn, đang thử kết nối lại…');
+        workflowState.postStreamReconnectTimer = window.setTimeout(() => {
+            connectTravelPlanEventSource(threadId);
+        }, 1200);
+    };
+}
+
+async function bootstrapTravelPlanStream(payload, threadId) {
+    const response = await fetch('/api/v1/travel-plans/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            ...payload,
+            thread_id: threadId
+        })
+    });
+
+    if (!response.ok) {
+        let errorPayload = {};
+        try {
+            errorPayload = await parseJsonResponse(response, 'Không thể khởi tạo luồng AI.');
+        } catch (error) {
+            throw new Error(error.message || 'Không thể khởi tạo luồng AI.');
+        }
+        throw new Error(errorPayload.error || 'Không thể khởi tạo luồng AI.');
+    }
+
+    if (response.body?.cancel) {
+        try {
+            await response.body.cancel();
+        } catch (error) {
+            console.warn('Không thể đóng bootstrap stream phụ.', error);
+        }
+    }
+
+    connectTravelPlanEventSource(threadId);
+}
+
+function goToStep(step) {
+    document.querySelectorAll('.step-content').forEach(content => {
+        content.classList.remove('active');
+    });
+
+    const targetStep = document.getElementById(`step-${step}`);
+    if (targetStep) {
+        targetStep.classList.add('active');
+    }
+
+    document.querySelectorAll('.step-item').forEach((item, index) => {
+        const stepNum = index + 1;
+        item.classList.remove('active', 'completed');
+
+        if (stepNum < step) {
+            item.classList.add('completed');
+        } else if (stepNum === step) {
+            item.classList.add('active');
+        }
+    });
+
+    workflowState.currentStep = step;
+
+    if (step === 3 && !workflowState.step3Data) {
+        loadStep3();
+    } else if (step === 4 && !workflowState.step4Data && !workflowState.activeStream) {
+        loadStep4();
+    }
+}
+
+async function createFinalPlan() {
+    const createBtn = document.getElementById('step4-create');
+    const resultDiv = document.getElementById('step4-result');
+    const payload = buildStep4GenerationPayload();
+
+    if (!payload.origin || !payload.destination || !payload.start_date) {
+        showErrorModal('Thiếu dữ liệu hành trình. Vui lòng kiểm tra lại 4 bước trước khi tạo lịch trình.');
+        return;
+    }
+
+    if (workflowState.activeStream?.threadId) {
+        showErrorModal('Luồng AI hiện tại vẫn đang chạy. Vui lòng chờ hoàn tất hoặc tải lại trang để khôi phục.');
+        return;
+    }
+
+    const threadId = generateTravelPlanThreadId();
+    const originalLabel = createBtn ? createBtn.innerHTML : '';
+
+    if (createBtn) {
+        createBtn.disabled = true;
+        createBtn.innerHTML = '<span class="loading-spinner"></span> Đang khởi tạo luồng AI...';
+    }
+
+    if (resultDiv) {
+        resultDiv.innerHTML = renderStep4StreamingShell(payload, threadId);
+    }
+
+    try {
+        registerActiveStream(threadId, payload, 'live');
+        appendStreamingProgress('bootstrap', 'Đã tạo thread_id, đang yêu cầu backend bắt đầu lập lịch trình…');
+        await bootstrapTravelPlanStream(payload, threadId);
+    } catch (error) {
+        console.error('Create final plan stream error:', error);
+        cleanupActiveStream({ clearStorage: true, clearData: false });
+        if (!workflowState.step4Data?.plan) {
+            workflowState.step4Data = buildSafeFallbackStep4Data(
+                payload,
+                error.message || 'Không thể hoàn thiện lịch trình AI.'
+            );
+        }
+        displayStep4Result(workflowState.step4Data);
+        showErrorModal(error.message || 'Không thể hoàn tất lịch trình lúc này. Vui lòng thử lại.');
+        if (createBtn) {
+            createBtn.disabled = false;
+            createBtn.innerHTML = originalLabel;
+        }
+    }
+}
+
+function resumeTravelPlanStreamFromStorage() {
+    const persisted = loadPersistedTravelStream();
+    if (!persisted?.threadId || !persisted?.payload) return;
+
+    hydrateWorkflowStateFromPayload(persisted.payload);
+    workflowState.step4Data = workflowState.step4Data || { status: 'streaming' };
+    goToStep(4);
+
+    const resultDiv = document.getElementById('step4-result');
+    const createBtn = document.getElementById('step4-create');
+    if (resultDiv) {
+        resultDiv.innerHTML = renderStep4StreamingShell(persisted.payload, persisted.threadId);
+    }
+    if (createBtn) {
+        createBtn.disabled = true;
+        createBtn.innerHTML = '<span class="loading-spinner"></span> Đang khôi phục luồng AI...';
+    }
+
+    registerActiveStream(persisted.threadId, persisted.payload, 'resume');
+    appendStreamingProgress('resume', 'Đã tìm thấy thread_id trước đó, đang phát lại tiến độ…');
+    connectTravelPlanEventSource(persisted.threadId);
+}
+
+window.goToStep = goToStep;
+window.createFinalPlan = createFinalPlan;
+
+function buildLoginUrl() {
+    const nextUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    return `${LOGIN_PATH}?next=${encodeURIComponent(nextUrl)}`;
+}
+
+function redirectToLogin() {
+    window.location.assign(buildLoginUrl());
+}
+
+function handleProtectedRouteFailure() {
+    if (workflowState.authRedirectPending) return;
+    workflowState.authRedirectPending = true;
+
+    showErrorModal(AUTH_REQUIRED_MESSAGE, 'error', {
+        onClose: redirectToLogin
+    });
+
+    window.setTimeout(() => {
+        if (workflowState.authRedirectPending) {
+            redirectToLogin();
+        }
+    }, 1400);
+}
+
+function persistActiveTravelStream(payload) {
+    try {
+        window.sessionStorage.setItem(ACTIVE_TRAVEL_STREAM_STORAGE_KEY, JSON.stringify(payload));
+    } catch (error) {
+        console.warn('Không thể lưu thread_id của luồng hiện tại.', error);
+    }
+}
+
+function loadPersistedTravelStream() {
+    try {
+        const raw = window.sessionStorage.getItem(ACTIVE_TRAVEL_STREAM_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : null;
+    } catch (error) {
+        console.warn('Không thể đọc thread_id đã lưu.', error);
+        return null;
+    }
+}
+
+function clearPersistedTravelStream() {
+    try {
+        window.sessionStorage.removeItem(ACTIVE_TRAVEL_STREAM_STORAGE_KEY);
+    } catch (error) {
+        console.warn('Không thể xoá thread_id đã lưu.', error);
+    }
+}
 
 function displayStep1Result(data) {
     const resultDiv = document.getElementById('step1-result');
@@ -1440,6 +2834,120 @@ function getCookie(name) {
     return cookieValue;
 }
 
+function formatIsoDateForDisplay(isoDate) {
+    if (!isoDate || !/^\d{4}-\d{2}-\d{2}$/.test(String(isoDate))) return '';
+    const [year, month, day] = String(isoDate).split('-');
+    return `${day}/${month}/${year}`;
+}
+
+function generateTravelPlanThreadId() {
+    const randomPart = Math.random().toString(16).slice(2, 10);
+    return `travel-plan-${Date.now()}-${randomPart}`;
+}
+
+function resetStreamTrackingState() {
+    workflowState.streamedDayKeys = new Set();
+    workflowState.streamedProgressKeys = new Set();
+}
+
+function registerActiveStream(threadId, payload, mode = 'live') {
+    workflowState.activeStream = {
+        threadId,
+        payload,
+        mode,
+        eventSource: null,
+        status: 'running'
+    };
+    resetStreamTrackingState();
+    persistActiveTravelStream({
+        threadId,
+        payload,
+        mode,
+        savedAt: new Date().toISOString()
+    });
+}
+
+function cleanupActiveStream({ clearStorage = true, clearData = false } = {}) {
+    if (workflowState.activeStream?.eventSource) {
+        workflowState.activeStream.eventSource.close();
+    }
+
+    if (workflowState.postStreamReconnectTimer) {
+        window.clearTimeout(workflowState.postStreamReconnectTimer);
+        workflowState.postStreamReconnectTimer = null;
+    }
+
+    workflowState.activeStream = null;
+    resetStreamTrackingState();
+
+    if (clearStorage) {
+        clearPersistedTravelStream();
+    }
+
+    if (clearData) {
+        workflowState.step4Data = null;
+    }
+}
+
+function hydrateWorkflowStateFromPayload(payload) {
+    if (!payload) return;
+
+    const originInput = document.getElementById('origin-input');
+    const destinationInput = document.getElementById('destination-input');
+    const startDateInput = document.getElementById('start-date');
+    const daysInput = document.getElementById('days');
+    const travelersInput = document.getElementById('travelers');
+    const travelStyleInput = document.getElementById('travel-style');
+
+    if (originInput && payload.origin) {
+        originInput.value = payload.origin;
+        const [lat, lon] = payload.start_location?.coordinates || [];
+        if (Number.isFinite(lat)) originInput.dataset.lat = String(lat);
+        if (Number.isFinite(lon)) originInput.dataset.lon = String(lon);
+    }
+
+    if (destinationInput && payload.destination) {
+        destinationInput.value = payload.destination;
+        const [lat, lon] = payload.destination_location?.coordinates || [];
+        if (Number.isFinite(lat)) destinationInput.dataset.lat = String(lat);
+        if (Number.isFinite(lon)) destinationInput.dataset.lon = String(lon);
+    }
+
+    if (startDateInput && payload.start_date) {
+        startDateInput.value = formatIsoDateForDisplay(payload.start_date);
+    }
+    if (daysInput && payload.days) daysInput.value = payload.days;
+    if (travelersInput && payload.travelers) travelersInput.value = payload.travelers;
+    if (travelStyleInput && payload.travel_style) travelStyleInput.value = payload.travel_style;
+
+    workflowState.step1Data = {
+        origin: {
+            name: payload.origin,
+            latitude: payload.start_location?.coordinates?.[0] ?? null,
+            longitude: payload.start_location?.coordinates?.[1] ?? null
+        },
+        destination: {
+            name: payload.destination,
+            latitude: payload.destination_location?.coordinates?.[0] ?? null,
+            longitude: payload.destination_location?.coordinates?.[1] ?? null
+        }
+    };
+
+    workflowState.step2Data = {
+        start_date: payload.start_date,
+        days: payload.days,
+        travelers: payload.travelers,
+        travel_style: payload.travel_style || 'standard'
+    };
+
+    if (payload.selected_hotel) {
+        workflowState.step3Data = {
+            ...(workflowState.step3Data || {}),
+            selected_hotel: payload.selected_hotel
+        };
+    }
+}
+
 function normalizeDateToIso(dateValue) {
     const raw = String(dateValue || '').trim();
     if (!raw) return '';
@@ -1506,6 +3014,219 @@ function buildStep4GenerationPayload() {
 
     return payload;
 }
+
+async function preflightTravelPlanStream(threadId) {
+    const response = await fetch(`/api/v1/travel-plans/stream/${encodeURIComponent(threadId)}/`, {
+        method: 'GET',
+        headers: {
+            Accept: 'text/event-stream'
+        }
+    });
+
+    if (!response.ok) {
+        let errorPayload = {};
+        try {
+            errorPayload = await parseJsonResponse(response, 'Không thể khôi phục luồng AI.');
+        } catch (error) {
+            throw new Error(error.message || 'Không thể khôi phục luồng AI.');
+        }
+        throw new Error(errorPayload.error || 'Không thể khôi phục luồng AI.');
+    }
+
+    if (response.body?.cancel) {
+        try {
+            await response.body.cancel();
+        } catch (error) {
+            console.warn('Không thể đóng preflight stream phụ.', error);
+        }
+    }
+}
+
+function connectTravelPlanEventSource(threadId) {
+    const streamUrl = `/api/v1/travel-plans/stream/${encodeURIComponent(threadId)}/`;
+    const eventSource = new EventSource(streamUrl);
+
+    if (!workflowState.activeStream) {
+        workflowState.activeStream = { threadId, eventSource, status: 'running' };
+    } else {
+        workflowState.activeStream.eventSource = eventSource;
+        workflowState.activeStream.status = 'running';
+    }
+
+    ['connected', 'progress', 'day_ready', 'completed', 'error'].forEach((eventName) => {
+        eventSource.addEventListener(eventName, (event) => {
+            let payload = {};
+            try {
+                payload = event.data ? JSON.parse(event.data) : {};
+            } catch (error) {
+                console.error('Không thể parse SSE payload:', error, event.data);
+            }
+            handleStreamEvent(eventName, payload);
+        });
+    });
+
+    eventSource.onerror = () => {
+        if (!workflowState.activeStream || workflowState.activeStream.threadId !== threadId) {
+            eventSource.close();
+            return;
+        }
+
+        eventSource.close();
+        workflowState.activeStream.eventSource = null;
+
+        if (workflowState.activeStream.status === 'completed') {
+            return;
+        }
+
+        appendStreamingProgress('reconnect', 'Luồng SSE bị gián đoạn, đang thử kết nối lại…');
+        workflowState.postStreamReconnectTimer = window.setTimeout(() => {
+            connectTravelPlanEventSource(threadId);
+        }, 1200);
+    };
+}
+
+function goToStep(step) {
+    document.querySelectorAll('.step-content').forEach(content => {
+        content.classList.remove('active');
+    });
+
+    const targetStep = document.getElementById(`step-${step}`);
+    if (targetStep) {
+        targetStep.classList.add('active');
+    }
+
+    document.querySelectorAll('.step-item').forEach((item, index) => {
+        const stepNum = index + 1;
+        item.classList.remove('active', 'completed');
+
+        if (stepNum < step) {
+            item.classList.add('completed');
+        } else if (stepNum === step) {
+            item.classList.add('active');
+        }
+    });
+
+    workflowState.currentStep = step;
+
+    if (step === 3 && !workflowState.step3Data) {
+        loadStep3();
+    } else if (step === 4 && !workflowState.step4Data && !workflowState.activeStream) {
+        loadStep4();
+    }
+}
+
+async function createFinalPlan() {
+    const createBtn = document.getElementById('step4-create');
+    const resultDiv = document.getElementById('step4-result');
+    const payload = buildStep4GenerationPayload();
+
+    if (!payload.origin || !payload.destination || !payload.start_date) {
+        showErrorModal('Thiếu dữ liệu hành trình. Vui lòng kiểm tra lại 4 bước trước khi tạo lịch trình.');
+        return;
+    }
+
+    if (workflowState.activeStream?.threadId) {
+        showErrorModal('Luồng AI hiện tại vẫn đang chạy. Vui lòng chờ hoàn tất hoặc tải lại trang để khôi phục.');
+        return;
+    }
+
+    const threadId = generateTravelPlanThreadId();
+    const originalLabel = createBtn ? createBtn.innerHTML : '';
+
+    if (createBtn) {
+        createBtn.disabled = true;
+        createBtn.innerHTML = '<span class="loading-spinner"></span> Đang khởi tạo luồng AI...';
+    }
+
+    if (resultDiv) {
+        resultDiv.innerHTML = renderStep4StreamingShell(payload, threadId);
+    }
+
+    try {
+        registerActiveStream(threadId, payload, 'live');
+        appendStreamingProgress('bootstrap', 'Đã tạo thread_id, đang yêu cầu backend bắt đầu lập lịch trình…');
+        await bootstrapTravelPlanStream(payload, threadId);
+    } catch (error) {
+        console.error('Create final plan stream error:', error);
+        cleanupActiveStream({ clearStorage: true, clearData: false });
+        if (!workflowState.step4Data?.plan) {
+            workflowState.step4Data = buildSafeFallbackStep4Data(
+                payload,
+                error.message || 'Không thể hoàn thiện lịch trình AI.'
+            );
+        }
+        displayStep4Result(workflowState.step4Data);
+        showErrorModal(error.message || 'Không thể hoàn tất lịch trình lúc này. Vui lòng thử lại.');
+        if (createBtn) {
+            createBtn.disabled = false;
+            createBtn.innerHTML = originalLabel;
+        }
+    }
+}
+
+async function resumeTravelPlanStreamFromStorage() {
+    const persisted = loadPersistedTravelStream();
+    if (!persisted?.threadId || !persisted?.payload) return;
+
+    hydrateWorkflowStateFromPayload(persisted.payload);
+    workflowState.step4Data = workflowState.step4Data || { status: 'streaming' };
+    goToStep(4);
+
+    const resultDiv = document.getElementById('step4-result');
+    const createBtn = document.getElementById('step4-create');
+    if (resultDiv) {
+        resultDiv.innerHTML = renderStep4StreamingShell(persisted.payload, persisted.threadId);
+    }
+    if (createBtn) {
+        createBtn.disabled = true;
+        createBtn.innerHTML = '<span class="loading-spinner"></span> Đang khôi phục luồng AI...';
+    }
+
+    registerActiveStream(persisted.threadId, persisted.payload, 'resume');
+    appendStreamingProgress('resume', 'Đã tìm thấy thread_id trước đó, đang phát lại tiến độ…');
+
+    try {
+        await preflightTravelPlanStream(persisted.threadId);
+    } catch (error) {
+        cleanupActiveStream({ clearStorage: true, clearData: true });
+        showErrorModal(error.message || 'Không thể khôi phục luồng AI.');
+        if (createBtn) {
+            createBtn.disabled = false;
+            createBtn.innerHTML = '<i class="fa-solid fa-sparkles"></i> Tạo lịch trình';
+        }
+        return;
+    }
+
+    connectTravelPlanEventSource(persisted.threadId);
+}
+
+window.goToStep = goToStep;
+window.createFinalPlan = createFinalPlan;
+window.closeErrorModal = closeErrorModal;
+
+document.addEventListener('DOMContentLoaded', () => {
+    const step4Header = document.querySelector('#step-4 .step-header h2');
+    const step4Intro = document.querySelector('#step-4 .step-header p');
+    const step4Notice = document.querySelector('#step-4 .tp-soft');
+    const modalTitle = document.querySelector('#error-modal-overlay .error-modal-header h3');
+    const modalButton = document.querySelector('#error-modal-overlay .error-modal-btn');
+
+    if (step4Header) {
+        step4Header.textContent = 'Rà soát blueprint chuyến đi trước khi hoàn tất';
+    }
+    if (step4Intro) {
+        step4Intro.textContent = 'Xem lại tổng chi phí, hoạt động gợi ý và timeline từng ngày. Khi bạn bấm tạo lịch trình, Atlas sẽ phát tiến độ theo thời gian thực và tự khôi phục nếu trang bị tải lại giữa chừng.';
+    }
+    if (step4Notice) {
+        step4Notice.innerHTML = '<strong class="text-slate-900 dark:text-slate-100">Lưu ý chính xác:</strong> Nút <em>Tạo lịch trình</em> sẽ mở luồng AI theo thời gian thực, phát từng ngày khi sẵn sàng và đồng bộ với trạng thái lưu lịch trình ở backend.';
+    }
+    if (modalTitle) {
+        modalTitle.textContent = 'Thông báo';
+    }
+    if (modalButton) {
+        modalButton.textContent = 'Đã hiểu';
+    }
+});
 
 function renderStep4LoadingState(title = 'Atlas đang dựng blueprint', subtitle = 'Lịch trình tổng quan đang được ghép từ hoạt động, chi phí và gợi ý di chuyển.') {
     return `

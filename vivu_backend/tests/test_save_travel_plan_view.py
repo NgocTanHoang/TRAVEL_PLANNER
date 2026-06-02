@@ -15,7 +15,7 @@ from apps.places.models import DiaDiem, TinhThanh
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-PAYLOAD_PATH = REPO_ROOT / "agent_output_test.json"
+PAYLOAD_PATH = REPO_ROOT / "vivu_backend" / "scripts" / "artifacts" / "agent_output_test.json"
 
 
 class SaveTravelPlanViewFixtureTests(TestCase):

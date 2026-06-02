@@ -447,26 +447,20 @@ class Step4ConfirmAndPlanView(APIView):
             }
             
             # Run orchestrator
-            def create_full_plan():
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                try:
-                    return loop.run_until_complete(orchestrator.execute(state))
-                finally:
-                    loop.close()
+            async def create_full_plan():
+                return await orchestrator.execute(state)
             
             try:
-                # Try to use existing event loop
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    # If loop is running, use executor
-                    from concurrent.futures import ThreadPoolExecutor
-                    with ThreadPoolExecutor() as executor:
-                        future = executor.submit(asyncio.run, create_full_plan())
-                        result_state = future.result(timeout=120)
-                else:
-                    result_state = loop.run_until_complete(create_full_plan())
+                running_loop = asyncio.get_running_loop()
             except RuntimeError:
+                running_loop = None
+
+            if running_loop and running_loop.is_running():
+                from concurrent.futures import ThreadPoolExecutor
+                with ThreadPoolExecutor() as executor:
+                    future = executor.submit(lambda: asyncio.run(create_full_plan()))
+                    result_state = future.result(timeout=120)
+            else:
                 result_state = asyncio.run(create_full_plan())
             
             # Format response

@@ -246,6 +246,12 @@ GROQ_MODEL = os.getenv('GROQ_MODEL', 'openai/gpt-oss-120b')  # Default to openai
 # OpenAI default model
 MODEL = os.getenv('MODEL', 'gpt-4o-mini')  # Default to gpt-4o-mini for OpenAI
 LANGCHAIN_API_KEY = os.getenv('LANGCHAIN_API_KEY', '')
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY', os.getenv('GOOGLE_MAPS_API_KEY', ''))
+GOOGLE_MAPS_API_KEY = GOOGLE_API_KEY
+CHROMA_PERSIST_DIRECTORY = os.getenv(
+    'CHROMA_PERSIST_DIRECTORY',
+    str(BASE_DIR / 'vector_db'),
+)
 
 # OpenRouteService API - For geocoding and routing
 OPENROUTE_API_KEY = os.getenv('OPENROUTE_API_KEY', '')
