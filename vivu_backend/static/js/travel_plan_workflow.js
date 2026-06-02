@@ -1151,7 +1151,7 @@ function renderStep4StreamingShell(payload, threadId) {
         <div class="step4-shell">
             ${renderStepPanel({
                 icon: 'fa-solid fa-tower-broadcast',
-                title: 'Atlas đang phát lịch trình theo thời gian thực',
+                title: 'Vi Vu đang phát lịch trình theo thời gian thực',
                 subtitle: 'Luồng AI sẽ tự khôi phục nếu bạn tải lại trang trong lúc hệ thống còn giữ thread.',
                 content: `
                     <div class="plan-overview-grid transition-all duration-300 ease-out">
@@ -1591,7 +1591,7 @@ document.addEventListener('DOMContentLoaded', () => {
         step4Header.textContent = 'Rà soát blueprint chuyến đi trước khi hoàn tất';
     }
     if (step4Intro) {
-        step4Intro.textContent = 'Xem lại tổng chi phí, hoạt động gợi ý và timeline từng ngày. Khi bạn bấm tạo lịch trình, Atlas sẽ phát tiến độ theo thời gian thực và tự khôi phục nếu trang bị tải lại giữa chừng.';
+        step4Intro.textContent = 'Xem lại tổng chi phí, hoạt động gợi ý và timeline từng ngày. Khi bạn bấm tạo lịch trình, Vi Vu sẽ phát tiến độ theo thời gian thực và tự khôi phục nếu trang bị tải lại giữa chừng.';
     }
     if (step4Notice) {
         step4Notice.innerHTML = '<strong class="text-slate-900 dark:text-slate-100">Lưu ý chính xác:</strong> Nút <em>Tạo lịch trình</em> sẽ mở luồng AI theo thời gian thực, phát từng ngày khi sẵn sàng và đồng bộ với trạng thái lưu lịch trình ở backend.';
@@ -1634,7 +1634,7 @@ function renderStep4StreamingShell(payload, threadId) {
         <div class="step4-shell">
             ${renderStepPanel({
                 icon: 'fa-solid fa-tower-broadcast',
-                title: 'Atlas đang phát lịch trình theo thời gian thực',
+                title: 'Vi Vu đang phát lịch trình theo thời gian thực',
                 subtitle: 'Luồng AI sẽ tự khôi phục nếu bạn tải lại trang trong lúc hệ thống còn giữ thread.',
                 content: `
                     <div class="plan-overview-grid transition-all duration-300 ease-out">
@@ -2290,7 +2290,7 @@ async function loadStep3() {
                 ${renderStepPanel({
                     icon: 'fa-solid fa-wallet',
                     title: 'Bức tranh ngân sách',
-                    subtitle: 'Atlas đang phân tích các nhóm chi phí cốt lõi cho chuyến đi của bạn.',
+                    subtitle: 'Vi Vu đang phân tích các nhóm chi phí cốt lõi cho chuyến đi của bạn.',
                     content: '<div class="loading-line lg"></div><div class="loading-line md" style="margin-top:0.85rem;"></div><div class="loading-line sm" style="margin-top:0.85rem;"></div>'
                 })}
                 ${renderStepPanel({
@@ -2438,7 +2438,7 @@ function displayStep3Result(data) {
                 ${renderStepPanel({
                     icon: 'fa-solid fa-hotel',
                     title: 'Khách sạn được tuyển chọn',
-                    subtitle: 'Chọn một nơi lưu trú nếu bạn muốn Atlas ưu tiên gắn vào blueprint cuối cùng.',
+                    subtitle: 'Chọn một nơi lưu trú nếu bạn muốn Vi Vu ưu tiên gắn vào blueprint cuối cùng.',
                     content: hotelsHTML
                 })}
             </div>
@@ -2669,7 +2669,7 @@ function displayStep4Result(data) {
                 ${renderStepPanel({
                     icon: 'fa-solid fa-compass',
                     title: 'Hoạt động nổi bật',
-                    subtitle: 'Những điểm nhấn Atlas ưu tiên đẩy lên đầu để chuyến đi cân bằng trải nghiệm và chi phí.',
+                    subtitle: 'Những điểm nhấn Vi Vu ưu tiên đẩy lên đầu để chuyến đi cân bằng trải nghiệm và chi phí.',
                     content: activitiesHTML || renderEmptyState('Chưa có hoạt động nổi bật được đề xuất.')
                 })}
             </div>
@@ -2717,7 +2717,7 @@ async function createFinalPlan() {
 
     if (resultDiv) {
         resultDiv.innerHTML = renderStep4LoadingState(
-            'Atlas đang khóa blueprint cuối',
+            'Vi Vu đang khóa blueprint cuối',
             'Dữ liệu từ biểu mẫu đang được chuyển đến AI planner và lưu vào hồ sơ hành trình của bạn.'
         );
     }
@@ -3215,7 +3215,7 @@ document.addEventListener('DOMContentLoaded', () => {
         step4Header.textContent = 'Rà soát blueprint chuyến đi trước khi hoàn tất';
     }
     if (step4Intro) {
-        step4Intro.textContent = 'Xem lại tổng chi phí, hoạt động gợi ý và timeline từng ngày. Khi bạn bấm tạo lịch trình, Atlas sẽ phát tiến độ theo thời gian thực và tự khôi phục nếu trang bị tải lại giữa chừng.';
+        step4Intro.textContent = 'Xem lại tổng chi phí, hoạt động gợi ý và timeline từng ngày. Khi bạn bấm tạo lịch trình, Vi Vu sẽ phát tiến độ theo thời gian thực và tự khôi phục nếu trang bị tải lại giữa chừng.';
     }
     if (step4Notice) {
         step4Notice.innerHTML = '<strong class="text-slate-900 dark:text-slate-100">Lưu ý chính xác:</strong> Nút <em>Tạo lịch trình</em> sẽ mở luồng AI theo thời gian thực, phát từng ngày khi sẵn sàng và đồng bộ với trạng thái lưu lịch trình ở backend.';
@@ -3228,7 +3228,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-function renderStep4LoadingState(title = 'Atlas đang dựng blueprint', subtitle = 'Lịch trình tổng quan đang được ghép từ hoạt động, chi phí và gợi ý di chuyển.') {
+function renderStep4LoadingState(title = 'Vi Vu đang dựng blueprint', subtitle = 'Lịch trình tổng quan đang được ghép từ hoạt động, chi phí và gợi ý di chuyển.') {
     return `
         <div class="step4-shell animate-pulse">
             ${renderStepPanel({
@@ -3255,7 +3255,7 @@ async function parseJsonResponse(response, defaultErrorMessage = 'Phản hồi t
     }
 }
 
-function buildSafeFallbackStep4Data(payload, reason = 'Atlas chưa trả về JSON hoàn chỉnh nên hệ thống dùng blueprint an toàn để bạn tiếp tục.') {
+function buildSafeFallbackStep4Data(payload, reason = 'Vi Vu chưa trả về JSON hoàn chỉnh nên hệ thống dùng blueprint an toàn để bạn tiếp tục.') {
     const totalDays = Math.max(1, Number(payload.duration_days || 1));
     const destinationName = payload.destination_location?.name || payload.destination || 'Điểm đến';
     const originName = payload.start_location?.name || payload.origin || 'Điểm đi';

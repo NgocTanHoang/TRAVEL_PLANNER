@@ -35,7 +35,7 @@ from apps.itineraries.models import LichTrinh, LichTrinhDiaDiem, DongGop
 def analyze_database():
     """Phân tích và mô tả cơ sở dữ liệu"""
     print("="*80)
-    print("PHÂN TÍCH CƠ SỞ DỮ LIỆU - VI VU TRAVEL PLANNER")
+    print("PHÂN TÍCH CƠ SỞ DỮ LIỆU - VI VU")
     print("="*80)
     
     # 1. Danh sách các bảng
@@ -181,7 +181,7 @@ Database schema được thiết kế tốt với:
   ✅ Unique constraints đảm bảo data integrity
   ✅ Indexes tối ưu cho performance
   ✅ Validation và default values hợp lý
-  ✅ Đủ các bảng để hỗ trợ đầy đủ chức năng của travel planner
+  ✅ Đủ các bảng để hỗ trợ đầy đủ chức năng của Vi Vu
 
 Database đã đủ cho project này và có thể mở rộng trong tương lai.
     """)

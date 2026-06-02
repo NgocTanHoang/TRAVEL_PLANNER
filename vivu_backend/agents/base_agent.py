@@ -1,5 +1,5 @@
 """
-Base Agent class for all travel planner agents.
+Base Agent class for all Vi Vu agents.
 Provides common functionality: logging, LangSmith tracing, error handling.
 """
 import logging
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class BaseAgent:
     """
-    Base class for all AI agents in the travel planner system.
+    Base class for all AI agents in the Vi Vu system.
     
     Features:
     - LangSmith tracing integration

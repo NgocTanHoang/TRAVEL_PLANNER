@@ -5,8 +5,8 @@
             <i class="fa-solid fa-map-marker-alt"></i>
             Chọn địa điểm
         </span>
-        <h2>Thiết lập tuyến đường cho hành trình của bạn</h2>
-        <p>Điền điểm xuất phát và điểm đến để Atlas kiểm tra khoảng cách, thời gian di chuyển và đề xuất tuyến phù hợp.</p>
+        <h2>Thiết lập tuyến hành trình</h2>
+        <p>Chọn điểm xuất phát và điểm đến để Vi Vu kiểm tra khoảng cách, thời gian di chuyển và phương án phù hợp.</p>
     </div>
 
     <form id="step1-form">
@@ -39,7 +39,7 @@
                                     <button type="button" id="confirm-address-btn" class="chip-btn chip-confirm" title="Xác nhận sử dụng vị trí này" aria-label="Xác nhận địa chỉ">✓</button>
                                 </div>
                                 <div id="origin-mini-map" class="mini-map hidden" aria-hidden="true"></div>
-                                <p class="mini-map-caption">Vị trí hiện tại sẽ được hiển thị trong một mini map gọn để bạn xác nhận trước khi tiếp tục.</p>
+                                <p class="mini-map-caption">Vị trí hiện tại sẽ được hiển thị trên bản đồ nhỏ để bạn xác nhận trước khi tiếp tục.</p>
                             </div>
                         </div>
                     </div>
@@ -63,7 +63,7 @@
                                         <div id="destination-autocomplete" class="autocomplete-dropdown"></div>
                                     </div>
                                 </div>
-                                <p class="helper-text">Autocomplete sẽ gợi ý địa danh thật từ hệ thống để bạn chọn nhanh và giảm lỗi nhập tay.</p>
+                                <p class="helper-text">Vi Vu sẽ gợi ý địa danh thực tế để bạn chọn nhanh và hạn chế nhầm lẫn khi nhập.</p>
                             </div>
                         </div>
                     </div>
@@ -72,7 +72,7 @@
                 <div id="step1-result" style="display: none;"></div>
 
                 <div class="workflow-actions">
-                    <div class="theme-text-muted text-sm leading-6">Atlas sẽ xác minh tuyến đi trước khi mở khóa bước cấu hình chuyến đi.</div>
+                    <div class="theme-text-muted text-sm leading-6">Vi Vu sẽ xác minh tuyến đi trước khi mở khóa bước cấu hình chuyến đi.</div>
                     <button type="submit" class="btn-workflow btn-primary">
                         Tiếp tục
                         <i class="fa-solid fa-arrow-right"></i>
@@ -86,14 +86,14 @@
                     <div>
                         <span class="tp-badge border border-white/20 bg-white/10 px-3 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-white">
                             <i class="fa-solid fa-map-location-dot"></i>
-                            Route Preview
+                            Tuyến hành trình
                         </span>
-                        <h3 class="mt-4 font-heading text-2xl font-bold">Bạn đi đâu thế?</h3>
-                        <p class="mt-3 text-sm leading-7 text-white/80">Tuyến đường, gợi ý di chuyển và các bước tiếp theo sẽ được mở khóa ngay khi bạn xác nhận đủ hai địa điểm.</p>
+                        <h3 class="mt-4 font-heading text-2xl font-bold">Bạn muốn bắt đầu từ đâu?</h3>
+                        <p class="mt-3 text-sm leading-7 text-white/80">Khoảng cách, phương án di chuyển và các bước tiếp theo sẽ được mở ra ngay khi bạn xác nhận đủ hai địa điểm.</p>
                     </div>
                     <div class="space-y-4">
                         <div class="step-preview-float">
-                            <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-white/65">Lộ trình</p>
+                            <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-white/65">Tuyến đường</p>
                             <p id="stitch-preview-route" class="mt-2 text-sm font-semibold text-white">Đang chờ nhập điểm đến...</p>
                         </div>
                         <div id="weather-preview-card" class="step-preview-float weather-preview-card" aria-live="polite">
@@ -113,7 +113,7 @@
                                 </div>
                                 <div>
                                     <p id="weather-temp" class="weather-preview-temp">--°C</p>
-                                    <p id="weather-summary" class="weather-preview-meta">Thời tiết sẽ hiện sau khi Atlas xác nhận điểm đến và lấy tọa độ thật.</p>
+                                    <p id="weather-summary" class="weather-preview-meta">Thời tiết sẽ hiển thị sau khi Vi Vu xác nhận điểm đến và lấy tọa độ thực tế.</p>
                                 </div>
                             </div>
                             <div class="weather-preview-grid">
@@ -133,8 +133,8 @@
                                     <i class="fa-solid fa-plane-departure"></i>
                                 </span>
                                 <div>
-                                    <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-white/65">AI Note</p>
-                                    <p class="mt-1 text-sm leading-6 text-white/85">Atlas sẽ đối chiếu khoảng cách, tuyến và nhịp di chuyển trước khi sang bước 2.</p>
+                                    <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-white/65">Ghi chú Vi Vu</p>
+                                    <p class="mt-1 text-sm leading-6 text-white/85">Vi Vu sẽ đối chiếu khoảng cách, tuyến đường và nhịp di chuyển trước khi sang bước 2.</p>
                                 </div>
                             </div>
                         </div>

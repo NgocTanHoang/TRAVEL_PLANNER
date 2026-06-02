@@ -14,54 +14,34 @@
         content: "";
         position: absolute;
         inset: 0;
-        background:
-            radial-gradient(circle at top left, rgba(var(--primary), 0.08), transparent 38%),
-            radial-gradient(circle at bottom right, rgba(var(--accent), 0.08), transparent 34%);
         pointer-events: none;
-    }
-
-    .auth-input {
-        width: 100%;
-        border-radius: 1rem;
-        border: 1px solid var(--input-hex);
-        background: var(--card-hex);
-        color: var(--foreground-hex);
-        padding: 0.95rem 3rem 0.95rem 1rem;
-        font-size: 0.95rem;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
-    }
-
-    .auth-input:focus {
-        outline: none;
-        border-color: var(--primary-hex);
-        box-shadow: 0 0 0 4px rgba(var(--primary), 0.12);
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<section class="auth-shell bg-background px-4 py-10 sm:px-6 lg:px-8 lg:py-16">
-    <div class="relative mx-auto max-w-6xl">
-        <div class="grid items-center gap-8 overflow-hidden rounded-[2rem] border border-border bg-card shadow-soft lg:grid-cols-[1.1fr_0.9fr]">
-            <div class="relative hidden h-full min-h-[680px] overflow-hidden bg-gradient-to-br from-ocean via-ocean-soft to-primary p-10 text-white lg:flex lg:flex-col lg:justify-between">
+<section class="auth-shell auth-page-shell px-4 pb-12 pt-28 sm:px-6 sm:pt-32 lg:px-8 lg:pb-16 lg:pt-36">
+    <div class="relative mx-auto flex min-h-[calc(100svh-10rem)] max-w-6xl items-start justify-center lg:min-h-[calc(100svh-12rem)] lg:items-center">
+        <div class="auth-card-surface grid items-center gap-8 overflow-hidden rounded-[2rem] lg:grid-cols-[1.1fr_0.9fr]">
+            <div class="auth-hero-panel relative hidden h-full min-h-[680px] overflow-hidden bg-gradient-to-br from-ocean via-ocean-soft to-primary p-10 text-white lg:flex lg:flex-col lg:justify-between">
                 <div class="absolute inset-0 opacity-25" style="background-image: radial-gradient(circle at top right, rgba(255,255,255,0.9), transparent 25%), radial-gradient(circle at bottom left, rgba(255,255,255,0.5), transparent 35%);"></div>
                 <div class="relative z-10">
                     <span class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold">
                         <i class="fa-solid fa-sparkles text-xs"></i>
                         Vi Vu AI Concierge
                     </span>
-                    <h1 class="mt-8 font-heading text-4xl font-extrabold leading-tight">
+                    <h1 class="auth-hero-title mt-8 font-heading text-4xl font-extrabold leading-tight">
                         Đăng nhập để tiếp tục xây lịch trình thông minh cho chuyến đi của bạn.
                     </h1>
-                    <p class="mt-5 max-w-xl text-base leading-7 text-slate-200">
+                    <p class="auth-hero-copy mt-5 max-w-xl text-base leading-7">
                         Đồng bộ hành trình, lưu lịch sử gợi ý AI, quản lý ngân sách và tiếp tục những kế hoạch dở dang trên mọi thiết bị.
                     </p>
                 </div>
 
                 <div class="relative z-10 grid gap-4">
-                    <div class="glass-panel rounded-[1.5rem] border border-white/15 p-5">
-                        <p class="text-sm font-semibold text-white">Lịch trình 4 bước</p>
-                        <p class="mt-2 text-sm leading-6 text-slate-200">Chọn điểm đi, cấu hình chuyến đi, xem ngân sách và sinh itinerary hoàn chỉnh từ dữ liệu thật.</p>
+                    <div class="auth-hero-glass rounded-[1.5rem] p-5">
+                        <p class="auth-hero-heading text-sm font-semibold">Lịch trình 4 bước</p>
+                        <p class="auth-hero-subcopy mt-2 text-sm leading-6">Chọn điểm đi, cấu hình chuyến đi, xem ngân sách và sinh itinerary hoàn chỉnh từ dữ liệu thật.</p>
                     </div>
                     <img
                         src="{% static 'img/signin-image.jpg' %}"
@@ -89,7 +69,7 @@
                         <div class="space-y-2">
                             <label for="id_username" class="text-sm font-semibold text-foreground">Tên đăng nhập hoặc email</label>
                             <div class="relative">
-                                <input type="text" name="username" id="id_username" class="auth-input" autocomplete="username" required autofocus>
+                                <input type="text" name="username" id="id_username" class="aether-input" autocomplete="username" required autofocus>
                                 <span class="pointer-events-none absolute inset-y-0 right-4 inline-flex items-center text-muted-foreground">
                                     <i class="fa-regular fa-user"></i>
                                 </span>
@@ -99,8 +79,8 @@
                         <div class="space-y-2">
                             <label for="id_password" class="text-sm font-semibold text-foreground">Mật khẩu</label>
                             <div class="relative">
-                                <input type="password" name="password" id="id_password" class="auth-input" autocomplete="current-password" required>
-                                <button type="button" class="absolute inset-y-0 right-3 inline-flex items-center rounded-full px-2 text-muted-foreground transition-colors hover:text-primary" onclick="togglePassword()" aria-label="Hiện hoặc ẩn mật khẩu">
+                                <input type="password" name="password" id="id_password" class="aether-input" autocomplete="current-password" required>
+                                <button type="button" class="auth-link-secondary absolute inset-y-0 right-3 inline-flex items-center rounded-full px-2 theme-text-muted" onclick="togglePassword()" aria-label="Hiện hoặc ẩn mật khẩu">
                                     <i class="fa-solid fa-eye-slash" id="toggle-icon"></i>
                                 </button>
                             </div>

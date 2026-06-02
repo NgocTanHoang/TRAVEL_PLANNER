@@ -29,28 +29,44 @@
         return root.getAttribute("data-theme") === "dark" ? "dark" : "light";
     }
 
+    function getThemeIconMarkup(theme) {
+        if (theme === "dark") {
+            return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><circle cx="12" cy="12" r="4.5"></circle><path d="M12 2.5v2.2"></path><path d="M12 19.3v2.2"></path><path d="M4.93 4.93l1.56 1.56"></path><path d="M17.51 17.51l1.56 1.56"></path><path d="M2.5 12h2.2"></path><path d="M19.3 12h2.2"></path><path d="M4.93 19.07l1.56-1.56"></path><path d="M17.51 6.49l1.56-1.56"></path></svg>';
+        }
+
+        return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><path d="M21 12.8A8.8 8.8 0 1 1 11.2 3a7.1 7.1 0 0 0 9.8 9.8Z"></path></svg>';
+    }
+
     function syncThemeIcons(theme) {
         themeToggleButtons.forEach((button) => {
             const icon = button.querySelector(".theme-toggle-icon");
             if (!icon) {
                 return;
             }
-            icon.className = theme === "dark"
-                ? "fa-solid fa-sun theme-toggle-icon"
-                : "fa-solid fa-moon theme-toggle-icon";
+
+            icon.innerHTML = getThemeIconMarkup(theme);
             button.setAttribute("aria-label", theme === "dark" ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối");
         });
     }
 
-    function applyTheme(theme) {
+    function applyTheme(theme, options = {}) {
+        const { persist = true } = options;
+
         root.setAttribute("data-theme", theme);
-        if (theme === "dark") {
-            root.classList.add("dark");
-        } else {
-            root.classList.remove("dark");
+        root.classList.toggle("dark", theme === "dark");
+        root.style.colorScheme = theme;
+
+        if (body) {
+            body.setAttribute("data-theme", theme);
+            body.classList.toggle("dark", theme === "dark");
         }
-        localStorage.setItem(storageKey, theme);
+
+        if (persist) {
+            localStorage.setItem(storageKey, theme);
+        }
+
         syncThemeIcons(theme);
+        window.dispatchEvent(new CustomEvent("vivu:themechange", { detail: { theme } }));
     }
 
     function toggleTheme() {
@@ -66,13 +82,14 @@
         navbar.classList.toggle("nav-scrolled", scrolled || navMode !== "floating");
         navbar.classList.toggle("nav-solid", scrolled || navMode !== "floating");
         navbar.classList.toggle("nav-floating", navMode === "floating" && !scrolled);
-        navbar.style.boxShadow = scrolled || navMode !== "floating" ? "var(--surface-shadow)" : "none";
+        navbar.style.boxShadow = "none";
     }
 
     function openDrawer() {
         if (!mobileDrawer || !mobileOverlay) {
             return;
         }
+
         mobileDrawer.classList.remove("translate-x-full", "pointer-events-none", "opacity-0");
         mobileOverlay.classList.remove("pointer-events-none", "opacity-0");
         mobileOverlay.classList.add("pointer-events-auto", "opacity-100");
@@ -86,6 +103,7 @@
         if (!mobileDrawer || !mobileOverlay) {
             return;
         }
+
         mobileDrawer.classList.add("translate-x-full", "pointer-events-none", "opacity-0");
         mobileOverlay.classList.add("pointer-events-none", "opacity-0");
         mobileOverlay.classList.remove("pointer-events-auto", "opacity-100");
@@ -99,6 +117,7 @@
         if (!userAvatarBtn || !userDropdownMenu) {
             return;
         }
+
         const shouldOpen = typeof forceOpen === "boolean"
             ? forceOpen
             : userDropdownMenu.classList.contains("hidden") || userDropdownMenu.classList.contains("invisible");
@@ -118,6 +137,7 @@
         if (!logoutModal) {
             return;
         }
+
         logoutModal.classList.remove("hidden");
         logoutModal.classList.add("flex");
         toggleUserDropdown(false);
@@ -128,6 +148,7 @@
         if (!logoutModal) {
             return;
         }
+
         logoutModal.classList.add("hidden");
         logoutModal.classList.remove("flex");
     }
@@ -135,7 +156,7 @@
     window.showLogoutModal = showLogoutModal;
     window.hideLogoutModal = hideLogoutModal;
 
-    syncThemeIcons(currentTheme());
+    applyTheme(currentTheme(), { persist: false });
     setNavbarState();
     window.addEventListener("scroll", setNavbarState);
 
@@ -147,7 +168,7 @@
         const media = window.matchMedia("(prefers-color-scheme: dark)");
         media.addEventListener("change", function (event) {
             if (!localStorage.getItem(storageKey)) {
-                applyTheme(event.matches ? "dark" : "light");
+                applyTheme(event.matches ? "dark" : "light", { persist: false });
             }
         });
     }

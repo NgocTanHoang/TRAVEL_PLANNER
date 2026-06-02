@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VI VU | Explore Vietnam</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&amp;family=Syne:wght@700;800&amp;family=Dancing+Script:wght@700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-surface": "#dae2fd",
+                        "on-secondary-fixed": "#002113",
+                        "surface-bright": "#31394d",
+                        "tertiary-fixed": "#68fcbf",
+                        "outline": "#889391",
+                        "primary-container": "#0f766e",
+                        "surface-tint": "#80d5cb",
+                        "on-error": "#690005",
+                        "surface-container": "#171f33",
+                        "surface-container-lowest": "#060e20",
+                        "on-error-container": "#ffdad6",
+                        "on-primary-container": "#a3faef",
+                        "tertiary": "#45dfa4",
+                        "surface-container-high": "#222a3d",
+                        "tertiary-fixed-dim": "#45dfa4",
+                        "on-secondary": "#003824",
+                        "surface-container-low": "#131b2e",
+                        "on-tertiary": "#003825",
+                        "outline-variant": "#3e4947",
+                        "on-tertiary-container": "#8fffcb",
+                        "on-surface-variant": "#bdc9c6",
+                        "error-container": "#93000a",
+                        "primary-fixed": "#9cf2e8",
+                        "primary": "#80d5cb",
+                        "error": "#ffb4ab",
+                        "on-secondary-container": "#00311f",
+                        "secondary": "#4edea3",
+                        "secondary-fixed-dim": "#4edea3",
+                        "on-tertiary-fixed": "#002114",
+                        "surface": "#0b1326",
+                        "tertiary-container": "#007853",
+                        "on-primary": "#003733",
+                        "primary-fixed-dim": "#80d5cb",
+                        "surface-dim": "#0b1326",
+                        "surface-container-highest": "#2d3449",
+                        "on-surface": "#dae2fd",
+                        "on-background": "#dae2fd",
+                        "inverse-primary": "#006a63",
+                        "on-primary-fixed-variant": "#00504a",
+                        "on-primary-fixed": "#00201d",
+                        "background": "#0b1326",
+                        "on-tertiary-fixed-variant": "#005137",
+                        "inverse-on-surface": "#283044",
+                        "secondary-fixed": "#6ffbbe",
+                        "surface-variant": "#2d3449",
+                        "secondary-container": "#00a572",
+                        "on-secondary-fixed-variant": "#005236"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "container-max": "1440px",
+                        "unit": "8px",
+                        "section-gap": "120px",
+                        "margin-mobile": "20px",
+                        "margin-desktop": "80px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "hero-lg": ["Syne"],
+                        "body-md": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "hero-lg-mobile": ["Syne"],
+                        "headline-sm": ["Inter"],
+                        "display-md": ["Syne"],
+                        "script": ["Dancing Script", "cursive"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "hero-lg": ["84px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "800"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                        "hero-lg-mobile": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "headline-sm": ["24px", {"lineHeight": "1.4", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                        "display-md": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        @keyframes ken-burns {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.15); }
+        }
+        
+        .ken-burns {
+            animation: ken-burns 40s ease-in-out infinite alternate;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .ken-burns {
+                animation: none;
+            }
+            .fade-in-up, .fade-in-right {
+                animation: none !important;
+                opacity: 1 !important;
+                transform: none !important;
+            }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            opacity: 0;
+        }
+        
+        .fade-in-right {
+            animation: fadeInRight 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInRight {
+            from {
+                opacity: 0;
+                transform: translateX(60px);
+            }
+            to {
+                opacity: 0.6;
+                transform: translateX(0);
+            }
+        }
+
+        .aether-glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .aether-glass:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(69, 223, 164, 0.4);
+            transform: translateY(-10px);
+            box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(69, 223, 164, 0.1);
+        }
+
+        .sidebar-line::before, .sidebar-line::after {
+            content: '';
+            width: 1px;
+            background: rgba(255, 255, 255, 0.15);
+            flex-grow: 1;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface selection:bg-tertiary selection:text-on-tertiary overflow-x-hidden">
+<!-- Global Background & Atmospheric Glow -->
+<div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+<div class="absolute inset-0 bg-[#060e20]"></div>
+<div class="absolute inset-0 overflow-hidden">
+<img alt="Majestic Ha Long Bay, Vietnam" class="absolute inset-0 w-full h-full object-cover ken-burns opacity-70 mix-blend-luminosity" src="https://lh3.googleusercontent.com/aida/AP1WRLuTfZA8qFjec-98ALHnrpXnAGDA61lw_OR7rabM_XEQyVHTnQwqLrFUtsqdu6ZHgp5SVIxZodwCtvmU_l0C9wbZ98tmtxQDxgKTDKdMYoXaSiaD1ySq5HxkR6g7tIeUC_OyflriHdI9P1W-y1XGK-zirNJIZo6cR83kT-Gqnu_VHbgSsITY4KWnmJs9Kw32_kDQJqolTyT2HZqEjTAU-Ki42Rbh3dOu0azv8SOtWNMWK4bhujwQHHvTdWA"/>
+</div>
+<!-- Static Overlay Layers -->
+<div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/40"></div>
+<div class="absolute inset-0 bg-gradient-to-r from-background/90 via-transparent to-background/30"></div>
+<div class="absolute inset-0 shadow-[inset_0_0_150px_rgba(0,0,0,0.8)]"></div>
+<!-- Atmospheric Glows -->
+<div class="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] bg-tertiary/10 rounded-full blur-[120px]"></div>
+<div class="absolute bottom-[-20%] left-[-10%] w-[800px] h-[800px] bg-primary/5 rounded-full blur-[150px]"></div>
+</div>
+<!-- Navigation Shell -->
+<header class="fixed top-0 left-0 right-0 z-50 transition-all duration-500">
+<nav class="bg-transparent backdrop-blur-sm border-b border-white/5">
+<div class="flex justify-between items-center w-full px-gutter py-5 max-w-container-max mx-auto">
+<!-- Brand Logo -->
+<a class="font-hero-lg text-headline-sm tracking-tighter text-tertiary hover:scale-105 transition-transform duration-300" href="#">VI VU</a>
+<!-- Nav Links (Desktop) -->
+<div class="hidden md:flex items-center gap-12">
+<a class="font-label-caps text-label-caps uppercase tracking-widest text-tertiary border-b border-tertiary pb-1" href="#">Destinations</a>
+<a class="font-label-caps text-label-caps uppercase tracking-widest text-on-surface/70 hover:text-on-surface transition-colors" href="#">Experiences</a>
+<a class="font-label-caps text-label-caps uppercase tracking-widest text-on-surface/70 hover:text-on-surface transition-colors" href="#">The Console</a>
+<a class="font-label-caps text-label-caps uppercase tracking-widest text-on-surface/70 hover:text-on-surface transition-colors" href="#">About</a>
+</div>
+<!-- Actions -->
+<div class="flex items-center gap-4">
+<button class="hidden md:block font-label-caps text-label-caps uppercase tracking-widest text-on-surface/70 hover:text-tertiary transition-all">Login</button>
+<button class="px-7 py-3 rounded-full bg-primary text-on-primary font-label-caps text-label-caps uppercase tracking-widest hover:bg-tertiary transition-all scale-105 active:scale-95 duration-300 shadow-lg shadow-primary/20">Start Journey</button>
+<button class="md:hidden flex items-center justify-center w-10 h-10 rounded-full bg-white/5">
+<span class="material-symbols-outlined text-tertiary">menu</span>
+</button>
+</div>
+</div>
+</nav>
+</header>
+<!-- Social Sidebar -->
+<aside class="fixed left-0 top-0 bottom-0 z-40 hidden xl:flex flex-col items-center justify-center gap-8 px-8 sidebar-line">
+<a class="text-on-surface/40 hover:text-tertiary transition-all hover:-translate-y-1" href="#"><span class="material-symbols-outlined">brand_family</span></a>
+<a class="text-on-surface/40 hover:text-tertiary transition-all hover:-translate-y-1" href="#"><span class="material-symbols-outlined">social_leaderboard</span></a>
+<a class="text-on-surface/40 hover:text-tertiary transition-all hover:-translate-y-1" href="#"><span class="material-symbols-outlined">photo_camera</span></a>
+<a class="text-on-surface/40 hover:text-tertiary transition-all hover:-translate-y-1" href="#"><span class="material-symbols-outlined">play_circle</span></a>
+</aside>
+<main class="relative z-10 min-h-screen flex flex-col pt-24">
+<!-- Hero Content -->
+<section class="flex-grow flex items-center justify-center px-margin-desktop relative overflow-hidden">
+<!-- Vietnam Map Integration -->
+<div class="fade-in-right absolute right-[10%] top-1/2 -translate-y-1/2 w-[400px] h-[650px] pointer-events-none select-none" style="animation-delay: 0.8s;">
+<svg class="w-full h-full stroke-white fill-none stroke-[0.3]" preserveaspectratio="xMidYMid meet" viewbox="0 0 100 200">
+<path d="M45,10 C48,15 52,12 55,18 C58,25 55,30 52,35 C50,40 55,45 58,50 C62,55 60,65 55,75 C50,85 45,95 48,105 C52,115 58,125 55,135 C52,145 45,155 42,165 C40,175 42,185 45,195"></path>
+</svg>
+</div>
+<div class="text-center relative max-w-4xl mx-auto">
+<div class="flex flex-col items-center">
+<h2 class="fade-in-up font-body-md text-label-caps md:text-sm font-light uppercase tracking-[0.5em] text-tertiary/90 mb-[-1.5rem] md:mb-[-2rem] relative z-20" style="animation-delay: 0.2s;">
+                        Explore
+                    </h2>
+<h1 class="fade-in-up font-script text-[110px] md:text-[240px] text-on-surface leading-none drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)] relative z-10" style="animation-delay: 0.4s;">
+                        Vietnam
+                    </h1>
+</div>
+<div class="fade-in-up mt-8 flex flex-col items-center gap-8" style="animation-delay: 0.6s;">
+<p class="max-w-2xl font-body-lg text-on-surface/70 text-center text-body-md md:text-lg leading-relaxed">
+                        Unveil the mystical landscapes where ancient traditions meet ethereal natural wonders. Your journey into the heart of the Orient begins here.
+                    </p>
+<div class="flex gap-5">
+<span class="w-2 h-2 rounded-full bg-tertiary animate-pulse shadow-[0_0_8px_rgba(69,223,164,0.8)]"></span>
+<span class="w-2 h-2 rounded-full bg-tertiary/40"></span>
+<span class="w-2 h-2 rounded-full bg-tertiary/20"></span>
+</div>
+</div>
+</div>
+</section>
+<!-- Bottom Cards -->
+<section class="w-full max-w-container-max mx-auto px-margin-desktop pb-16">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<!-- Tours Card -->
+<div class="fade-in-up aether-glass p-10 rounded-2xl group flex flex-col gap-5" style="animation-delay: 0.8s;">
+<div class="flex items-center gap-4">
+<div class="p-2 bg-tertiary/10 rounded-lg">
+<span class="material-symbols-outlined text-tertiary text-[22px]">explore</span>
+</div>
+<h3 class="font-label-caps text-label-caps uppercase tracking-widest text-on-surface">Tours</h3>
+</div>
+<p class="font-body-md text-on-surface/60 text-sm leading-relaxed">
+                        Curated expeditions through rice terraces, floating markets, and UNESCO heritage sites.
+                    </p>
+<a class="mt-4 flex items-center gap-2 text-tertiary font-label-caps text-label-caps uppercase tracking-widest group-hover:gap-5 transition-all" href="#">
+                        Discover <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+</div>
+<!-- Hotels Card -->
+<div class="fade-in-up aether-glass p-10 rounded-2xl group flex flex-col gap-5" style="animation-delay: 1s;">
+<div class="flex items-center gap-4">
+<div class="p-2 bg-tertiary/10 rounded-lg">
+<span class="material-symbols-outlined text-tertiary text-[22px]">bed</span>
+</div>
+<h3 class="font-label-caps text-label-caps uppercase tracking-widest text-on-surface">Hotels</h3>
+</div>
+<p class="font-body-md text-on-surface/60 text-sm leading-relaxed">
+                        From secluded rainforest retreats to luxury colonial estates in the heart of the city.
+                    </p>
+<a class="mt-4 flex items-center gap-2 text-tertiary font-label-caps text-label-caps uppercase tracking-widest group-hover:gap-5 transition-all" href="#">
+                        Reserve <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+</div>
+<!-- Dining Card -->
+<div class="fade-in-up aether-glass p-10 rounded-2xl group flex flex-col gap-5" style="animation-delay: 1.2s;">
+<div class="flex items-center gap-4">
+<div class="p-2 bg-tertiary/10 rounded-lg">
+<span class="material-symbols-outlined text-tertiary text-[22px]">restaurant</span>
+</div>
+<h3 class="font-label-caps text-label-caps uppercase tracking-widest text-on-surface">Dining</h3>
+</div>
+<p class="font-body-md text-on-surface/60 text-sm leading-relaxed">
+                        Experience the vibrant palette of Vietnamese street food and refined contemporary gastronomy.
+                    </p>
+<a class="mt-4 flex items-center gap-2 text-tertiary font-label-caps text-label-caps uppercase tracking-widest group-hover:gap-5 transition-all" href="#">
+                        Explore <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer Shell -->
+<footer class="full-width py-24 bg-surface-container-lowest border-t border-white/5 relative z-10">
+<div class="flex flex-col md:flex-row justify-between items-center px-margin-desktop w-full max-w-container-max mx-auto gap-8">
+<div class="flex flex-col gap-4 items-center md:items-start">
+<span class="font-hero-lg text-body-lg text-primary">VI VU</span>
+<p class="font-body-md text-body-md text-on-surface-variant opacity-80 text-center md:text-left">© 2024 AetherTravel AI. Navigating the spatial frontier.</p>
+</div>
+<div class="flex flex-wrap justify-center gap-8">
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-tertiary transition-colors opacity-80 hover:opacity-100" href="#">Privacy Policy</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-tertiary transition-colors opacity-80 hover:opacity-100" href="#">Terms of Service</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-tertiary transition-colors opacity-80 hover:opacity-100" href="#">Travel Insurance</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-tertiary transition-colors opacity-80 hover:opacity-100" href="#">Support</a>
+</div>
+</div>
+</footer>
+<script>
+        // Micro-interaction for scroll shrinkage and background of header
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            const nav = document.querySelector('header nav');
+            if (window.scrollY > 50) {
+                nav.classList.add('py-2', 'bg-surface/60', 'backdrop-blur-xl');
+                nav.classList.remove('py-5', 'bg-transparent', 'backdrop-blur-sm');
+            } else {
+                nav.classList.add('py-5', 'bg-transparent', 'backdrop-blur-sm');
+                nav.classList.remove('py-2', 'bg-surface/60', 'backdrop-blur-xl');
+            }
+        });
+
+        // Parallax-ish mouse effect for the map and title
+        document.addEventListener('mousemove', (e) => {
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            
+            const moveX = (e.clientX - window.innerWidth / 2) / 60;
+            const moveY = (e.clientY - window.innerHeight / 2) / 60;
+            
+            const mapContainer = document.querySelector('.fade-in-right');
+            const title = document.querySelector('h1');
+            const subtitle = document.querySelector('h2');
+            
+            if(mapContainer) mapContainer.style.transform = `translate(${moveX * -1}px, calc(-50% + ${moveY * -1}px))`;
+            if(title) title.style.transform = `translate(${moveX}px, ${moveY}px)`;
+            if(subtitle) subtitle.style.transform = `translate(${moveX * 0.5}px, ${moveY * 0.5}px)`;
+        });
+    </script>
+</body></html>

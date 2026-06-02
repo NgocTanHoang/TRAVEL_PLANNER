@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Vi Vu | Atlas AI Travel System{% endblock %}
+{% block title %}Vi Vu - Du lịch Việt Nam{% endblock %}
 
 {% block nav_mode %}floating{% endblock %}
 
@@ -9,535 +9,293 @@
 
 {% block extra_styles %}
 <style>
-    :root {
-        --landing-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    @import url("https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap");
+
+    .font-script {
+        font-family: "Caveat", cursive;
     }
 
-    .atlas-landing {
-        position: relative;
-        overflow: hidden;
-        background:
-            radial-gradient(circle at 10% 20%, rgba(var(--primary), 0.08), transparent 28%),
-            radial-gradient(circle at 90% 12%, rgba(var(--accent), 0.08), transparent 30%),
-            linear-gradient(180deg, rgba(2, 6, 23, 1) 0%, rgba(11, 19, 38, 1) 42%, rgba(var(--background), 1) 100%);
-    }
-
-    .surface-glass {
-        background: rgba(11, 19, 38, 0.44);
-        backdrop-filter: blur(24px);
-        -webkit-backdrop-filter: blur(24px);
-        border: 1px solid rgba(255, 255, 255, 0.09);
-    }
-
-    .surface-glass-strong {
-        background: rgba(6, 14, 32, 0.74);
-        backdrop-filter: blur(40px);
-        -webkit-backdrop-filter: blur(40px);
-        border: 1px solid rgba(16, 185, 129, 0.15);
-    }
-
-    .hero-vignette {
-        background:
-            radial-gradient(circle at center, transparent 0%, rgba(6, 14, 32, 0.34) 52%, rgba(6, 14, 32, 0.9) 100%),
-            linear-gradient(180deg, rgba(6, 14, 32, 0.42) 0%, rgba(6, 14, 32, 0.1) 32%, rgba(6, 14, 32, 0.92) 100%);
-    }
-
-    .hero-grid {
-        display: grid;
-        gap: 2rem;
-    }
-
-    @media (min-width: 1024px) {
-        .hero-grid {
-            grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
-            align-items: end;
-        }
-    }
-
-    .reveal-up {
-        opacity: 0;
-        transform: translateY(24px);
-        transition:
-            opacity 0.9s var(--landing-ease),
-            transform 0.9s var(--landing-ease);
-    }
-
-    .reveal-up.is-visible {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-    .hero-title {
-        font-family: "Plus Jakarta Sans", "Inter", sans-serif;
-        font-size: clamp(3.4rem, 7vw, 6.4rem);
-        line-height: 0.95;
-        letter-spacing: -0.05em;
-        font-weight: 800;
-        color: #f8fafc;
-        text-transform: uppercase;
-        text-shadow: 0 18px 60px rgba(2, 6, 23, 0.65);
-    }
-
-    .section-title {
-        font-family: "Plus Jakarta Sans", "Inter", sans-serif;
-        font-size: clamp(2.2rem, 4vw, 3.8rem);
-        line-height: 1.02;
-        letter-spacing: -0.03em;
-        font-weight: 800;
-    }
-
-    .emerald-gradient-btn {
-        background: linear-gradient(135deg, #10b981 0%, #0f766e 100%);
-    }
-
-    .hero-chip,
-    .intent-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.75rem;
-        border-radius: 9999px;
-        padding: 0.9rem 1.15rem;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        transition: all 0.3s ease;
-    }
-
-    .intent-chip:hover {
-        transform: translateY(-2px);
-        border-color: rgba(16, 185, 129, 0.42);
-        background: rgba(16, 185, 129, 0.14);
-    }
-
-    .atlas-console {
-        padding: 0.45rem;
-        border-radius: 1.75rem;
-    }
-
-    .atlas-console input {
-        background: transparent;
-        border: 0;
-        outline: 0;
-        color: #f8fafc;
-    }
-
-    .atlas-console input::placeholder {
-        color: rgba(226, 232, 240, 0.54);
-    }
-
-    .atlas-console:focus-within {
-        box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.3), 0 0 42px rgba(16, 185, 129, 0.16);
-    }
-
-    .floating-card {
-        box-shadow: 0 24px 80px rgba(2, 6, 23, 0.32);
-    }
-
-    .metric-card {
-        transition: transform 0.3s ease, border-color 0.3s ease, background 0.3s ease;
-    }
-
-    .metric-card:hover {
-        transform: translateY(-4px);
-        border-color: rgba(16, 185, 129, 0.3);
-        background: rgba(10, 20, 38, 0.78);
-    }
-
-    .destination-card {
-        overflow: hidden;
-        border-radius: 2rem;
-        transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
-    }
-
-    .destination-card:hover {
-        transform: translateY(-6px);
-        border-color: rgba(16, 185, 129, 0.26);
-        box-shadow: 0 28px 80px rgba(2, 6, 23, 0.22);
-    }
-
-    .destination-card img {
-        transition: transform 1.2s ease;
-    }
-
-    .destination-card:hover img {
-        transform: scale(1.06);
-    }
-
-    .spotlight-shell {
-        position: relative;
-        overflow: hidden;
-        border-radius: 2.4rem;
-        min-height: 32rem;
-    }
-
-    .spotlight-shell::after {
+    .hero-video-frame::before,
+    .hero-video-frame::after {
         content: "";
         position: absolute;
         inset: 0;
-        background: linear-gradient(180deg, rgba(2, 6, 23, 0.08) 0%, rgba(2, 6, 23, 0.86) 88%);
-    }
-
-    .spotlight-content {
-        position: relative;
         z-index: 1;
+        transition: background 0.35s ease;
     }
 
-    .signal-dot {
-        width: 0.55rem;
-        height: 0.55rem;
-        border-radius: 9999px;
-        background: #34d399;
-        box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.6);
-        animation: signalPulse 2.2s infinite;
+    .hero-video-frame::before {
+        background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), transparent, rgba(255, 255, 255, 0.1));
     }
 
-    @keyframes signalPulse {
-        0% {
-            box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.5);
-        }
-        70% {
-            box-shadow: 0 0 0 12px rgba(52, 211, 153, 0);
-        }
-        100% {
-            box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
-        }
+    .hero-video-frame::after {
+        background:
+            radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.18), transparent 28%),
+            radial-gradient(circle at 80% 15%, rgba(16, 185, 129, 0.12), transparent 24%);
     }
 
-    @media (prefers-reduced-motion: reduce) {
-        .reveal-up,
-        .destination-card,
-        .destination-card img,
-        .metric-card,
-        .intent-chip,
-        .signal-dot {
-            transition: none !important;
-            animation: none !important;
-            transform: none !important;
-            opacity: 1 !important;
-        }
+    .hero-video-frame video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center center;
+        filter: brightness(1.1) contrast(1.05) saturate(1.1);
+        transform: scale(1.02);
+        transition: filter 0.35s ease;
+    }
+
+    html.dark .hero-video-frame::before,
+    html[data-theme="dark"] .hero-video-frame::before {
+        background:
+            linear-gradient(180deg, rgba(3, 7, 18, 0.24) 0%, rgba(3, 7, 18, 0.4) 28%, rgba(3, 7, 18, 0.84) 100%),
+            linear-gradient(90deg, rgba(2, 6, 23, 0.78) 0%, rgba(2, 6, 23, 0.12) 42%, rgba(2, 6, 23, 0.74) 100%);
+    }
+
+    html.dark .hero-video-frame::after,
+    html[data-theme="dark"] .hero-video-frame::after {
+        background:
+            radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.16), transparent 28%),
+            radial-gradient(circle at 80% 15%, rgba(45, 212, 191, 0.12), transparent 24%),
+            radial-gradient(circle at center, transparent 44%, rgba(0, 0, 0, 0.22) 100%);
+    }
+
+    html.dark .hero-video-frame video,
+    html[data-theme="dark"] .hero-video-frame video {
+        filter: brightness(0.75) contrast(1.25) saturate(0.75);
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="atlas-landing">
-    <section class="relative min-h-[calc(100vh-5rem)] overflow-hidden">
-        <div class="absolute inset-0">
-            <video autoplay loop muted playsinline class="h-full w-full object-cover">
-                <source src="{% static 'img/video_02.mp4' %}" type="video/mp4">
-            </video>
-            <div class="hero-vignette absolute inset-0"></div>
-        </div>
+<section class="relative isolate overflow-hidden bg-white text-zinc-900 dark:bg-slate-950 dark:text-white">
+    <div class="hero-video-frame absolute inset-0">
+        <video autoplay loop muted playsinline preload="metadata" poster="{% static 'img/stitch-deep-ocean-landing.png' %}">
+            <source src="{% static 'img/video_02.mp4' %}" type="video/mp4">
+        </video>
+    </div>
 
-        <div class="relative z-10 mx-auto flex min-h-[calc(100vh-5rem)] max-w-[1440px] items-center px-4 py-20 sm:px-6 lg:px-10">
-            <div class="hero-grid w-full">
-                <div class="space-y-8">
-                    <div class="reveal-up">
-                        <div class="hero-chip surface-glass inline-flex text-[11px] font-bold uppercase tracking-[0.28em] text-slate-100">
-                            <span class="signal-dot"></span>
-                            Atlas AI đang đồng bộ hành trình theo thời gian thực
-                        </div>
-                    </div>
-
-                    <div class="max-w-4xl space-y-6">
-                        <h1 class="hero-title reveal-up">
-                            Khám phá Việt Nam<br>
-                            cùng Atlas AI
-                        </h1>
-                        <p class="reveal-up max-w-3xl text-lg leading-8 text-slate-200/92 sm:text-xl">
-                            Một landing page đậm chất cinematic cho Vi Vu: lên lịch trình 4 bước, khám phá điểm đến đã được chuẩn hóa,
-                            và để Atlas kết nối dữ liệu tuyến đường, ngân sách, lưu trú, thời tiết trong cùng một nhịp trải nghiệm.
-                        </p>
-                    </div>
-
-                    <div class="reveal-up flex flex-wrap gap-4">
-                        <a href="{% url 'travel-plan' %}" class="emerald-gradient-btn inline-flex items-center justify-center rounded-2xl px-8 py-4 text-sm font-bold uppercase tracking-[0.18em] text-white shadow-2xl shadow-emerald-500/20 transition-all duration-300 hover:-translate-y-1 hover:brightness-110">
-                            Bắt đầu lập lịch trình
-                        </a>
-                        <a href="{% url 'place_search' %}" class="surface-glass inline-flex items-center justify-center rounded-2xl px-8 py-4 text-sm font-bold uppercase tracking-[0.18em] text-white transition-all duration-300 hover:-translate-y-1 hover:bg-white/10">
-                            Khám phá địa điểm
-                        </a>
-                    </div>
-
-                    <form id="landing-command-form" class="reveal-up atlas-console surface-glass-strong max-w-4xl">
-                        <div class="flex flex-col gap-3 md:flex-row md:items-center">
-                            <div class="flex min-w-0 flex-1 items-center gap-3 px-4">
-                                <span class="rounded-full bg-emerald-400/15 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-emerald-300">
-                                    Hỏi Atlas
-                                </span>
-                                <input
-                                    id="landing-command-input"
-                                    type="text"
-                                    autocomplete="off"
-                                    placeholder="Ví dụ: Lên lịch trình 3 ngày ở Biên Hòa cho 2 người, thích ẩm thực và nghỉ dưỡng nhẹ."
-                                    class="w-full py-4 text-base"
-                                >
-                            </div>
-                            <button type="submit" class="emerald-gradient-btn inline-flex min-h-[3.75rem] items-center justify-center gap-2 rounded-2xl px-7 text-sm font-bold uppercase tracking-[0.16em] text-white transition-all duration-300 hover:brightness-110">
-                                <i class="fa-solid fa-wand-magic-sparkles"></i>
-                                Tạo lịch trình
-                            </button>
-                        </div>
-                    </form>
-
-                    <div class="reveal-up flex flex-wrap gap-3">
-                        <button type="button" class="intent-chip surface-glass text-sm font-semibold text-white/90" data-landing-destination="Tỉnh Đồng Nai">
-                            <i class="fa-solid fa-location-dot text-emerald-300"></i>
-                            Tỉnh Đồng Nai
-                        </button>
-                        <button type="button" class="intent-chip surface-glass text-sm font-semibold text-white/90" data-landing-destination="Thành phố Biên Hòa">
-                            <i class="fa-solid fa-location-dot text-emerald-300"></i>
-                            Thành phố Biên Hòa
-                        </button>
-                        <button type="button" class="intent-chip surface-glass text-sm font-semibold text-white/90" data-landing-destination="Thành phố Long Khánh">
-                            <i class="fa-solid fa-location-dot text-emerald-300"></i>
-                            Thành phố Long Khánh
-                        </button>
-                        <button type="button" class="intent-chip surface-glass text-sm font-semibold text-white/90" data-landing-destination="Đà Nẵng">
-                            <i class="fa-solid fa-location-dot text-emerald-300"></i>
-                            Đà Nẵng
-                        </button>
-                    </div>
-                </div>
-
-                <div class="reveal-up lg:justify-self-end">
-                    <div class="floating-card surface-glass-strong rounded-[2rem] p-5 text-slate-50">
-                        <div class="flex items-center justify-between gap-4">
-                            <div>
-                                <p class="text-[11px] font-bold uppercase tracking-[0.24em] text-emerald-300">Aether Console</p>
-                                <h2 class="mt-3 text-3xl font-bold tracking-tight">Điểm đến nổi bật</h2>
-                            </div>
-                            <span class="rounded-full bg-white/10 px-3 py-2 text-xs font-semibold text-slate-200">
-                                Stitch Sync
-                            </span>
-                        </div>
-
-                        <div class="mt-5 overflow-hidden rounded-[1.5rem] border border-white/10">
-                            <img
-                                src="{% static 'img/stitch-deep-ocean-landing.png' %}"
-                                alt="Giao diện premium của Vi Vu Atlas AI"
-                                class="aspect-[4/3] w-full object-cover"
-                            >
-                        </div>
-
-                        <div class="mt-5 grid gap-3 sm:grid-cols-2">
-                            <div class="metric-card rounded-[1.5rem] border border-white/10 bg-white/5 p-4 transition-all duration-300 ease-out">
-                                <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-400">Route Intelligence</p>
-                                <p class="mt-3 text-lg font-semibold text-white">OSRM + Atlas</p>
-                                <p class="mt-2 text-sm leading-6 text-slate-300">Ưu tiên đường đi khả thi, mạch hành trình rõ và ít xung đột thời gian.</p>
-                            </div>
-                            <div class="metric-card rounded-[1.5rem] border border-white/10 bg-white/5 p-4 transition-all duration-300 ease-out">
-                                <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-400">Live Planning</p>
-                                <p class="mt-3 text-lg font-semibold text-white">SSE Realtime</p>
-                                <p class="mt-2 text-sm leading-6 text-slate-300">Nhận từng khối nội dung ngày đi thay vì chờ toàn bộ lịch trình kết thúc.</p>
-                            </div>
-                        </div>
-
-                        <div class="mt-4 rounded-[1.5rem] border border-emerald-400/20 bg-emerald-400/10 p-4">
-                            <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-emerald-300">Atlas Note</p>
-                            <p class="mt-2 text-sm leading-6 text-slate-100/90">
-                                Hero đã được nối video local, còn các ô hình public sẽ ưu tiên asset nội bộ để frontend không còn phụ thuộc URL ngoài.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="relative z-10 px-4 pb-20 sm:px-6 lg:px-10">
-        <div class="mx-auto grid max-w-[1440px] gap-6 md:grid-cols-3">
-            <article class="reveal-up surface-glass rounded-[2rem] p-8 text-slate-100">
-                <div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-400/10 text-2xl text-emerald-300">
-                    <i class="fa-solid fa-map-location-dot"></i>
-                </div>
-                <h3 class="mt-6 text-2xl font-bold">Khám phá địa điểm</h3>
-                <p class="mt-3 text-sm leading-7 text-slate-300">
-                    Search, filter và bám dữ liệu địa lý thật trước khi đẩy địa điểm vào hành trình.
+    <div class="relative z-10 mx-auto flex min-h-screen w-full max-w-[1440px] flex-col px-4 pb-10 pt-28 sm:px-6 lg:px-10">
+        <div class="flex flex-1 items-center justify-center">
+            <div class="w-full max-w-5xl text-center">
+                <p class="text-xs md:text-sm uppercase tracking-[0.3em] font-light text-emerald-400">
+                    Explore
                 </p>
-            </article>
-            <article class="reveal-up surface-glass rounded-[2rem] p-8 text-slate-100">
-                <div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-400/10 text-2xl text-emerald-300">
-                    <i class="fa-solid fa-route"></i>
-                </div>
-                <h3 class="mt-6 text-2xl font-bold">Wizard 4 bước</h3>
-                <p class="mt-3 text-sm leading-7 text-slate-300">
-                    Đi từ tuyến đường, ngày đi, ngân sách đến lịch trình chi tiết trong cùng một flow có kiểm soát.
+                <h1 class="font-script mt-3 text-6xl font-normal text-zinc-950 drop-shadow-[0_4px_16px_rgba(0,0,0,0.5)] md:text-8xl dark:text-white">
+                    Vietnam
+                </h1>
+                <p class="mx-auto mt-6 max-w-2xl text-sm font-extralight leading-relaxed text-zinc-800/90 drop-shadow-[0_2px_10px_rgba(255,255,255,0.45)] md:text-base dark:text-white/70 dark:drop-shadow-none">
+                    Khám phá những vùng đất kỳ vĩ, nơi những giá trị truyền thống hòa quyện cùng thiên nhiên tuyệt sắc. Hành trình diệu kỳ của bạn bắt đầu từ đây.
                 </p>
-            </article>
-            <article class="reveal-up surface-glass rounded-[2rem] p-8 text-slate-100">
-                <div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-400/10 text-2xl text-emerald-300">
-                    <i class="fa-solid fa-satellite-dish"></i>
-                </div>
-                <h3 class="mt-6 text-2xl font-bold">Atlas điều phối</h3>
-                <p class="mt-3 text-sm leading-7 text-slate-300">
-                    Multi-agent xử lý transport, accommodation, activities, budget và planning theo cùng một ngữ cảnh.
-                </p>
-            </article>
-        </div>
-    </section>
 
-    <section class="bg-background px-4 py-24 text-foreground sm:px-6 lg:px-10">
-        <div class="mx-auto max-w-[1440px]">
-            <div class="mb-14 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-                <div class="max-w-3xl space-y-4">
-                    <p class="text-[11px] font-black uppercase tracking-[0.28em] text-primary">Featured Atlas Routes</p>
-                    <h2 class="section-title">Điểm đến nổi bật để mở ra hành trình tiếp theo</h2>
-                    <p class="text-lg leading-8 text-muted-foreground">
-                        Mỗi card bên dưới đều có thể chuyển người dùng thẳng sang wizard hoặc sang trang khám phá địa điểm.
-                    </p>
+                <div class="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+                    <a
+                        href="{% url 'travel-plan' %}"
+                        class="inline-flex min-h-[3.5rem] items-center justify-center rounded-full border border-emerald-300/40 bg-emerald-300 px-8 text-sm font-light uppercase tracking-[0.28em] text-slate-950 transition-all duration-300 hover:-translate-y-0.5 hover:bg-emerald-200"
+                    >
+                        Bắt đầu hành trình
+                    </a>
+                    <a
+                        href="{% url 'place_search' %}"
+                        class="inline-flex min-h-[3.5rem] items-center justify-center rounded-full border border-white/50 bg-white/45 px-8 text-sm font-extralight uppercase tracking-[0.24em] text-zinc-900 backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/60 dark:border-white/15 dark:bg-white/5 dark:text-white/85 dark:hover:bg-white/10"
+                    >
+                        Khám phá điểm đến
+                    </a>
                 </div>
 
-                <form id="landing-discovery-form" class="surface-glass flex w-full max-w-xl items-center gap-3 rounded-[1.5rem] p-2 lg:w-auto">
-                    <div class="flex min-w-0 flex-1 items-center gap-3 px-3">
-                        <i class="fa-solid fa-magnifying-glass text-primary"></i>
+                <form id="landing-command-form" class="mx-auto mt-8 w-full max-w-3xl">
+                    <div class="flex flex-col gap-3 rounded-[1.75rem] border border-white/60 bg-white/40 p-3 backdrop-blur-xl md:flex-row md:items-center dark:border-white/10 dark:bg-white/[0.05]">
                         <input
-                            id="landing-discovery-input"
+                            id="landing-command-input"
                             type="text"
                             autocomplete="off"
-                            placeholder="Tìm điểm đến, ví dụ: Đồng Nai, Biên Hòa, Hạ Long..."
-                            class="w-full border-0 bg-transparent py-3 text-base text-foreground outline-none"
+                            placeholder="Ví dụ: Lên lịch trình 3 ngày ở Đà Lạt cho 2 người, thích thiên nhiên và cà phê."
+                            class="min-w-0 flex-1 bg-transparent px-4 py-3 text-sm font-extralight text-zinc-900 outline-none placeholder:text-zinc-600/70 md:text-base dark:text-white dark:placeholder:text-white/40"
                         >
+                        <button
+                            type="submit"
+                            class="inline-flex items-center justify-center rounded-full border border-emerald-300/40 bg-emerald-300 px-6 py-3 text-xs font-medium uppercase tracking-[0.28em] text-slate-950 transition-all duration-300 hover:bg-emerald-200"
+                        >
+                            Bắt đầu hành trình
+                        </button>
                     </div>
-                    <button type="submit" class="rounded-[1.2rem] bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-all duration-300 hover:bg-primary-hover">
-                        Mở khám phá
-                    </button>
                 </form>
             </div>
+        </div>
 
-            <div class="grid gap-8 lg:grid-cols-12">
-                <article class="reveal-up spotlight-shell lg:col-span-7">
-                    <img
-                        src="{% static 'img/image_404a1e.jpg' %}"
-                        alt="Điểm đến spotlight theo stitch asset"
-                        class="absolute inset-0 h-full w-full object-cover"
-                    >
-                    <div class="spotlight-content flex h-full flex-col justify-end p-8 text-white sm:p-10">
-                        <span class="inline-flex w-fit rounded-full bg-emerald-400/15 px-4 py-2 text-[11px] font-black uppercase tracking-[0.22em] text-emerald-300">
-                            image_404a1e.jpg
-                        </span>
-                        <h3 class="mt-5 text-4xl font-black tracking-tight sm:text-5xl">Hạ Long trong lớp cinematic của Stitch</h3>
-                        <p class="mt-4 max-w-xl text-base leading-7 text-slate-200/88">
-                            Card spotlight này dùng đúng asset nội bộ có token `image_404a1e.jpg`, thay cho URL ngoài, để giữ path sạch trong frontend.
+        <div class="grid gap-4 pt-12 lg:grid-cols-3">
+            <article class="rounded-xl border border-white/60 bg-white/40 p-6 shadow-sm backdrop-blur-md transition-all duration-300 hover:bg-white/55 dark:border-white/[0.08] dark:bg-white/[0.03] dark:shadow-none dark:hover:bg-white/[0.06]">
+                <p class="text-xs uppercase tracking-[0.35em] text-zinc-600 dark:text-white/45">Tours</p>
+                <h2 class="mt-3 text-xl font-normal tracking-wider text-zinc-800 dark:font-light dark:text-white">Hành trình cảm hứng</h2>
+                <p class="mt-3 text-sm font-normal leading-7 text-zinc-800 dark:text-white/60 dark:font-extralight">
+                    Mở ra những cung đường giàu cảm xúc, nơi cảnh sắc, văn hóa và nhịp sống địa phương hòa thành một chuyến đi đáng nhớ.
+                </p>
+                <button
+                    type="button"
+                    data-landing-destination="Hạ Long"
+                    class="mt-5 inline-flex items-center gap-2 text-emerald-300 tracking-widest uppercase text-xs font-medium"
+                >
+                    Discover
+                    <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                </button>
+            </article>
+
+            <article class="rounded-xl border border-white/60 bg-white/40 p-6 shadow-sm backdrop-blur-md transition-all duration-300 hover:bg-white/55 dark:border-white/[0.08] dark:bg-white/[0.03] dark:shadow-none dark:hover:bg-white/[0.06]">
+                <p class="text-xs uppercase tracking-[0.35em] text-zinc-600 dark:text-white/45">Hotels</p>
+                <h2 class="mt-3 text-xl font-normal tracking-wider text-zinc-800 dark:font-light dark:text-white">Chốn nghỉ tinh tế</h2>
+                <p class="mt-3 text-sm font-normal leading-7 text-zinc-800 dark:text-white/60 dark:font-extralight">
+                    Lưu lại những khoảnh khắc thư thái với gợi ý lưu trú hài hòa cùng thiên nhiên, nhịp sống và ngân sách của bạn.
+                </p>
+                <a
+                    href="{% url 'place_search' %}"
+                    class="mt-5 inline-flex items-center gap-2 text-emerald-300 tracking-widest uppercase text-xs font-medium"
+                >
+                    Reserve
+                    <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                </a>
+            </article>
+
+            <article class="rounded-xl border border-white/60 bg-white/40 p-6 shadow-sm backdrop-blur-md transition-all duration-300 hover:bg-white/55 dark:border-white/[0.08] dark:bg-white/[0.03] dark:shadow-none dark:hover:bg-white/[0.06]">
+                <p class="text-xs uppercase tracking-[0.35em] text-zinc-600 dark:text-white/45">Dining</p>
+                <h2 class="mt-3 text-xl font-normal tracking-wider text-zinc-800 dark:font-light dark:text-white">Hương vị bản địa</h2>
+                <p class="mt-3 text-sm font-normal leading-7 text-zinc-800 dark:text-white/60 dark:font-extralight">
+                    Chạm tới tinh thần mỗi vùng đất qua ẩm thực, những quán nhỏ duyên dáng và các điểm dừng chân giàu bản sắc.
+                </p>
+                <a
+                    href="{% url 'travel-plan' %}"
+                    class="mt-5 inline-flex items-center gap-2 text-emerald-300 tracking-widest uppercase text-xs font-medium"
+                >
+                    Explore
+                    <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                </a>
+            </article>
+        </div>
+    </div>
+</section>
+
+<section class="relative bg-transparent text-zinc-900 dark:bg-slate-950 dark:text-white">
+    <div class="absolute inset-0 bg-gradient-to-b from-white/30 via-transparent to-white/10 dark:from-transparent dark:via-slate-950/20 dark:to-slate-950"></div>
+    <div class="relative mx-auto max-w-[1440px] px-4 py-20 sm:px-6 lg:px-10">
+        <div class="mx-auto max-w-4xl text-center">
+            <p class="text-xs font-light uppercase tracking-[0.34em] text-emerald-600 dark:text-emerald-300/80">Điểm đến nổi bật</p>
+            <h2 class="mt-4 text-3xl font-extralight tracking-wider text-zinc-900 md:text-5xl dark:text-white">
+                Những điểm dừng chân mang đậm vẻ đẹp Việt Nam
+            </h2>
+            <p class="mx-auto mt-6 max-w-3xl text-sm font-extralight leading-8 text-zinc-700 md:text-base dark:text-white/65">
+                Từ di sản ven biển đến cao nguyên mờ sương, mỗi nơi đều có một nhịp điệu riêng để bạn khám phá bằng sự tò mò và cảm hứng.
+            </p>
+        </div>
+
+        <div class="mt-12 grid gap-6 md:grid-cols-3">
+            <button type="button" data-landing-destination="Hà Giang" class="text-left">
+                <article class="overflow-hidden rounded-2xl border border-white/50 bg-white/30 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:bg-white/45 dark:border-white/10 dark:bg-white/[0.02] dark:shadow-none dark:hover:bg-white/[0.05]">
+                    <div class="h-72 bg-[url('/static/img/image_404a1e.jpg')] bg-cover bg-center"></div>
+                    <div class="px-1 py-6">
+                        <p class="text-xs uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-300/80">Miền núi phía Bắc</p>
+                        <h3 class="mt-3 text-2xl font-light tracking-wider text-zinc-900 dark:text-white">Hà Giang</h3>
+                        <p class="mt-3 text-sm font-extralight leading-7 text-zinc-700 dark:text-white/60">
+                            Những cung đường uốn lượn, bản làng bình yên và sắc màu cao nguyên đá tạo nên hành trình đầy chiều sâu.
                         </p>
-                        <div class="mt-6 flex flex-wrap gap-3">
-                            <button type="button" class="emerald-gradient-btn rounded-2xl px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-white" data-landing-destination="Hạ Long">
-                                Lập lịch trình
-                            </button>
-                            <a href="{% url 'place_search' %}?q=Hạ%20Long" class="surface-glass rounded-2xl px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-white">
-                                Xem trên bản đồ
-                            </a>
-                        </div>
                     </div>
                 </article>
+            </button>
 
-                <div class="grid gap-8 lg:col-span-5">
-                    <article class="destination-card reveal-up surface-glass">
-                        <div class="relative aspect-[5/4] overflow-hidden">
-                            <img src="{% static 'img/stitch-deep-ocean-search.png' %}" alt="Khung khám phá địa điểm Vi Vu" class="h-full w-full object-cover">
-                            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/10 to-transparent"></div>
-                            <div class="absolute bottom-0 left-0 right-0 p-6 text-white">
-                                <p class="text-[11px] font-black uppercase tracking-[0.22em] text-emerald-300">Discovery Grid</p>
-                                <h3 class="mt-3 text-3xl font-bold">Đồng Nai đã chuẩn hóa</h3>
-                                <p class="mt-3 text-sm leading-6 text-slate-200/88">Từ Biên Hòa đến Long Khánh, flow khám phá có thể bắn thẳng sang wizard để Atlas tiếp tục xử lý.</p>
-                                <button type="button" class="mt-5 inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.14em] text-emerald-300" data-landing-destination="Tỉnh Đồng Nai">
-                                    Mở wizard
-                                    <i class="fa-solid fa-arrow-right"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </article>
-
-                    <article class="destination-card reveal-up surface-glass">
-                        <div class="relative aspect-[5/4] overflow-hidden">
-                            <img src="{% static 'img/stitch-deep-ocean-travel-plan.png' %}" alt="Workflow travel plan của Vi Vu" class="h-full w-full object-cover">
-                            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/10 to-transparent"></div>
-                            <div class="absolute bottom-0 left-0 right-0 p-6 text-white">
-                                <p class="text-[11px] font-black uppercase tracking-[0.22em] text-emerald-300">Wizard Sync</p>
-                                <h3 class="mt-3 text-3xl font-bold">Bàn điều phối 4 bước</h3>
-                                <p class="mt-3 text-sm leading-6 text-slate-200/88">Prompt từ landing được đẩy sang wizard qua query params và sessionStorage, không làm đổi contract backend.</p>
-                                <a href="{% url 'travel-plan' %}" class="mt-5 inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.14em] text-emerald-300">
-                                    Vào flow tạo lịch trình
-                                    <i class="fa-solid fa-arrow-right"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </article>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="bg-ocean px-4 py-24 text-slate-100 sm:px-6 lg:px-10">
-        <div class="mx-auto max-w-[1440px]">
-            <div class="grid gap-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center">
-                <div class="space-y-6">
-                    <p class="text-[11px] font-black uppercase tracking-[0.28em] text-emerald-300">Atlas Launch Pad</p>
-                    <h2 class="section-title text-white">Sẵn sàng chuyển từ cảm hứng sang một lịch trình khả thi?</h2>
-                    <p class="max-w-3xl text-lg leading-8 text-slate-300">
-                        Bắt đầu ở landing, chuyển sang wizard, và để Atlas xử lý tuyến đường, ngân sách, lưu trú, hoạt động và planning trong cùng một nhịp.
-                    </p>
-                </div>
-
-                <div class="surface-glass rounded-[2rem] p-6">
-                    <div class="space-y-4 text-sm leading-7 text-slate-200">
-                        <div class="flex items-start gap-3">
-                            <span class="mt-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-400/15 text-emerald-300">1</span>
-                            <p>Nhập ý định ở landing hoặc chọn nhanh một điểm đến nổi bật.</p>
-                        </div>
-                        <div class="flex items-start gap-3">
-                            <span class="mt-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-400/15 text-emerald-300">2</span>
-                            <p>Wizard 4 bước tiếp nhận ngữ cảnh và mở sẵn phần cần điền.</p>
-                        </div>
-                        <div class="flex items-start gap-3">
-                            <span class="mt-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-400/15 text-emerald-300">3</span>
-                            <p>SSE sẽ stream tiến trình tạo lịch trình thay vì chờ toàn bộ phản hồi.</p>
-                        </div>
+            <button type="button" data-landing-destination="Hội An" class="text-left">
+                <article class="overflow-hidden rounded-2xl border border-white/50 bg-white/30 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:bg-white/45 dark:border-white/10 dark:bg-white/[0.02] dark:shadow-none dark:hover:bg-white/[0.05]">
+                    <div class="h-72 bg-[url('/static/img/stitch-deep-ocean-landing.png')] bg-cover bg-center"></div>
+                    <div class="px-1 py-6">
+                        <p class="text-xs uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-300/80">Miền Trung duyên dáng</p>
+                        <h3 class="mt-3 text-2xl font-light tracking-wider text-zinc-900 dark:text-white">Hội An</h3>
+                        <p class="mt-3 text-sm font-extralight leading-7 text-zinc-700 dark:text-white/60">
+                            Phố cổ dịu dàng, ánh đèn lồng ấm áp và nhịp sống thong thả khiến mỗi khoảnh khắc đều trở nên thi vị.
+                        </p>
                     </div>
+                </article>
+            </button>
 
-                    <div class="mt-6 flex flex-wrap gap-3">
-                        <a href="{% url 'travel-plan' %}" class="emerald-gradient-btn inline-flex items-center justify-center rounded-2xl px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-white transition-all duration-300 hover:brightness-110">
-                            Khởi tạo với Atlas
-                        </a>
-                        <a href="{% url 'place_search' %}" class="inline-flex items-center justify-center rounded-2xl border border-white/10 px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-white transition-all duration-300 hover:bg-white/10">
-                            Xem console khám phá
-                        </a>
+            <button type="button" data-landing-destination="Phú Quốc" class="text-left">
+                <article class="overflow-hidden rounded-2xl border border-white/50 bg-white/30 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:bg-white/45 dark:border-white/10 dark:bg-white/[0.02] dark:shadow-none dark:hover:bg-white/[0.05]">
+                    <div class="h-72 bg-[url('/static/img/stitch-deep-ocean-landing.png')] bg-cover bg-center"></div>
+                    <div class="px-1 py-6">
+                        <p class="text-xs uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-300/80">Biển đảo phương Nam</p>
+                        <h3 class="mt-3 text-2xl font-light tracking-wider text-zinc-900 dark:text-white">Phú Quốc</h3>
+                        <p class="mt-3 text-sm font-extralight leading-7 text-zinc-700 dark:text-white/60">
+                            Bờ cát sáng, mặt biển trong xanh và những buổi chiều lộng gió mở ra cảm giác nghỉ dưỡng nhẹ nhàng, thư thái.
+                        </p>
                     </div>
-                </div>
-            </div>
+                </article>
+            </button>
         </div>
-    </section>
-</div>
+    </div>
+</section>
+
+<section class="relative bg-transparent text-zinc-900 dark:bg-slate-950 dark:text-white">
+    <div class="relative mx-auto max-w-[1440px] px-4 py-20 sm:px-6 lg:px-10">
+        <div class="mx-auto max-w-4xl text-center">
+            <p class="text-xs font-light uppercase tracking-[0.34em] text-emerald-600 dark:text-emerald-300/80">Nhịp hành trình</p>
+            <h2 class="mt-4 text-3xl font-extralight tracking-wider text-zinc-900 md:text-5xl dark:text-white">
+                Bắt đầu nhẹ nhàng, hoàn thiện chuyến đi theo từng bước
+            </h2>
+        </div>
+
+        <div class="mt-12 grid gap-10 md:grid-cols-2 xl:grid-cols-4">
+            <article class="space-y-4">
+                <p class="text-xs uppercase tracking-[0.32em] text-emerald-600 dark:text-emerald-300/80">01</p>
+                <h3 class="text-2xl font-light tracking-wider text-zinc-900 dark:text-white">Chọn cảm hứng</h3>
+                <p class="text-sm font-extralight leading-7 text-zinc-700 dark:text-white/60">
+                    Bắt đầu bằng một vùng đất, một mùa đẹp hay một trải nghiệm mà bạn muốn chạm tới.
+                </p>
+            </article>
+            <article class="space-y-4">
+                <p class="text-xs uppercase tracking-[0.32em] text-emerald-600 dark:text-emerald-300/80">02</p>
+                <h3 class="text-2xl font-light tracking-wider text-zinc-900 dark:text-white">Mở lộ trình</h3>
+                <p class="text-sm font-extralight leading-7 text-zinc-700 dark:text-white/60">
+                    Gửi mong muốn của bạn để mở ra gợi ý phù hợp về điểm đến, nhịp di chuyển và thời lượng.
+                </p>
+            </article>
+            <article class="space-y-4">
+                <p class="text-xs uppercase tracking-[0.32em] text-emerald-600 dark:text-emerald-300/80">03</p>
+                <h3 class="text-2xl font-light tracking-wider text-zinc-900 dark:text-white">Tinh chỉnh chi tiết</h3>
+                <p class="text-sm font-extralight leading-7 text-zinc-700 dark:text-white/60">
+                    Điều chỉnh phong cách nghỉ dưỡng, ẩm thực và ngân sách để hành trình gần hơn với mong đợi riêng của bạn.
+                </p>
+            </article>
+            <article class="space-y-4">
+                <p class="text-xs uppercase tracking-[0.32em] text-emerald-600 dark:text-emerald-300/80">04</p>
+                <h3 class="text-2xl font-light tracking-wider text-zinc-900 dark:text-white">Sẵn sàng lên đường</h3>
+                <p class="text-sm font-extralight leading-7 text-zinc-700 dark:text-white/60">
+                    Lưu lại kế hoạch yêu thích và khởi hành với một lịch trình rõ ràng, mềm mại và giàu cảm hứng.
+                </p>
+            </article>
+        </div>
+    </div>
+</section>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
     (function () {
-        const LANDING_INTENT_KEY = 'vivu-landing-intent';
-        const commandForm = document.getElementById('landing-command-form');
-        const commandInput = document.getElementById('landing-command-input');
-        const discoveryForm = document.getElementById('landing-discovery-form');
-        const discoveryInput = document.getElementById('landing-discovery-input');
-        const destinationButtons = document.querySelectorAll('[data-landing-destination]');
+        const LANDING_INTENT_KEY = "vivu-landing-intent";
+        const commandForm = document.getElementById("landing-command-form");
+        const commandInput = document.getElementById("landing-command-input");
+        const destinationButtons = document.querySelectorAll("[data-landing-destination]");
 
         function navigateToWizard(payload) {
             const params = new URLSearchParams();
             if (payload.destination) {
-                params.set('destination', payload.destination);
-            }
-            if (payload.origin) {
-                params.set('origin', payload.origin);
+                params.set("destination", payload.destination);
             }
             if (payload.prompt) {
-                params.set('prompt', payload.prompt);
+                params.set("prompt", payload.prompt);
             }
 
             sessionStorage.setItem(LANDING_INTENT_KEY, JSON.stringify(payload));
-            window.location.href = "{% url 'travel-plan' %}" + (params.toString() ? `?${params.toString()}` : '');
+            window.location.href = "{% url 'travel-plan' %}" + (params.toString() ? `?${params.toString()}` : "");
         }
 
         if (commandForm) {
-            commandForm.addEventListener('submit', function (event) {
+            commandForm.addEventListener("submit", function (event) {
                 event.preventDefault();
-                const prompt = (commandInput?.value || '').trim();
+                const prompt = (commandInput?.value || "").trim();
                 if (!prompt) {
                     commandInput?.focus();
                     return;
@@ -545,56 +303,26 @@
 
                 navigateToWizard({
                     prompt,
-                    destination: '',
-                    source: 'landing-command'
+                    destination: "",
+                    source: "landing-command"
                 });
             });
         }
 
-        if (discoveryForm) {
-            discoveryForm.addEventListener('submit', function (event) {
-                event.preventDefault();
-                const keyword = (discoveryInput?.value || '').trim();
-                if (!keyword) {
-                    discoveryInput?.focus();
-                    return;
-                }
-
-                const searchUrl = new URL("{% url 'place_search' %}", window.location.origin);
-                searchUrl.searchParams.set('q', keyword);
-                window.location.href = searchUrl.toString();
-            });
-        }
-
         destinationButtons.forEach((button) => {
-            button.addEventListener('click', function () {
-                const destination = this.dataset.landingDestination || '';
+            button.addEventListener("click", function () {
+                const destination = this.dataset.landingDestination || "";
                 if (!destination) {
                     return;
                 }
 
                 navigateToWizard({
-                    prompt: `Lên lịch trình cho ${destination}`,
+                    prompt: `Bắt đầu hành trình đến ${destination}`,
                     destination,
-                    source: 'landing-chip'
+                    source: "landing-destination"
                 });
             });
         });
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach((entry) => {
-                if (!entry.isIntersecting) {
-                    return;
-                }
-                entry.target.classList.add('is-visible');
-                observer.unobserve(entry.target);
-            });
-        }, {
-            threshold: 0.16,
-            rootMargin: '0px 0px -60px 0px'
-        });
-
-        document.querySelectorAll('.reveal-up').forEach((element) => observer.observe(element));
     })();
 </script>
 {% endblock %}

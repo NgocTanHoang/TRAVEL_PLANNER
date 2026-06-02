@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Atlas AI Concierge Workspace | Vi Vu{% endblock %}
+{% block title %}Trợ lý du lịch Vi Vu | Vi Vu{% endblock %}
 
 {% block body_class %}bg-slate-950{% endblock %}
 
@@ -83,10 +83,8 @@
                     <span class="pulse-status h-2 w-2 rounded-full bg-emerald-300"></span>
                     <span class="text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-300">Đang hoạt động</span>
                 </div>
-                <h1 class="font-heading text-2xl font-bold text-white">Atlas AI Concierge</h1>
-                <p class="mt-2 text-sm leading-6 text-slate-300">
-                    Trợ lý du lịch thông minh của Vi Vu, có thể giữ ngữ cảnh hội thoại theo `conversation_id` và phản hồi dựa trên RAG, chatbot và dữ liệu thật.
-                </p>
+                <h1 class="font-heading text-2xl font-bold text-white">Trợ lý du lịch Vi Vu</h1>
+                <p class="mt-2 text-sm leading-6 text-slate-300">Trợ lý du lịch thông minh của Vi Vu, giúp bạn tìm địa điểm, tạo lịch trình, tối ưu ngân sách và điều chỉnh chuyến đi theo nhu cầu.</p>
             </div>
 
             <div class="space-y-3">
@@ -110,7 +108,7 @@
             <div class="aether-glass rounded-[2rem] p-6">
                 <div class="flex items-center justify-between gap-4">
                     <div>
-                        <p class="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Trip Context</p>
+                        <p class="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Bối cảnh hành trình</p>
                         <h2 class="mt-2 text-lg font-semibold text-white">Bối cảnh hành trình</h2>
                     </div>
                     <i class="fa-solid fa-compass text-emerald-300"></i>
@@ -129,9 +127,7 @@
                         <i class="fa-solid fa-location-dot text-emerald-300"></i>
                     </button>
                 </div>
-                <p id="chat-context-note" class="mt-4 text-xs leading-6 text-slate-400">
-                    Chưa có điểm đến ưu tiên. Bạn có thể chọn nhanh một khu vực hoặc để Atlas tự suy luận từ tin nhắn.
-                </p>
+                <p id="chat-context-note" class="mt-4 text-xs leading-6 text-slate-400">Chưa có hành trình đang mở. Bạn có thể chọn nhanh một khu vực hoặc để Vi Vu suy luận từ tin nhắn.</p>
             </div>
         </aside>
 
@@ -143,12 +139,12 @@
                     </span>
                     <div>
                         <div class="flex items-center gap-3">
-                            <h2 class="font-heading text-lg font-bold text-white">Atlas AI Concierge</h2>
+                    <h2 class="font-heading text-lg font-bold text-white">Trợ lý du lịch Vi Vu</h2>
                             <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-300">
-                                Travel Assistant
+                        Vi Vu
                             </span>
                         </div>
-                        <p class="mt-1 text-xs text-slate-400">Kết nối chat API, conversation cache và fallback 4 tầng của hệ thống.</p>
+                    <p class="mt-1 text-xs text-slate-400">Vi Vu có thể ghi nhớ ngữ cảnh trong phiên trò chuyện hiện tại để đưa ra gợi ý phù hợp hơn.</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -164,7 +160,7 @@
                         <i class="fa-solid fa-robot"></i>
                     </div>
                     <div class="atlas-bubble max-w-3xl rounded-3xl rounded-tl-none px-5 py-4 text-sm leading-7 text-slate-100">
-                        Xin chào! Tôi là Atlas. Tôi có thể giúp bạn tìm địa điểm, khách sạn, món ăn, hoặc gợi ý lịch trình dựa trên dữ liệu thật trong hệ thống Vi Vu.
+                        Xin chào! Tôi là Vi Vu. Tôi có thể giúp bạn tìm địa điểm, khách sạn, món ăn hoặc gợi ý lịch trình dựa trên dữ liệu thật trong hệ thống.
                     </div>
                 </div>
             </div>
@@ -179,7 +175,7 @@
                         <span class="typing-dot inline-block h-2 w-2 rounded-full bg-emerald-300"></span>
                         <span class="typing-dot inline-block h-2 w-2 rounded-full bg-emerald-300"></span>
                     </div>
-                    <span>Atlas đang tổng hợp câu trả lời...</span>
+                        <span>Vi Vu đang tổng hợp câu trả lời...</span>
                 </div>
             </div>
 
@@ -187,20 +183,20 @@
                 <form id="chat-form" class="space-y-4">
                     <div class="flex flex-wrap items-center gap-2">
                         <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-300">
-                            Conversation Cache
+                            Phiên trò chuyện
                         </span>
                         <span id="chat-conversation-pill" class="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-300">
-                            Sẽ tạo mới khi gửi tin nhắn đầu tiên
+                            Phiên trò chuyện mới sẽ bắt đầu khi bạn gửi tin nhắn đầu tiên.
                         </span>
                     </div>
                     <div class="flex flex-col gap-3 lg:flex-row">
                         <div class="min-w-0 flex-1 rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-3">
-                            <label for="chat-input" class="sr-only">Tin nhắn cho Atlas</label>
-                            <textarea id="chat-input" rows="2" class="w-full resize-none border-0 bg-transparent text-sm leading-7 text-white outline-none placeholder:text-slate-400" placeholder="Ví dụ: Tôi muốn đi Biên Hòa 3 ngày, ưu tiên quán cà phê đẹp và khách sạn gần trung tâm."></textarea>
+                    <label for="chat-input" class="sr-only">Tin nhắn cho Vi Vu</label>
+                    <textarea id="chat-input" rows="2" class="w-full resize-none border-0 bg-transparent text-sm leading-7 text-white outline-none placeholder:text-slate-400" placeholder="Hỏi Vi Vu về lịch trình, địa điểm, ngân sách hoặc chuyến đi của bạn..."></textarea>
                         </div>
                         <button id="chat-send-btn" type="submit" class="inline-flex min-h-[3.75rem] items-center justify-center gap-2 rounded-[1.5rem] bg-primary px-6 text-sm font-semibold text-primary-foreground transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary-hover">
                             <i class="fa-solid fa-paper-plane"></i>
-                            Gửi Atlas
+                            Gửi
                         </button>
                     </div>
                 </form>
@@ -215,7 +211,7 @@
     (function () {
         "use strict";
 
-        const CHAT_STORAGE_KEY = "vivu-atlas-chat-session";
+const CHAT_STORAGE_KEY = "vivu-chat-session";
         const DEFAULT_ERROR_MESSAGE = "Có lỗi xảy ra khi xử lý tin nhắn.";
         const AUTH_REQUIRED_MESSAGE = "Vui lòng đăng nhập để sử dụng tính năng này.";
         const ACCESS_DENIED_MESSAGE = "Bạn không có quyền sử dụng tính năng này.";
@@ -260,12 +256,8 @@
         }
 
         function updateContextUI() {
-            conversationPill.textContent = conversationId
-                ? `Đang dùng ${conversationId}`
-                : "Sẽ tạo mới khi gửi tin nhắn đầu tiên";
-            contextNote.textContent = selectedDestination
-                ? `Atlas sẽ ưu tiên ngữ cảnh cho ${selectedDestination} khi truy xuất dữ liệu và fallback.`
-                : "Chưa có điểm đến ưu tiên. Bạn có thể chọn nhanh một khu vực hoặc để Atlas tự suy luận từ tin nhắn.";
+            conversationPill.textContent = conversationId ? "Đã kết nối phiên trò chuyện hiện tại." : "Phiên trò chuyện mới sẽ bắt đầu khi bạn gửi tin nhắn đầu tiên.";
+        contextNote.textContent = selectedDestination ? `Vi Vu sẽ ưu tiên ngữ cảnh cho ${selectedDestination} khi gợi ý hành trình và điểm đến.` : "Chưa có hành trình đang mở. Bạn có thể chọn nhanh một khu vực hoặc để Vi Vu suy luận từ tin nhắn.";
         }
 
         function getCookie(name) {
@@ -378,7 +370,7 @@
                     updateContextUI();
                 }
 
-                appendMessage("assistant", payload.message || "Atlas chưa trả về nội dung.", payload.sources || []);
+        appendMessage("assistant", payload.message || "Vi Vu chưa trả về nội dung.", payload.sources || []);
             } catch (error) {
                 appendMessage("assistant", error.message || DEFAULT_ERROR_MESSAGE);
                 if ((error.message || "") === AUTH_REQUIRED_MESSAGE) {
@@ -440,7 +432,7 @@
                         <i class="fa-solid fa-robot"></i>
                     </div>
                     <div class="atlas-bubble max-w-3xl rounded-3xl rounded-tl-none px-5 py-4 text-sm leading-7 text-slate-100">
-                        Xin chào! Tôi là Atlas. Tôi có thể giúp bạn tìm địa điểm, khách sạn, món ăn, hoặc gợi ý lịch trình dựa trên dữ liệu thật trong hệ thống Vi Vu.
+                        Xin chào! Tôi là Vi Vu. Tôi có thể giúp bạn tìm địa điểm, khách sạn, món ăn hoặc gợi ý lịch trình dựa trên dữ liệu thật trong hệ thống.
                     </div>
                 </div>
             `;

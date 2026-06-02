@@ -1,0 +1,378 @@
+{
+  "model": "DiaDiem",
+  "db_table": "DIADIEM",
+  "ordering": [
+    "-danhGiaTrungBinh",
+    "-soLuotDanhGia"
+  ],
+  "unique_together": [],
+  "fields": [
+    {
+      "name": "maDiaDiem",
+      "db_column": "maDiaDiem",
+      "type": "AutoField",
+      "null": false,
+      "blank": true,
+      "primary_key": true,
+      "unique": true,
+      "indexed": false,
+      "max_length": null,
+      "default": null,
+      "choices": null,
+      "related_model": null
+    },
+    {
+      "name": "tenDiaDiem",
+      "db_column": "tenDiaDiem",
+      "type": "CharField",
+      "null": false,
+      "blank": false,
+      "primary_key": false,
+      "unique": false,
+      "indexed": true,
+      "max_length": 255,
+      "default": null,
+      "choices": null,
+      "related_model": null
+    },
+    {
+      "name": "moTa",
+      "db_column": "moTa",
+      "type": "TextField",
+      "null": false,
+      "blank": true,
+      "primary_key": false,
+      "unique": false,
+      "indexed": false,
+      "max_length": null,
+      "default": null,
+      "choices": null,
+      "related_model": null
+    },
+    {
+      "name": "diaChi",
+      "db_column": "diaChi",
+      "type": "CharField",
+      "null": false,
+      "blank": true,
+      "primary_key": false,
+      "unique": false,
+      "indexed": false,
+      "max_length": 500,
+      "default": null,
+      "choices": null,
+      "related_model": null
+    },
+    {
+      "name": "maTinhThanh",
+      "db_column": "maTinhThanh",
+      "type": "ForeignKey",
+      "null": false,
+      "blank": false,
+      "primary_key": false,
+      "unique": false,
+      "indexed": true,
+      "max_length": null,
+      "default": null,
+      "choices": null,
+      "related_model": "TinhThanh"
+    },
+    {
+      "name": "loaiDiaDiem",
+      "db_column": "loaiDiaDiem",
+      "type": "CharField",
+      "null": false,
+      "blank": false,
+      "primary_key": false,
+      "unique": false,
+      "indexed": false,
+      "max_length": 50,
+      "default": null,
+      "choices": [
+        {
+          "value": "dia_danh",
+          "label": "Địa danh"
+        },
+        {
+          "value": "nha_hang",
+          "label": "Nhà hàng"
+        },
+        {
+          "value": "khach_san",
+          "label": "Khách sạn"
+        },
+        {
+          "value": "giai_tri",
+          "label": "Giải trí"
+        },
+        {
+          "value": "mua_sam",
+          "label": "Mua sắm"
+        },
+        {
+          "value": "khac",
+          "label": "Khác"
+        }
+      ],
+      "related_model": null
+    },
+    {
+      "name": "viDo",
+      "db_column": "viDo",
+      "type": "FloatField",
+      "null": true,
+      "blank": true,
+      "primary_key": false,
+      "unique": false,
+      "indexed": false,
+      "max_length": null,
+      "default": null,
+      "choices": null,
+      "related_model": null
+    },
+    {
+      "name": "kinhDo",
+      "db_column": "kinhDo",
+      "type": "FloatField",
+      "null": true,
+      "blank": true,
+      "primary_key": false,
+      "unique": false,
+      "indexed": false,
+      "max_length": null,
+      "default": null,
+      "choices": null,
+      "related_model": null
+    },
+    {
+      "name": "giaVe",
+      "db_column": "giaVe",
+      "type": "FloatField",
+      "null": true,
+      "blank": true,
+      "primary_key": false,
+      "unique": false,
+      "indexed": false,
+      "max_length": null,
+      "default": null,
+      "choices": null,
+      "related_model": null
+    },
+    {
+      "name": "gioMoCua",
+      "db_column": "gioMoCua",
+      "type": "CharField",
+      "null": false,
+      "blank": true,
+      "primary_key": false,
+      "unique": false,
+      "indexed": false,
+      "max_length": 50,
+      "default": null,
+      "choices": null,
+      "related_model": null
+    },
+    {
+      "name": "gioDongCua",
+      "db_column": "gioDongCua",
+      "type": "CharField",
+      "null": false,
+      "blank": true,
+      "primary_key": false,
+      "unique": false,
+      "indexed": false,
+      "max_length": 50,
+      "default": null,
+      "choices": null,
+      "related_model": null
+    },
+    {
+      "name": "dienThoai",
+      "db_column": "dienThoai",
+      "type": "CharField",
+      "null": false,
+      "blank": true,
+      "primary_key": false,
+      "unique": false,
+      "indexed": false,
+      "max_length": 20,
+      "default": null,
+      "choices": null,
+      "related_model": null
+    },
+    {
+      "name": "website",
+      "db_column": "website",
+      "type": "CharField",
+      "null": false,
+      "blank": true,
+      "primary_key": false,
+      "unique": false,
+      "indexed": false,
+      "max_length": 200,
+      "default": null,
+      "choices": null,
+      "related_model": null
+    },
+    {
+      "name": "danhGiaTrungBinh",
+      "db_column": "danhGiaTrungBinh",
+      "type": "FloatField",
+      "null": false,
+      "blank": false,
+      "primary_key": false,
+      "unique": false,
+      "indexed": false,
+      "max_length": null,
+      "default": 0.0,
+      "choices": null,
+      "related_model": null
+    },
+    {
+      "name": "soLuotDanhGia",
+      "db_column": "soLuotDanhGia",
+      "type": "IntegerField",
+      "null": false,
+      "blank": false,
+      "primary_key": false,
+      "unique": false,
+      "indexed": false,
+      "max_length": null,
+      "default": 0,
+      "choices": null,
+      "related_model": null
+    },
+    {
+      "name": "soLuotXem",
+      "db_column": "soLuotXem",
+      "type": "IntegerField",
+      "null": false,
+      "blank": false,
+      "primary_key": false,
+      "unique": false,
+      "indexed": false,
+      "max_length": null,
+      "default": 0,
+      "choices": null,
+      "related_model": null
+    },
+    {
+      "name": "maNguoiTao",
+      "db_column": "maNguoiTao",
+      "type": "ForeignKey",
+      "null": true,
+      "blank": true,
+      "primary_key": false,
+      "unique": false,
+      "indexed": true,
+      "max_length": null,
+      "default": null,
+      "choices": null,
+      "related_model": "NguoiDung"
+    },
+    {
+      "name": "ngayTao",
+      "db_column": "ngayTao",
+      "type": "DateTimeField",
+      "null": false,
+      "blank": true,
+      "primary_key": false,
+      "unique": false,
+      "indexed": false,
+      "max_length": null,
+      "default": null,
+      "choices": null,
+      "related_model": null
+    },
+    {
+      "name": "lanCapNhatCuoi",
+      "db_column": "lanCapNhatCuoi",
+      "type": "DateTimeField",
+      "null": false,
+      "blank": true,
+      "primary_key": false,
+      "unique": false,
+      "indexed": false,
+      "max_length": null,
+      "default": null,
+      "choices": null,
+      "related_model": null
+    },
+    {
+      "name": "trangThai",
+      "db_column": "trangThai",
+      "type": "CharField",
+      "null": false,
+      "blank": false,
+      "primary_key": false,
+      "unique": false,
+      "indexed": false,
+      "max_length": 20,
+      "default": "active",
+      "choices": [
+        {
+          "value": "active",
+          "label": "Active"
+        },
+        {
+          "value": "inactive",
+          "label": "Inactive"
+        },
+        {
+          "value": "pending",
+          "label": "Pending"
+        }
+      ],
+      "related_model": null
+    },
+    {
+      "name": "dacDiem",
+      "db_column": "dacDiem",
+      "type": "TextField",
+      "null": false,
+      "blank": true,
+      "primary_key": false,
+      "unique": false,
+      "indexed": false,
+      "max_length": null,
+      "default": null,
+      "choices": null,
+      "related_model": null
+    },
+    {
+      "name": "tienNghi",
+      "db_column": "tienNghi",
+      "type": "TextField",
+      "null": false,
+      "blank": true,
+      "primary_key": false,
+      "unique": false,
+      "indexed": false,
+      "max_length": null,
+      "default": null,
+      "choices": null,
+      "related_model": null
+    }
+  ],
+  "indexes": [
+    {
+      "name": "DIADIEM_maTinhT_58a390_idx",
+      "fields": [
+        "maTinhThanh",
+        "loaiDiaDiem"
+      ]
+    },
+    {
+      "name": "DIADIEM_danhGia_14da23_idx",
+      "fields": [
+        "-danhGiaTrungBinh"
+      ]
+    },
+    {
+      "name": "DIADIEM_trangTh_290f7b_idx",
+      "fields": [
+        "trangThai"
+      ]
+    }
+  ]
+}

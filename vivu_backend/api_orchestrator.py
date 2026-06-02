@@ -1,5 +1,5 @@
 """
-FastAPI Orchestrator for Travel Planner Multi-Agent System
+FastAPI Orchestrator for Vi Vu Multi-Agent System
 ==========================================================
 Điều phối 7 agents chính:
 1. Transport Agent
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 # Initialize FastAPI app
 app = FastAPI(
-    title="Travel Planner API",
+    title="Vi Vu API",
     description="Multi-Agent System for Travel Planning",
     version="2.0.0"
 )

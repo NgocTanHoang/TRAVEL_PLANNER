@@ -1,5 +1,5 @@
 """
-Interactive Workflow for Travel Planner - Simplified for 7 Agents
+Interactive Workflow for Vi Vu - Simplified for 7 Agents
 =================================================================
 Workflow tương tác với người dùng, sử dụng 7 agents chính
 Tích hợp đầy đủ với LangChain, LangGraph và LangSmith

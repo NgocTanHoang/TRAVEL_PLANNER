@@ -4,8 +4,8 @@
             <i class="fa-solid fa-compass-drafting"></i>
             Thông tin du lịch
         </span>
-        <h2>Cá nhân hóa nhịp điệu của chuyến đi</h2>
-        <p>Thiết lập thời gian, số người và phong cách du lịch để AI chọn nhịp trải nghiệm phù hợp hơn với mục tiêu của bạn.</p>
+        <h2>Cá nhân hóa nhịp chuyến đi</h2>
+        <p>Thiết lập thời gian, số người và phong cách du lịch để Vi Vu gợi ý nhịp trải nghiệm phù hợp hơn với mục tiêu của bạn.</p>
     </div>
 
     <form id="step2-form">
@@ -14,9 +14,9 @@
                 <section class="step2-section">
                     <div class="step2-header">
                         <i class="fa-solid fa-sliders"></i>
-                        <span>Thiết lập nhịp chuyến đi</span>
+                        <span>Thiết lập chuyến đi</span>
                     </div>
-                    <p class="step2-support">Chia nhỏ các thông tin cốt lõi để Atlas hiểu nhịp khởi hành, thời lượng và quy mô nhóm của bạn.</p>
+                    <p class="step2-support">Điền các thông tin cốt lõi để Vi Vu hiểu rõ thời gian khởi hành, thời lượng và quy mô nhóm của bạn.</p>
 
                     <div class="travel-info-grid">
                         <div class="input-card">
@@ -26,7 +26,7 @@
                                 <i class="fa-solid fa-calendar-day"></i>
                                 <input type="text" id="start-date" placeholder="Chọn ngày bắt đầu" required readonly>
                             </div>
-                            <p class="helper-text">Chọn ngày khởi hành để hệ thống tính gợi ý lịch trình theo thời gian thực tế.</p>
+                            <p class="helper-text">Chọn ngày khởi hành để hệ thống gợi ý lịch trình theo thời gian thực tế.</p>
                         </div>
 
                         <div class="input-card">
@@ -36,7 +36,7 @@
                                 <i class="fa-solid fa-hourglass-half"></i>
                                 <input type="number" id="days" min="1" max="14" value="3" required>
                             </div>
-                            <p class="helper-text">Giới hạn từ 1-14 ngày để AI tối ưu mật độ hoạt động hợp lý.</p>
+                            <p class="helper-text">Giới hạn từ 1-14 ngày để Vi Vu sắp xếp mật độ trải nghiệm hợp lý.</p>
                         </div>
 
                         <div class="input-card">
@@ -46,7 +46,7 @@
                                 <i class="fa-solid fa-users"></i>
                                 <input type="number" id="travelers" min="1" max="20" value="2" required>
                             </div>
-                            <p class="helper-text">Giới hạn từ 1-20 người để hệ thống ước tính chi phí và chỗ ở chính xác hơn.</p>
+                            <p class="helper-text">Giới hạn từ 1-20 người để Vi Vu ước tính chi phí và gợi ý lưu trú chính xác hơn.</p>
                         </div>
                     </div>
                 </section>
@@ -56,7 +56,7 @@
                         <i class="fa-solid fa-compass-drafting"></i>
                         <span>Phong cách du lịch</span>
                     </div>
-                    <p class="step2-support">Chân dung chuyến đi sẽ ảnh hưởng tới cách Atlas sắp xếp nhịp tham quan, ẩm thực và thời gian nghỉ ngơi.</p>
+                    <p class="step2-support">Phong cách chuyến đi sẽ ảnh hưởng đến cách Vi Vu sắp xếp tham quan, ăn uống và thời gian nghỉ ngơi.</p>
 
                     <div class="step2-divider"></div>
 
@@ -70,7 +70,7 @@
                                 <option value="standard" selected>Tiêu chuẩn</option>
                             </select>
                         </div>
-                        <small class="helper-text">Đang tải danh sách phong cách...</small>
+                        <small class="helper-text">Vi Vu đang tải danh sách phong cách để bạn chọn nhanh hơn.</small>
                         <div id="travel-style-cards" class="travel-style-cards" aria-live="polite"></div>
                     </div>
                 </section>
@@ -79,17 +79,17 @@
             <div id="step2-result" class="step2-section">
                 <div class="step2-header">
                     <i class="fa-solid fa-road"></i>
-                    <span>Tóm tắt nhanh bước 2</span>
+                    <span>Tóm tắt bước 2</span>
                 </div>
-                <p class="step2-support">Tóm tắt này giúp bạn kiểm tra nhanh những tham số sáng tạo lịch trình trước khi chuyển sang bước ngân sách.</p>
+                <p class="step2-support">Kiểm tra nhanh các thông tin sẽ được dùng để tiếp tục sang bước ngân sách và lưu trú.</p>
                 <div class="step2-summary-grid">
-                    <div class="summary-item"><span class="summary-label">Route</span><span id="summary-route-clone" class="summary-value">Theo bước 1</span></div>
-                    <div class="summary-item"><span class="summary-label">Style</span><span id="travel-style-display-clone" class="summary-value">Tiêu chuẩn</span></div>
+                    <div class="summary-item"><span class="summary-label">Tuyến đường</span><span id="summary-route-clone" class="summary-value">Tuyến đường: theo bước 1</span></div>
+                    <div class="summary-item"><span class="summary-label">Phong cách</span><span id="travel-style-display-clone" class="summary-value">Phong cách: Tiêu chuẩn</span></div>
                 </div>
                 <div class="step2-chip-row">
                     <span class="step2-chip"><i class="fa-regular fa-clock"></i> 1-14 ngày</span>
                     <span class="step2-chip"><i class="fa-solid fa-users"></i> 1-20 người</span>
-                    <span class="step2-chip"><i class="fa-solid fa-sparkles"></i> Tùy biến theo gu du lịch</span>
+                    <span class="step2-chip"><i class="fa-solid fa-sparkles"></i> Tùy biến theo phong cách du lịch</span>
                 </div>
             </div>
         </div>

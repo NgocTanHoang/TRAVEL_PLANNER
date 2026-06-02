@@ -1,5 +1,5 @@
 """
-Orchestrator for Travel Planner Multi-Agent System
+Orchestrator for Vi Vu multi-agent system
 ===================================================
 Điều phối cả interactive workflow và LangGraph workflow với 7 agents.
 
@@ -26,7 +26,7 @@ class TravelPlannerOrchestrator:
     
     def __init__(self):
         """Initialize the orchestrator."""
-        logger.info("Travel Planner Orchestrator initialized (7 agents)")
+        logger.info("Vi Vu orchestrator initialized (7 agents)")
         logger.info("  - Interactive workflow: Available (synchronous)")
         logger.info("  - LangGraph workflow: Available (async)")
         self._langgraph_workflow = None

@@ -54,6 +54,36 @@ services:
     networks:
       - vivu-network
 
+  scraper:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    profiles: ["scraper"]
+    command: >
+      sh -c "python vivu_scraper/scripts/run_public_pipeline.py --help"
+    env_file:
+      - .env
+    environment:
+      DATABASE_HOST: db
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 0
+      CHROMA_HOST: chroma
+      CHROMA_PORT: 8000
+      CHROMA_URL: http://chroma:8000
+      CHROMA_PERSIST_DIRECTORY: ${CHROMA_PERSIST_DIRECTORY:-vector_db_data}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      chroma:
+        condition: service_healthy
+    working_dir: /app
+    restart: "no"
+    networks:
+      - vivu-network
+
   redis:
     image: redis:7-alpine
     container_name: vivu-redis
