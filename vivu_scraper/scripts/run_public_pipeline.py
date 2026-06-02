@@ -6,10 +6,14 @@ import sys
 from pathlib import Path
 from typing import List
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BACKEND_DIR = REPO_ROOT / "vivu_backend"
 OUTPUT_DIR = REPO_ROOT / "vivu_scraper" / "outputs"
+
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from vivu_scraper.services.harvest_orchestrator import HarvestOrchestrator
 
 
 def run_command(cmd: List[str]) -> int:
@@ -57,6 +61,26 @@ def run_osm(args: argparse.Namespace) -> int:
     return run_command(cmd)
 
 
+def run_harvest(args: argparse.Namespace) -> int:
+    categories = None
+    if args.source == "tourism":
+        raw_categories = (args.categories or "").strip()
+        if raw_categories and raw_categories.lower() != "all":
+            categories = [value.strip() for value in raw_categories.split(",") if value.strip()]
+
+    orchestrator = HarvestOrchestrator(
+        source=args.source,
+        batch_size=args.batch_size,
+    )
+    orchestrator.run(
+        limit=args.limit,
+        max_pages_per_category=args.max_pages_per_category,
+        categories=categories,
+        skip_vector_sync=args.skip_vector_sync,
+    )
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Public data crawling pipeline cho Vi Vu. Tap trung vao nguon cong khai, khong bypass anti-bot."
@@ -75,6 +99,14 @@ def build_parser() -> argparse.ArgumentParser:
     osm = subparsers.add_parser("osm", help="Harvest POI cong khai tu OSM/Overpass vao SQLite rieng")
     osm.add_argument("--limit", type=int, default=20000)
 
+    harvest = subparsers.add_parser("harvest", help="Dong bo public POI theo tinh bang voi checkpoint va bulk upsert")
+    harvest.add_argument("--source", choices=["osm", "tourism"], required=True)
+    harvest.add_argument("--batch-size", type=int, default=1000)
+    harvest.add_argument("--limit", type=int, default=None)
+    harvest.add_argument("--categories", default="all")
+    harvest.add_argument("--max-pages-per-category", type=int, default=None)
+    harvest.add_argument("--skip-vector-sync", action="store_true")
+
     return parser
 
 
@@ -89,6 +121,8 @@ def main() -> int:
         return run_tourism_db(args)
     if args.command == "osm":
         return run_osm(args)
+    if args.command == "harvest":
+        return run_harvest(args)
     parser.error("Unsupported command")
     return 2
 

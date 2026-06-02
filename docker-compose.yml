@@ -80,6 +80,8 @@ services:
       chroma:
         condition: service_healthy
     working_dir: /app
+    volumes:
+      - ./vivu_scraper/outputs:/app/vivu_scraper/outputs
     restart: "no"
     networks:
       - vivu-network

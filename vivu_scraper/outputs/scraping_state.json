@@ -1,0 +1,15 @@
+{
+  "completed_provinces": [
+    "Thành phố Cần Thơ",
+    "Thành phố Hà Nội"
+  ],
+  "current_province": null,
+  "imported_records_count": 0,
+  "last_checkpoint_reason": "Hoàn tất tỉnh",
+  "last_successful_page": 0,
+  "skipped_records_count": 0,
+  "source": "osm",
+  "status": "completed",
+  "updated_at": "2026-06-02T15:45:14.930522+00:00",
+  "updated_records_count": 5
+}

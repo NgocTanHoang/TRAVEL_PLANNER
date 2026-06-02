@@ -3,8 +3,8 @@
     id="navbar"
     class="nav-shell {% if request.path == '/' %}nav-floating{% else %}nav-solid nav-scrolled{% endif %} fixed inset-x-0 top-0 z-50 border-b border-white/[0.04] bg-transparent font-sans backdrop-blur-[4px] transition-all duration-300 dark:bg-transparent"
 >
-    <div class="mx-auto grid h-16 w-full max-w-[1440px] grid-cols-[auto_1fr_auto] items-center gap-4 px-4 sm:px-6 lg:px-10">
-        <a href="{% url 'home' %}" class="flex min-w-0 items-center gap-3 justify-self-start" aria-label="Vi Vu">
+    <div class="mx-auto grid h-16 w-full max-w-[1440px] grid-cols-3 items-center gap-4 px-4 sm:px-6 lg:px-10">
+        <a href="{% url 'home' %}" class="flex min-w-0 w-full items-center gap-3 justify-self-start justify-start" aria-label="Vi Vu">
             <img
                 src="{% static 'img/logo_crop-Photoroom.png' %}"
                 alt="Vi Vu"
@@ -40,7 +40,7 @@
             </a>
         </nav>
 
-        <div class="hidden items-center gap-2 justify-self-end lg:flex">
+        <div class="hidden w-full items-center justify-end gap-2 justify-self-end lg:flex">
             {% if user.is_authenticated %}
                 <a
                     href="{% url 'profile' %}"
@@ -112,7 +112,7 @@
             </button>
         </div>
 
-        <div class="flex items-center gap-2 justify-self-end lg:hidden">
+        <div class="flex w-full items-center justify-end gap-2 justify-self-end lg:hidden">
             <button
                 id="theme-toggle-mobile-top"
                 type="button"
