@@ -159,11 +159,10 @@ USE_TZ = True
 
 # Static files
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'  # Collected static files location
+STATIC_ROOT = PROJECT_ROOT / 'staticfiles'
 STATIC_ROOT.mkdir(parents=True, exist_ok=True)
 STATICFILES_DIRS = [
-    FRONTEND_DIR / 'static',  # Frontend static files (CSS, JS, images)
-    BASE_DIR / 'static',  # Backend static files (if any) - keep for admin
+    FRONTEND_DIR / 'static',
 ]
 STATICFILES_STORAGE = os.getenv(
     'DJANGO_STATICFILES_STORAGE',
