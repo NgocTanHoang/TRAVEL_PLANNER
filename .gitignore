@@ -1,3 +1,7 @@
+# ==========================================
+# PRODUCTION HARDENING IGNORE MATRIX (VI VU)
+# ==========================================
+
 # Python
 __pycache__/
 *.py[cod]
@@ -29,12 +33,15 @@ db.sqlite3-journal
 /media
 /staticfiles
 
-# Virtual Environment
+# 1. Python Virtual Environments (Local)
+.venv/
 venv/
 env/
 ENV/
 env.bak/
 venv.bak/
+pip-log.txt
+pip-delete-this-directory.txt
 
 # IDE
 .vscode/
@@ -72,17 +79,27 @@ htmlcov/
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# Vector DB
-vector_db/*/
-!vector_db/.gitkeep
-
-# ChromaDB
+# 2. Local Databases & Persistence Layers
+*.sqlite3
+vivudb.sqlite3
+vivu_backend/vector_db/
+vector_db/
+vector_db_data/
+db.sqlite3
 chroma.sqlite3
 *.pickle
 
-# Logs
+# 3. AI Models & Large Static Artifacts
+models/
+*.pkl
+*.h5
+*.onnx
+vivu_scraper/outputs/raw_places.json
+
+# 4. Logs and Diagnostics
 logs/
 *.log
+vivu_backend/scripts/diagnostics/logs/
 
 # OS
 .DS_Store
